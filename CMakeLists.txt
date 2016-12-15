@@ -1,0 +1,28 @@
+cmake_minimum_required(VERSION 3.3)
+project(dogImageStabilization)
+find_package( OpenCV REQUIRED )
+
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+#set(SOURCE_FILES main.cpp videostabExample.cpp)
+add_executable(computeMeasures computeMeasures.cpp videoStabilizationQualityMeasures.h videoStabilizationQualityMeasures.cpp)
+target_link_libraries( computeMeasures ${OpenCV_LIBS} )
+
+add_executable(dogImageStabilization simpleExample.cpp )
+target_link_libraries( dogImageStabilization ${OpenCV_LIBS} )
+
+add_executable(videoStabExample videostabExample.cpp)
+target_link_libraries( videoStabExample ${OpenCV_LIBS} )
+
+add_executable(showTwoTogether showTwoTogether.cpp)
+target_link_libraries( showTwoTogether ${OpenCV_LIBS} )
+
+#add_executable(frameWiseEntropy frameWiseEntropy.cpp)
+#target_link_libraries( frameWiseEntropy ${OpenCV_LIBS} )
+
+#add_executable(twoImageMeasures twoImageMeasures.cpp)
+#target_link_libraries( twoImageMeasures ${OpenCV_LIBS} )
+
+add_executable(brno brno.cpp Stabilizer.h StabilizerGCBPM.cpp StabilizerGCBPM.h Exceptions.h Parameters.cpp Parameters.h xgetopt.cpp xgetopt.h StabilizerSVD.cpp StabilizerSVD.h)
+target_link_libraries( brno ${OpenCV_LIBS} )
