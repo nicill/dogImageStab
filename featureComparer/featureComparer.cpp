@@ -68,7 +68,8 @@ vector<vector<DMatch>> featureComparer::getMatches(
 
     // Match descriptor vectors
     vector<vector<DMatch>> matchess;
-    (*this->descriptorMatcher).knnMatch(
+
+    this->descriptorMatcher->knnMatch(
             (InputArray)descriptors_1,
             (InputArray)descriptors_2,
             matchess,

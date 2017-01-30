@@ -29,7 +29,7 @@ private:
     descriptorMatcherType matcherType;
 
     Ptr<Feature2D> featureDetector;
-    DescriptorMatcher *descriptorMatcher;
+    Ptr<DescriptorMatcher> descriptorMatcher;
 
     vector<vector<DMatch>> getMatches(InputArray img1, InputArray img2);
 };
