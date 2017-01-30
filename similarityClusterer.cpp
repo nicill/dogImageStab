@@ -8,6 +8,7 @@
 #include <iomanip>
 #include "framewiseSimilarityMetric.h"
 #include "opencvHistComparer.h"
+#include "featureComparer/featureComparer.h"
 
 
 using namespace std;
@@ -50,7 +51,16 @@ int main(int argc, char **argv) {
         case 1  :
             metric = new opencvHistComparer();
             break;
-        default : //Optional
+        case 2 :
+            metric = new featureComparer(featureComparer::SIFT, featureComparer::BF);
+            break;
+        case 3 :
+            metric = new featureComparer(featureComparer::SURF, featureComparer::BF);
+            break;
+        case 4 :
+            metric = new featureComparer(featureComparer::ORB, featureComparer::BF);
+            break;
+        default : // Optional
            cout<<"Wrong metric code in similarity clusterer "<<metrictype<<endl;
             throw("Wrong metric code in similarity clusterer");
     }
