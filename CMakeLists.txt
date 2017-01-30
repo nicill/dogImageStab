@@ -33,5 +33,5 @@ target_link_libraries( similarityClusterer ${OpenCV_LIBS} )
 add_executable(similarityTEST similarityTEST.cpp similarityTEST.h)
 target_link_libraries( similarityTEST ${OpenCV_LIBS} )
 
-add_executable(siftTEST siftTEST/siftTEST.cpp siftTEST/matchCalculator.cpp siftTEST/matchCalculator.h)
+add_executable(siftTEST siftTEST/siftTEST.cpp siftTEST/featureComparer.cpp siftTEST/featureComparer.h)
 target_link_libraries( siftTEST ${OpenCV_LIBS} )

@@ -17,8 +17,8 @@
       <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/similarityTEST.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/videostabExample.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/siftTEST/matchCalculator.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/siftTEST/matchCalculator.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/siftTEST/featureComparer.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/siftTEST/featureComparer.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/siftTEST/siftTEST.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/similarityTEST.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/StabilizerSVD.h" isTestSource="false" />
