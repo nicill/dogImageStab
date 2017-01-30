@@ -27,11 +27,8 @@ target_link_libraries( showTwoTogether ${OpenCV_LIBS} )
 add_executable(brno brno.cpp Stabilizer.h StabilizerGCBPM.cpp StabilizerGCBPM.h Exceptions.h Parameters.cpp Parameters.h xgetopt.cpp xgetopt.h StabilizerSVD.cpp StabilizerSVD.h)
 target_link_libraries( brno ${OpenCV_LIBS} )
 
-add_executable(similarityClusterer similarityClusterer.cpp framewiseSimilarityMetric.h opencvHistComparer.cpp opencvHistComparer.h)
+add_executable(similarityClusterer similarityClusterer.cpp framewiseSimilarityMetric.h opencvHistComparer.cpp opencvHistComparer.h featureComparer/featureComparer.cpp featureComparer/featureComparer.h)
 target_link_libraries( similarityClusterer ${OpenCV_LIBS} )
 
 add_executable(similarityTEST similarityTEST.cpp similarityTEST.h)
 target_link_libraries( similarityTEST ${OpenCV_LIBS} )
-
-add_executable(siftTEST siftTEST/siftTEST.cpp siftTEST/featureComparer.cpp siftTEST/featureComparer.h)
-target_link_libraries( siftTEST ${OpenCV_LIBS} )
