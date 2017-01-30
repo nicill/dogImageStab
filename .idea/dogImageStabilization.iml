@@ -5,19 +5,24 @@
       <sourceFolder url="file://$MODULE_DIR$/brno.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Stabilizer.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/showTwoTogether.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/similarityClusterer.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/opencvHistComparer.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/StabilizerGCBPM.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/framewiseSimilarityMetric.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/xgetopt.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Parameters.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/StabilizerGCBPM.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/videoStabilizationQualityMeasures.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/opencvHistComparer.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Parameters.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/StabilizerSVD.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/videostabExample.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/framewiseSimilarityMetric.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/opencvHistComparer.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/similarityTEST.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/videostabExample.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/siftTEST/matchCalculator.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/siftTEST/matchCalculator.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/siftTEST/siftTEST.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/similarityTEST.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/StabilizerSVD.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/similarityClusterer.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/computeMeasures.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/xgetopt.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/videoStabilizationQualityMeasures.h" isTestSource="false" />
