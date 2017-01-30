@@ -48,9 +48,30 @@ double featureComparer::computeSimilarity(Mat* im1, Mat* im2) {
         }
     }
 
-    // TODO Calculate similarity score in [0,1].
-    assert_perror(1);
-    return 0;
+    // No matches found
+    if (goodMatches.size() == 0) return 0;
+
+    // TODO proposal: Compare number of matches with distance < 100 to those with bigger distances.
+    int matches0_100 = 0;
+    int matches100_ = 0;
+    int relation;
+
+    for (DMatch match : goodMatches) {
+        if (match.distance < 100) matches0_100++;
+        else matches100_++;
+    }
+
+    // Make sure the calculation works.
+    if (matches0_100 == 0 || matches100_ == 0) {
+        matches0_100++;
+        matches100_++;
+    }
+
+    relation = matches0_100 / matches100_;
+
+    if (relation > 4) return 1;
+    // relation is now between 0 and 4
+    else return relation/4;
 }
 
 // Implementation is based on: http://stackoverflow.com/a/27533437
