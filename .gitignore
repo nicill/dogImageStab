@@ -1,5 +1,7 @@
 # Created by https://www.gitignore.io/api/linux,c,c++,cmake,jetbrains
 
+cmake-build-debug/
+
 ### Linux ###
 *~
 
