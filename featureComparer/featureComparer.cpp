@@ -54,7 +54,7 @@ double featureComparer::computeSimilarity(Mat* im1, Mat* im2) {
     // TODO proposal: Compare number of matches with distance < 100 to those with bigger distances.
     int matches0_100 = 0;
     int matches100_ = 0;
-    int relation;
+    double relation;
 
     for (DMatch match : goodMatches) {
         if (match.distance < 100) matches0_100++;
@@ -69,9 +69,13 @@ double featureComparer::computeSimilarity(Mat* im1, Mat* im2) {
 
     relation = matches0_100 / matches100_;
 
-    if (relation > 4) return 1;
-    // relation is now between 0 and 4
-    else return relation/4;
+    // TODO debug
+    // std::cout << "matches0_100: " << matches0_100 <<", matches100_: " << matches100_ << ", relation: " << relation << std::endl;
+    int maxVal = 2000;
+
+    if (relation > maxVal) return 1;
+    // relation is now between 0 and 2000
+    else return relation / maxVal;
 }
 
 // Implementation is based on: http://stackoverflow.com/a/27533437
