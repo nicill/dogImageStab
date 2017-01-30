@@ -27,6 +27,7 @@ class videoStabilizationQualityMeasures {
 public:
     double framewiseEntropy(string videoPath);
     double ITF(string video);
+    vector<int>* ITFRegularThresholder(string video, int numThresholds);
     double blackPixelPercent(string videoPath);
     double SSIM(string videoPath);
 };

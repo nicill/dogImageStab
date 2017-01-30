@@ -481,3 +481,97 @@ double videoStabilizationQualityMeasures::SSIM(string video) {
     if(verbose) cout<<" SSIM going to return "<<accumulate/frameNum<<endl;
     return ( accumulate/frameNum);
 }
+
+vector<int> *videoStabilizationQualityMeasures::ITFRegularThresholder(string video, int numThresholds) {
+    vector<int> *returnValue = new vector<int>();
+
+    stringstream conv;
+    bool verbose=false;
+
+    int psnrTriggerValue, delay;
+
+    char c;
+    int frameNum = 0;          // Frame counter
+
+    VideoCapture capt(video); //open the same
+
+    if (!capt.isOpened()){
+        cout  << "videoStabilizationQualityMeasures::ITF(string video) Could not open video " << video << endl;
+        throw("        cout  << \"videoStabilizationQualityMeasures::ITF(string video) Could not open video \" << current << endl;");
+    }
+
+    Size refS = Size((int) capt.get(CV_CAP_PROP_FRAME_WIDTH),(int) capt.get(CV_CAP_PROP_FRAME_HEIGHT));
+
+    const char* WIN_RF = "Image to show";
+
+    // Windows
+    namedWindow(WIN_RF, CV_WINDOW_AUTOSIZE);
+    cvMoveWindow(WIN_RF, 400       , 0);         //750,  2 (bernat =0)
+
+    if(verbose) {
+        cout << "Reference frame resolution: Width=" << refS.width << "  Height=" << refS.height << " of nr#: " <<
+        capt.get(CV_CAP_PROP_FRAME_COUNT) << endl;
+        cout << "PSNR trigger value " << setiosflags(ios::fixed) << setprecision(3) << psnrTriggerValue << endl;
+    }
+
+    Mat curr,prev;
+    capt >> prev;
+
+    Mat grayImagePrev;
+    cvtColor(prev, grayImagePrev, CV_RGB2GRAY);
+
+    double psnrV;
+    double ITF=0; //to accumulata psnrv values
+    //Scalar mssimV;
+
+    for(;;) //Show the image captured in the window and repeat
+    {
+        capt >> curr;
+
+        if(curr.data == NULL) {
+            break;
+        }
+
+//       if(diffSizes) resize(frameUnderTest, frameUnderTest, Size(frameReference.cols, frameReference.rows));
+
+        if(verbose) cout << "Frame: " << frameNum << "# ";
+
+
+        // First, transform to grayscale
+        Mat grayImageCurr;
+        cvtColor(curr, grayImageCurr, CV_RGB2GRAY);
+
+        ///////////////////////////////// PSNR ////////////////////////////////////////////////////
+        psnrV = getPSNR(grayImageCurr,grayImagePrev);
+        //cout << setiosflags(ios::fixed) << setprecision(3) << psnrV << "dB";
+
+        // accumulat for ITF computations
+        if(psnrV!=0)
+        {
+            ITF=ITF+psnrV;
+            ++frameNum;
+        }
+
+        //update prev
+        grayImagePrev=grayImageCurr;
+
+        //////////////////////////////////// MSSIM /////////////////////////////////////////////////
+        /* if (psnrV < psnrTriggerValue && psnrV)
+         {
+             mssimV = getMSSIM(curr, prev);
+
+             if(verbose)  cout << " MSSIM: " << " R " << setiosflags(ios::fixed) << setprecision(2) << mssimV.val[2] * 100 << "%" << " G " << setiosflags(ios::fixed) << setprecision(2) << mssimV.val[1] * 100 << "%" << " B " << setiosflags(ios::fixed) << setprecision(2) << mssimV.val[0] * 100 << "%";
+         }*/
+
+        if(verbose) cout << endl;
+
+        ////////////////////////////////// Show Image /////////////////////////////////////////////
+        if(verbose) {
+            imshow(WIN_RF, curr);
+            c = (char) cvWaitKey(delay);
+            if (c == 27) break;
+        }
+    }
+
+    return returnValue;
+}

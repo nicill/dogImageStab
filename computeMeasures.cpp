@@ -37,7 +37,7 @@ videoStabilizationQualityMeasures vidStabMeasurer;
             //“Z. Wang, A. C. Bovik, H. R. Sheikh and E. P. Simoncelli, “Image quality assessment: From error visibility to structural similarity,” IEEE Transactions on Image Processing, vol. 13, no. 4, pp. 600-612, Apr. 2004.”
             cout<<0<<endl;
             exit;
-            cout<<vidStabMeasurer.SSIM(argv[1]);
+            cout<<vidStabMeasurer.SSIM(argv[1]); //ep!!! fotre un cop dull a https://gist.github.com/Bibimaw/8873663
             break;
         default :
             cout << "computeMeasures, wrong measure code" << endl;

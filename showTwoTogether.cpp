@@ -35,7 +35,7 @@ int main(int argc, char **argv)
     outputVideo.open(argv[3], ex, cap1.get(CAP_PROP_FPS), S, true);
     if (!outputVideo.isOpened())
     {
-        cout  << "Could not open the output video for writting: " << argv[2] << endl;
+        cout  << "Could not open the output video for writting: " << argv[3] << endl;
         return -1;
     }
 
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
         //    resize(canvas, canvas, Size(canvas.cols/2, canvas.rows/2));
         //}
 
-        //imshow("Showing videos side by side ", canvas);
+        imshow("Showing videos side by side ", canvas);
         // save the output video and the comparison side by side
         outputVideo << canvas;
        // waitKey(20);
