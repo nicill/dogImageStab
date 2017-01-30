@@ -3,18 +3,14 @@
 //
 
 #include "featureComparer.h"
-#include "opencv2/xfeatures2d.hpp"
 
-using namespace std;
-using namespace cv;
+featureComparer::featureComparer(
+        featureDetectorType givenDetectorType,
+        descriptorMatcherType givenMatcherType) {
+    this->detectorType = givenDetectorType;
+    this->matcherType = givenMatcherType;
 
-featureComparer::featureComparer(featureDetector featureDetector, descriptorMatcher descriptorMatcher)
-{
-    this->detectorType = featureDetector;
-    this->matcherType = descriptorMatcher;
-
-    switch (featureDetector)
-    {
+    switch (givenDetectorType) {
         case featureComparer::SIFT:
             this->featureDetector = xfeatures2d::SIFT::create();
             break;
@@ -28,29 +24,26 @@ featureComparer::featureComparer(featureDetector featureDetector, descriptorMatc
             throw("This descriptor hasn't been implemented yet.");
     }
 
-    switch (descriptorMatcher)
-    {
+    switch (givenMatcherType) {
         case featureComparer::BF:
-            BFMatcher matcher;
-            this->descriptorMatcher = matcher;
+            this->descriptorMatcher = BFMatcher::create();
+            break;
+            // TODO FLANN
         default:
             throw("This matcher hasn't been implemented yet.");
     }
 }
 
-double featureComparer::computeSimilarity(Mat* im1, Mat* im2)
-{
+double featureComparer::computeSimilarity(Mat* im1, Mat* im2) {
     vector<vector<DMatch>> matchess = getMatches(*im1, *im2);
 
-    // Implmentation is based on the assumption of only two matches being selected.
+    // Implmentation assumes only two matches being selected.
     assert(matchess[0].size() == 2);
 
     // Filter matches based on metric proposed by Lowe (2004), p. 104.
     vector<DMatch> goodMatches;
-    for(vector<DMatch> matches : matchess)
-    {
-        if (matches[0].distance < 0.8 * matches[1].distance)
-        {
+    for (vector<DMatch> matches : matchess) {
+        if (matches[0].distance < 0.8 * matches[1].distance) {
             goodMatches.push_back(matches[0]);
         }
     }
@@ -61,8 +54,8 @@ double featureComparer::computeSimilarity(Mat* im1, Mat* im2)
 }
 
 // Implementation is based on: http://stackoverflow.com/a/27533437
-vector<vector<DMatch>> featureComparer::getMatches(InputArray img1, InputArray img2)
-{
+vector<vector<DMatch>> featureComparer::getMatches(
+        InputArray img1, InputArray img2) {
     // Detect keypoints
     vector<KeyPoint> keypoints_1, keypoints_2;
     this->featureDetector->detect(img1, keypoints_1);
@@ -75,7 +68,7 @@ vector<vector<DMatch>> featureComparer::getMatches(InputArray img1, InputArray i
 
     // Match descriptor vectors
     vector<vector<DMatch>> matchess;
-    this->descriptorMatcher.knnMatch(
+    (*this->descriptorMatcher).knnMatch(
             (InputArray)descriptors_1,
             (InputArray)descriptors_2,
             matchess,

@@ -2,34 +2,37 @@
 // Created by tokuyama on 17/01/30.
 //
 
-#ifndef DOGIMAGESTABILIZATION_SIFTCALCULATOR_H
-#define DOGIMAGESTABILIZATION_SIFTCALCULATOR_H
+#ifndef FEATURECOMPARER_FEATURECOMPARER_H_
+#define FEATURECOMPARER_FEATURECOMPARER_H_
 
-#include <vector>
-#include <opencv2/opencv.hpp>
 #include "../framewiseSimilarityMetric.h"
+#include "opencv2/xfeatures2d.hpp"
+#include <opencv2/opencv.hpp>
 
-using namespace std;
-using namespace cv;
+using std::vector;
+using cv::DescriptorMatcher;
+using cv::DMatch;
 
-class featureComparer : public framewiseSimilarityMetric
-{
+class featureComparer : public framewiseSimilarityMetric {
 public:
-    enum featureDetector { SIFT, SURF, ORB };
-    enum descriptorMatcher { BF }; // FLANN?
+    enum featureDetectorType { SIFT, SURF, ORB };
+    enum descriptorMatcherType { BF };  // FLANN?
 
     double computeSimilarity(Mat* im1, Mat* im2);
-    featureComparer(featureDetector = SIFT, descriptorMatcher = BF);
+
+    featureComparer(
+            featureDetectorType givenDetectorType = SIFT,
+            descriptorMatcherType givenMatcherType = BF);
 
 private:
-    featureDetector detectorType;
-    descriptorMatcher matcherType;
+    featureDetectorType detectorType;
+    descriptorMatcherType matcherType;
 
     Ptr<Feature2D> featureDetector;
-    DescriptorMatcher descriptorMatcher;
+    DescriptorMatcher *descriptorMatcher;
 
     vector<vector<DMatch>> getMatches(InputArray img1, InputArray img2);
 };
 
 
-#endif //DOGIMAGESTABILIZATION_SIFTCALCULATOR_H
+#endif  // FEATURECOMPARER_FEATURECOMPARER_H_
