@@ -29,12 +29,12 @@ int main(int argc, char **argv) {
 
     VideoCapture capt(argv[1]); //open the same
 
-    if (!capt.isOpened()){
+    if (!capt.isOpened()) {
         cout  << "similarityclusterer::main Could not open video " << argv[1] << endl;
         throw(" similarityclusterer::main Could not open video ");
     }
 
-    Size refS = Size((int) capt.get(CV_CAP_PROP_FRAME_WIDTH),(int) capt.get(CV_CAP_PROP_FRAME_HEIGHT));
+    Size refS = Size((int) capt.get(CV_CAP_PROP_FRAME_WIDTH), (int) capt.get(CV_CAP_PROP_FRAME_HEIGHT));
 
     Mat curr,prev;
     capt >> prev;
@@ -44,41 +44,40 @@ int main(int argc, char **argv) {
 
     // Get the code of the type that we want from arg[2] and initialize pointer
     // 1: Histogram comparison
-    int metrictype=atoi(argv[2]);
+    int metrictype = atoi(argv[2]);
 
 
-    switch(metrictype){
+    switch (metrictype) {
         case 1  :
             metric = new opencvHistComparer();
             break;
         case 2 :
-            metric = new featureComparer(featureComparer::SIFT, featureComparer::BF);
+            metric = new featureComparer(featureComparer::SIFT, featureComparer::BF_L2);
             break;
         case 3 :
-            metric = new featureComparer(featureComparer::SURF, featureComparer::BF);
+            metric = new featureComparer(featureComparer::SURF, featureComparer::BF_L2);
             break;
         case 4 :
-            metric = new featureComparer(featureComparer::ORB, featureComparer::BF);
+            metric = new featureComparer(featureComparer::ORB, featureComparer::BF_L2);
             break;
         default : // Optional
            cout<<"Wrong metric code in similarity clusterer "<<metrictype<<endl;
             throw("Wrong metric code in similarity clusterer");
     }
 
-    for(;;) //framewise metric computation
-    {
+    for (;;) { // framewise metric computation
         capt >> curr;
 
-        if(curr.data == NULL) {
+        if (curr.data == NULL) {
             break;
         }
 
-        double currentSimilarity=metric->computeSimilarity(&curr,&prev);
+        double currentSimilarity = metric->computeSimilarity(&curr,&prev);
 
-        if(verbose) cout << "Frame: " << frameNum << "# has similarity "<<currentSimilarity<<endl;
+        if (verbose) cout << "Frame: " << frameNum << "# has similarity " << currentSimilarity << endl;
 
         //update prev
-        prev=curr;
+        curr.copyTo(prev);
         frameNum++;
     }
 

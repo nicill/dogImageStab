@@ -16,13 +16,13 @@ using cv::DMatch;
 class featureComparer : public framewiseSimilarityMetric {
 public:
     enum featureDetectorType { SIFT, SURF, ORB };
-    enum descriptorMatcherType { BF };  // FLANN?
+    enum descriptorMatcherType { BF_L2 };  // FLANN?
 
     double computeSimilarity(Mat* im1, Mat* im2);
 
     featureComparer(
             featureDetectorType givenDetectorType = SIFT,
-            descriptorMatcherType givenMatcherType = BF);
+            descriptorMatcherType givenMatcherType = BF_L2);
 
 private:
     featureDetectorType detectorType;
@@ -33,7 +33,7 @@ private:
     // Possible descriptor matchers: http://docs.opencv.org/trunk/db/d39/classcv_1_1DescriptorMatcher.html
     Ptr<DescriptorMatcher> descriptorMatcher;
 
-    vector<vector<DMatch>> getMatches(InputArray img1, InputArray img2);
+    vector<vector<DMatch>> getMatches(Mat* img1, Mat* img2);
 };
 
 
