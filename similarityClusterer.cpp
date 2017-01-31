@@ -3,51 +3,50 @@
 //
 
 #include <opencv2/opencv.hpp>
-#include <opencv2/videoio/videoio.hpp>
-#include <opencv2/core/core.hpp>        // Basic OpenCV structures (cv::Mat, Scalar)
-#include <iomanip>
 #include "framewiseSimilarityMetric.h"
 #include "opencvHistComparer.h"
 #include "featureComparer/featureComparer.h"
-
 
 using namespace std;
 using namespace cv;
 
 int main(int argc, char **argv) {
-    if (argc < 2) {
-       // cout << "./computeMeasures [video] [code]" << endl;
-       // cout << "code: 0=framewise entropy,  1=ITF" << endl;
-       // return 0;
+    if (argc == 1 && argv[0] == "--help") {
+        cout << "Usage:" << endl
+             << "./computeMeasures [video] [metricIndex]" << endl
+             << endl
+             << "Arguments:" << endl
+             << "-v / --verbose: Enable verbose logging." << endl;
+        return 0;
     }
+    else if (argc < 2) {
+        cout << "./computeMeasures [video] [metricIndex]" << endl;
+        return 0;
+    }
+
+    // TODO read argument
+    bool verbose=true;
 
     // make a function that returns a vector, with, for every time a label depending on the threshold of similarity
 
+    // Open capture
+    VideoCapture capture(argv[1]);
 
-    bool verbose=true;
-    int frameNum = 0;          // Frame counter
-
-    VideoCapture capt(argv[1]); //open the same
-
-    if (!capt.isOpened()) {
-        cout  << "similarityclusterer::main Could not open video " << argv[1] << endl;
-        throw(" similarityclusterer::main Could not open video ");
+    if (!capture.isOpened()) {
+        const string couldNotOpen = "similarityclusterer::main - Could not open video ";
+        cout << couldNotOpen << argv[1] << endl;
+        throw(couldNotOpen + argv[1]);
     }
 
-    Size refS = Size((int) capt.get(CV_CAP_PROP_FRAME_WIDTH), (int) capt.get(CV_CAP_PROP_FRAME_HEIGHT));
-
-    Mat curr,prev;
-    capt >> prev;
-
-    // Declare similarity metric
+    Size refS = Size(
+            (int) capture.get(CV_CAP_PROP_FRAME_WIDTH),
+            (int) capture.get(CV_CAP_PROP_FRAME_HEIGHT));
+    Mat current, previous;
     framewiseSimilarityMetric *metric;
+    int metricType = atoi(argv[2]);
+    int frameCounter = 0;
 
-    // Get the code of the type that we want from arg[2] and initialize pointer
-    // 1: Histogram comparison
-    int metrictype = atoi(argv[2]);
-
-
-    switch (metrictype) {
+    switch (metricType) {
         case 1  :
             metric = new opencvHistComparer();
             break;
@@ -61,26 +60,26 @@ int main(int argc, char **argv) {
             metric = new featureComparer(featureComparer::ORB, featureComparer::BF_L2);
             break;
         default : // Optional
-           cout<<"Wrong metric code in similarity clusterer "<<metrictype<<endl;
-            throw("Wrong metric code in similarity clusterer");
+            cout << "Invalid metric index provided:" << metricType << endl;
+            return 0;
     }
 
-    for (;;) { // framewise metric computation
-        capt >> curr;
+    // Load first frame
+    capture >> previous;
 
-        if (curr.data == NULL) {
+    // Framewise metric computation
+    for (;;) {
+        capture >> current;
+        frameCounter++;
+
+        if (current.data == NULL) {
             break;
         }
 
-        double currentSimilarity = metric->computeSimilarity(&curr,&prev);
+        double currentSimilarity = metric->computeSimilarity(&current,&previous);
 
-        if (verbose) cout << "Frame: " << frameNum << "# has similarity " << currentSimilarity << endl;
+        if (verbose) cout << "Frame: " << frameCounter << "# has similarity " << currentSimilarity << endl;
 
-        //update prev
-        curr.copyTo(prev);
-        frameNum++;
+        current.copyTo(previous);
     }
-
-
-
 }
