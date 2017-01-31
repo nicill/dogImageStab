@@ -28,7 +28,9 @@ private:
     featureDetectorType detectorType;
     descriptorMatcherType matcherType;
 
+    // Possible feature detectors: http://docs.opencv.org/trunk/d0/d13/classcv_1_1Feature2D.html
     Ptr<Feature2D> featureDetector;
+    // Possible descriptor matchers: http://docs.opencv.org/trunk/db/d39/classcv_1_1DescriptorMatcher.html
     Ptr<DescriptorMatcher> descriptorMatcher;
 
     vector<vector<DMatch>> getMatches(InputArray img1, InputArray img2);

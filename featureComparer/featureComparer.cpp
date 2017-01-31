@@ -51,52 +51,39 @@ double featureComparer::computeSimilarity(Mat* im1, Mat* im2) {
     // No matches found
     if (goodMatches.size() == 0) return 0;
 
-    // TODO proposal: Compare number of matches with distance < 100 to those with bigger distances.
-    int matches0_100 = 0;
-    int matches100_ = 0;
-    double relation;
-
+    // TODO temporary override until an algorithm has been found.
+    double sumOfDistances = 0;
     for (DMatch match : goodMatches) {
-        if (match.distance < 100) matches0_100++;
-        else matches100_++;
+        sumOfDistances += match.distance;
     }
+    double avgdistance = sumOfDistances / goodMatches.size();
 
-    // Make sure the calculation works.
-    if (matches0_100 == 0 || matches100_ == 0) {
-        matches0_100++;
-        matches100_++;
-    }
-
-    relation = matches0_100 / matches100_;
-
-    // TODO debug
-    // std::cout << "matches0_100: " << matches0_100 <<", matches100_: " << matches100_ << ", relation: " << relation << std::endl;
-    int maxVal = 2000;
-
-    if (relation > maxVal) return 1;
-    // relation is now between 0 and 2000
-    else return relation / maxVal;
+    std::cout << "Average distance: " << avgdistance <<" (NO SIMILARITY CALCULATION DONE!)" << std::endl;
+    return 1;
 }
 
-// Implementation is based on: http://stackoverflow.com/a/27533437
-vector<vector<DMatch>> featureComparer::getMatches(
-        InputArray img1, InputArray img2) {
-    // Detect keypoints
+/**
+ * Uses the class featureDetector and descriptorMatcher to compute matches between the two given images.
+ * @param img1 The first image.
+ * @param img2 The second image.
+ * @return Two matches for each point.
+ */
+vector<vector<DMatch>> featureComparer::getMatches(InputArray img1, InputArray img2) {
     vector<KeyPoint> keypoints_1, keypoints_2;
+    Mat descriptors_1, descriptors_2;
+    vector<vector<DMatch>> matchess;
+
+    // Detect keypoints and compute descriptors (feature vectors)
     this->featureDetector->detect(img1, keypoints_1);
     this->featureDetector->detect(img2, keypoints_2);
 
-    // Calculate descriptors (feature vectors)
-    Mat descriptors_1, descriptors_2;
     this->featureDetector->compute(img1, keypoints_1, descriptors_1);
     this->featureDetector->compute(img2, keypoints_2, descriptors_2);
 
     // Match descriptor vectors
-    vector<vector<DMatch>> matchess;
-
     this->descriptorMatcher->knnMatch(
-            (InputArray)descriptors_1,
-            (InputArray)descriptors_2,
+            descriptors_1,
+            descriptors_2,
             matchess,
             2);
 
