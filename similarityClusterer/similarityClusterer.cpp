@@ -5,7 +5,7 @@
 #include <opencv2/opencv.hpp>
 #include "framewiseSimilarityMetric.h"
 #include "opencvHistComparer.h"
-#include "featureComparer/featureComparer.h"
+#include "featureComparer.h"
 
 using namespace std;
 using namespace cv;

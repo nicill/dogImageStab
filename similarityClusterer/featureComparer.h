@@ -5,7 +5,7 @@
 #ifndef FEATURECOMPARER_FEATURECOMPARER_H_
 #define FEATURECOMPARER_FEATURECOMPARER_H_
 
-#include "../framewiseSimilarityMetric.h"
+#include "framewiseSimilarityMetric.h"
 #include "opencv2/xfeatures2d.hpp"
 #include <opencv2/opencv.hpp>
 
