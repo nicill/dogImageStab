@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
     bool verbose = false;
 
     // Only valid case of one argument being given.
-    if (argc == 1 && argv[0] == "--help") {
+    if (argc == 2 && string(argv[1]) == "--help") {
         cout << "Usage:" << endl
              << "./computeMeasures [video] [metricIndex]" << endl
              << endl
@@ -23,11 +23,11 @@ int main(int argc, char **argv) {
         return 0;
     }
     // Only valid case of three arguments being given.
-    else if (argc == 3 && argv[0] == "-v") {
+    else if (argc == 4 && string(argv[3]) == "-v") {
         verbose = true;
         cout << "Verbose logging activated." << endl;
     }
-    else if (argc != 2) {
+    else if (argc != 3) {
         cout << "./computeMeasures [video] [metricIndex] [flags]" << endl;
         return 0;
     }
@@ -45,22 +45,22 @@ int main(int argc, char **argv) {
             (int) capture.get(CV_CAP_PROP_FRAME_WIDTH),
             (int) capture.get(CV_CAP_PROP_FRAME_HEIGHT));
     Mat current, previous;
-    framewiseSimilarityMetric *metric;
+    framewiseSimilarityMetric *comparer;
     int metricType = atoi(argv[2]);
     int frameCounter = 0;
 
     switch (metricType) {
         case 1  :
-            metric = new opencvHistComparer();
+            comparer = new opencvHistComparer();
             break;
         case 2 :
-            metric = new featureComparer(featureComparer::SIFT, featureComparer::BF_L2);
+            comparer = new featureComparer(featureComparer::SIFT, featureComparer::BF_L2);
             break;
         case 3 :
-            metric = new featureComparer(featureComparer::SURF, featureComparer::BF_L2);
+            comparer = new featureComparer(featureComparer::SURF, featureComparer::BF_L2);
             break;
         case 4 :
-            metric = new featureComparer(featureComparer::ORB, featureComparer::BF_L2);
+            comparer = new featureComparer(featureComparer::ORB, featureComparer::BF_L2);
             break;
         default : // Optional
             cout << "Invalid metric index provided: " << metricType << endl;
@@ -79,10 +79,13 @@ int main(int argc, char **argv) {
             break;
         }
 
-        double currentSimilarity = metric->computeSimilarity(&previous, &current);
+        double currentSimilarity = comparer->computeSimilarity(&previous, &current);
 
         if (verbose) cout << "Frame: #" << frameCounter << " has similarity " << currentSimilarity << endl;
 
         current.copyTo(previous);
     }
+
+    delete comparer;
+    return 0;
 }
