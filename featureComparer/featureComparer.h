@@ -23,6 +23,7 @@ public:
     featureComparer(
             featureDetectorType givenDetectorType = SIFT,
             descriptorMatcherType givenMatcherType = BF_L2);
+    ~featureComparer();
 
 private:
     featureDetectorType detectorType;
@@ -36,6 +37,7 @@ private:
     int processedComparisons;
 
     vector<vector<DMatch>> getMatches(Mat* img1, Mat* img2);
+    bool hasGoodMatch(vector<DMatch>);
 };
 
 #endif  // FEATURECOMPARER_FEATURECOMPARER_H_
