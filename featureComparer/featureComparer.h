@@ -33,8 +33,9 @@ private:
     // Possible descriptor matchers: http://docs.opencv.org/trunk/db/d39/classcv_1_1DescriptorMatcher.html
     Ptr<DescriptorMatcher> descriptorMatcher;
 
+    int processedComparisons;
+
     vector<vector<DMatch>> getMatches(Mat* img1, Mat* img2);
 };
-
 
 #endif  // FEATURECOMPARER_FEATURECOMPARER_H_
