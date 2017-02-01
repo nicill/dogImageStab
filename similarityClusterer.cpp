@@ -11,25 +11,28 @@ using namespace std;
 using namespace cv;
 
 int main(int argc, char **argv) {
+    bool verbose = false;
+
+    // Only valid case of one argument being given.
     if (argc == 1 && argv[0] == "--help") {
         cout << "Usage:" << endl
              << "./computeMeasures [video] [metricIndex]" << endl
              << endl
              << "Arguments:" << endl
-             << "-v / --verbose: Enable verbose logging." << endl;
+             << "-v: Enable verbose logging." << endl;
         return 0;
     }
-    else if (argc < 2) {
-        cout << "./computeMeasures [video] [metricIndex]" << endl;
+    // Only valid case of three arguments being given.
+    else if (argc == 3 && argv[0] == "-v") {
+        verbose = true;
+        cout << "Verbose logging activated." << endl;
+    }
+    else if (argc != 2) {
+        cout << "./computeMeasures [video] [metricIndex] [flags]" << endl;
         return 0;
     }
 
-    // TODO read argument
-    bool verbose = false;
-
-    // make a function that returns a vector, with, for every time a label depending on the threshold of similarity
-
-    // Open capture
+    // Open the video capture.
     VideoCapture capture(argv[1]);
 
     if (!capture.isOpened()) {
