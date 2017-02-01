@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
     }
 
     // TODO read argument
-    bool verbose=true;
+    bool verbose = false;
 
     // make a function that returns a vector, with, for every time a label depending on the threshold of similarity
 
@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
     VideoCapture capture(argv[1]);
 
     if (!capture.isOpened()) {
-        const string couldNotOpen = "similarityclusterer::main - Could not open video ";
+        const string couldNotOpen = "similarityClusterer::main - Could not open video ";
         cout << couldNotOpen << argv[1] << endl;
         throw(couldNotOpen + argv[1]);
     }
@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
             metric = new featureComparer(featureComparer::ORB, featureComparer::BF_L2);
             break;
         default : // Optional
-            cout << "Invalid metric index provided:" << metricType << endl;
+            cout << "Invalid metric index provided: " << metricType << endl;
             return 0;
     }
 
@@ -76,9 +76,9 @@ int main(int argc, char **argv) {
             break;
         }
 
-        double currentSimilarity = metric->computeSimilarity(&current,&previous);
+        double currentSimilarity = metric->computeSimilarity(&current, &previous);
 
-        if (verbose) cout << "Frame: " << frameCounter << "# has similarity " << currentSimilarity << endl;
+        if (verbose) cout << "Frame: #" << frameCounter << " has similarity " << currentSimilarity << endl;
 
         current.copyTo(previous);
     }
