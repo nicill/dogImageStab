@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
             break;
         }
 
-        double currentSimilarity = metric->computeSimilarity(&current, &previous);
+        double currentSimilarity = metric->computeSimilarity(&previous, &current);
 
         if (verbose) cout << "Frame: #" << frameCounter << " has similarity " << currentSimilarity << endl;
 

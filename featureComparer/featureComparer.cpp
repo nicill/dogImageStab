@@ -48,7 +48,7 @@ double featureComparer::computeSimilarity(Mat* im1, Mat* im2) {
     vector<vector<DMatch>> matchess = this->getMatches(im1, im2);
 
     // Implmentation assumes only two matches being selected.
-    assert(matchess[0].size() == 2);
+    if (matchess.size() != 0) assert(matchess[0].size() == 2);
 
     // Filter matches based on metric proposed by Lowe (2004), p. 104.
     // Alternatively use crosscheck? http://docs.opencv.org/3.0-beta/doc/py_tutorials/py_feature2d/py_matcher/py_matcher.html
@@ -105,6 +105,15 @@ vector<vector<DMatch>> featureComparer::getMatches(Mat* img1, Mat* img2) {
             descriptors_2,
             matchess,
             2);
+
+    // TODO seems shady that we need to check this
+    bool matchessInitialised = 1 < matchess.size();
+    bool matchess_0_Initialised = (matchessInitialised && 1 < matchess[0].size());
+
+    if (!matchessInitialised || !matchess_0_Initialised) {
+        vector<vector<DMatch>> *temp = new vector<vector<DMatch>>();
+        matchess = *temp;
+    }
 
     return matchess;
 }
