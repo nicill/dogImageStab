@@ -4,10 +4,6 @@
 
 #include "featureComparer.h"
 
-// TODO debug variables
-//                #    avg     min     max
-vector<std::tuple<int, double, double, double>> distancesPerFrame;
-
 /**
  * Constructor.
  * @param givenDetectorType Type of detector.
@@ -40,6 +36,12 @@ featureComparer::featureComparer(
     }
 }
 
+/**
+ * Interface function. Compute similarity between two given frames.
+ * @param im1 Frame #1
+ * @param im2 Subsequent frame #2
+ * @return Similarity score [0,1]
+ */
 double featureComparer::computeSimilarity(Mat* im1, Mat* im2) {
     this->processedComparisons++;
 
@@ -49,6 +51,7 @@ double featureComparer::computeSimilarity(Mat* im1, Mat* im2) {
     for (vector<DMatch> matchesAtKeypoint : matchesOfAllKeypoints) {
         // Match list might not contain any matches
         if (matchesAtKeypoint.size() == 0) {
+            message("Skipping keypoint with 0 matches.");
             continue;
         }
 
@@ -58,34 +61,25 @@ double featureComparer::computeSimilarity(Mat* im1, Mat* im2) {
         }
     }
 
-    // No matches found
-    if (goodMatches.size() == 0) return 0;
+    message("Comparison #" + std::to_string(this->processedComparisons) + ": "
+            + std::to_string(matchesOfAllKeypoints.size()) + " keypoints, "
+            + std::to_string(goodMatches.size()) + " good matches");
 
-    // TODO temporary override until an algorithm has been found.
-    double sumOfDistances = 0;
-    double average = 0;
-    double minimum = goodMatches[0].distance;
-    double maximum = goodMatches[0].distance;
+    if (matchesOfAllKeypoints.size() == 0) return 0;
+    else return (double)goodMatches.size() / matchesOfAllKeypoints.size();
+}
 
-    for (DMatch match : goodMatches) {
-        sumOfDistances += match.distance;
-
-        if (match.distance < minimum) minimum = match.distance;
-        if (match.distance > maximum) maximum = match.distance;
-    }
-    average = sumOfDistances / goodMatches.size();
-
-    //                                     #    avg     min     max
-    distancesPerFrame.push_back(std::tuple<int, double, double, double>(
-            this->processedComparisons, average, minimum, maximum));
-
-    return (double)goodMatches.size() / matchesOfAllKeypoints.size();
+/**
+ * Interface function. Activates output.
+ */
+void featureComparer::activateVerbosity() {
+    this->verbose = true;
 }
 
 /**
  * Computes matches between the two given images.
- * @param img1 The first image.
- * @param img2 The second image.
+ * @param img1 The query image.
+ * @param img2 The training image.
  * @return A list of the best two matches for each determined keypoint.
  * Elements might contain no matches!
  */
@@ -105,13 +99,18 @@ vector<vector<DMatch>> featureComparer::getMatches(Mat* img1, Mat* img2) {
             matchesOfAllKeypoints,
             2);
 
+    if (matchesOfAllKeypoints.size() == 0) {
+        message("No keypoints found!");
+    }
+
     return matchesOfAllKeypoints;
 }
 
 /**
  * Checks the given list of matches if the best one can be considered "good".
  * Currently only works with SIFT!
- * @param possibleMatches All possible matches for a keypoint. Must be of size 2!
+ * @param possibleMatches All possible matches for a keypoint.
+ * Must be of size 2!
  */
 bool featureComparer::hasGoodMatch(vector<DMatch> possibleMatches) {
     // Filter matches based on metric proposed by Lowe (2004), p. 104.
@@ -123,31 +122,10 @@ bool featureComparer::hasGoodMatch(vector<DMatch> possibleMatches) {
     else return possibleMatches[0].distance < 0.8 * possibleMatches[1].distance;
 }
 
-/**
- * Destructor. Used for debugging purposes.
- */
-featureComparer::~featureComparer() {
-    if (1 < distancesPerFrame.size()) return;
-
-    double sumOfAverages = 0;
-    double globalAverage = std::get<1>(distancesPerFrame[0]);
-    double globalMinimum = std::get<2>(distancesPerFrame[0]);
-    double globalMaximum = std::get<3>(distancesPerFrame[0]);
-
-    // Compute total maximum, minimum and average
-    //              #    avg     min     max
-    for (std::tuple<int, double, double, double> entry : distancesPerFrame) {
-        sumOfAverages += std::get<1>(entry);
-        if (std::get<2>(entry) < globalMinimum) {}
-        if (std::get<3>(entry) > globalMaximum) {}
-
-        std::cout << std::get<0>(entry) << " | " << "AVG: " << std::get<1>(entry)
-                  << ", MIN: " << std::get<2>(entry) << ", MAX: " << std::get<3>(entry)
-                  << std::endl;
+void featureComparer::message(string text) {
+    if (!this->verbose) {
+        return;
     }
-    globalAverage = sumOfAverages / distancesPerFrame.size();
 
-    std::cout << std::endl << std::endl << "GLOBAL" << std::endl << "----------" << std::endl
-              << "AVG: " << globalAverage << ", MIN: " << globalMinimum
-              << ", MAX: " << globalMaximum << std::endl;
+    std::cout << "[featureComparer] " << text << std::endl;
 }

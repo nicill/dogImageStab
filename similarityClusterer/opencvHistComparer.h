@@ -21,6 +21,7 @@ class opencvHistComparer: public framewiseSimilarityMetric {
 
 public:
     double computeSimilarity(Mat* im1, Mat* im2);
+    void activateVerbosity();
     opencvHistComparer(int i=2);
 
 private:

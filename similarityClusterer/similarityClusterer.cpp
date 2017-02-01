@@ -61,6 +61,8 @@ int main(int argc, char **argv) {
             return 0;
     }
 
+    if (verbose) comparer->activateVerbosity();
+
     // Load first frame
     capture >> previous;
 
@@ -80,6 +82,5 @@ int main(int argc, char **argv) {
         current.copyTo(previous);
     }
 
-    delete comparer;
     return 0;
 }

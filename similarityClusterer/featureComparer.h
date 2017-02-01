@@ -9,6 +9,7 @@
 #include "opencv2/xfeatures2d.hpp"
 #include <opencv2/opencv.hpp>
 
+using std::string;
 using std::vector;
 using cv::DescriptorMatcher;
 using cv::DMatch;
@@ -19,11 +20,11 @@ public:
     enum descriptorMatcherType { BF_L2 };  // FLANN?
 
     double computeSimilarity(Mat* im1, Mat* im2);
+    void activateVerbosity();
 
     featureComparer(
             featureDetectorType givenDetectorType = SIFT,
             descriptorMatcherType givenMatcherType = BF_L2);
-    ~featureComparer();
 
 private:
     featureDetectorType detectorType;
@@ -35,9 +36,11 @@ private:
     Ptr<DescriptorMatcher> descriptorMatcher;
 
     int processedComparisons;
+    bool verbose = false;
 
     vector<vector<DMatch>> getMatches(Mat* img1, Mat* img2);
-    bool hasGoodMatch(vector<DMatch>);
+    bool hasGoodMatch(vector<DMatch> possibleMatches);
+    void message(string text);
 };
 
 #endif  // FEATURECOMPARER_FEATURECOMPARER_H_

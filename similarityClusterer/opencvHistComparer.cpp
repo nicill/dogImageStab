@@ -47,3 +47,8 @@ double opencvHistComparer::computeSimilarity(Mat* im1, Mat* im2) {
     return histComparison;
 }
 
+// TODO implement
+void opencvHistComparer::activateVerbosity() {
+    return;
+}
+

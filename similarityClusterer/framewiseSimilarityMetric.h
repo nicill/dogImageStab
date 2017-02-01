@@ -12,7 +12,7 @@ class framewiseSimilarityMetric {
 public:
     // pure virtual function
     virtual double computeSimilarity(Mat* im1, Mat* im2 ) = 0;
-
+    virtual void activateVerbosity() = 0;
 };
 
 
