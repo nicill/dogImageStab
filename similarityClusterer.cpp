@@ -56,12 +56,6 @@ int main(int argc, char **argv) {
         case 2 :
             comparer = new featureComparer(featureComparer::SIFT, featureComparer::BF_L2);
             break;
-        case 3 :
-            comparer = new featureComparer(featureComparer::SURF, featureComparer::BF_L2);
-            break;
-        case 4 :
-            comparer = new featureComparer(featureComparer::ORB, featureComparer::BF_L2);
-            break;
         default : // Optional
             cout << "Invalid metric index provided: " << metricType << endl;
             return 0;

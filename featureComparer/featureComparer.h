@@ -15,7 +15,7 @@ using cv::DMatch;
 
 class featureComparer : public framewiseSimilarityMetric {
 public:
-    enum featureDetectorType { SIFT, SURF, ORB };
+    enum featureDetectorType { SIFT }; // SURF? ORB?
     enum descriptorMatcherType { BF_L2 };  // FLANN?
 
     double computeSimilarity(Mat* im1, Mat* im2);

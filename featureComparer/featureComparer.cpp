@@ -26,12 +26,6 @@ featureComparer::featureComparer(
         case featureComparer::SIFT:
             this->featureDetector = xfeatures2d::SIFT::create();
             break;
-        case featureComparer::SURF:
-            this->featureDetector = xfeatures2d::SURF::create();
-            break;
-        case featureComparer::ORB:
-            this->featureDetector = ORB::create();
-            break;
         default:
             throw("This descriptor hasn't been implemented yet.");
     }
