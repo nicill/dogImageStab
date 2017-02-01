@@ -61,10 +61,6 @@ double featureComparer::computeSimilarity(Mat* im1, Mat* im2) {
         }
     }
 
-    message("Comparison #" + std::to_string(this->processedComparisons) + ": "
-            + std::to_string(matchesOfAllKeypoints.size()) + " keypoints, "
-            + std::to_string(goodMatches.size()) + " good matches");
-
     if (matchesOfAllKeypoints.size() == 0) return 0;
     else return (double)goodMatches.size() / matchesOfAllKeypoints.size();
 }

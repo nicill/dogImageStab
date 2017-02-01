@@ -47,7 +47,6 @@ int main(int argc, char **argv) {
     Mat current, previous;
     framewiseSimilarityMetric *comparer;
     int metricType = atoi(argv[2]);
-    int frameCounter = 0;
 
     switch (metricType) {
         case 1  :
@@ -67,9 +66,9 @@ int main(int argc, char **argv) {
     capture >> previous;
 
     // Framewise metric computation
+    int frameCounter = 2;
     for (;;) {
         capture >> current;
-        frameCounter++;
 
         if (current.data == NULL) {
             break;
@@ -77,9 +76,14 @@ int main(int argc, char **argv) {
 
         double currentSimilarity = comparer->computeSimilarity(&previous, &current);
 
-        if (verbose) cout << "Frame: #" << frameCounter << " has similarity " << currentSimilarity << endl;
+        if (verbose) {
+            cout << "Frame #" << frameCounter
+                 << " has similarity " << currentSimilarity
+                 << " to the last frame" << endl;
+        }
 
         current.copyTo(previous);
+        frameCounter++;
     }
 
     return 0;
