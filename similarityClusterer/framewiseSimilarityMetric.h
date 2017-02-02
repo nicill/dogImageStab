@@ -30,7 +30,7 @@ public:
 
 
 // 2) SIFT
-// http://aishack.in/tutorials/sift-scale-invariant-feature-transform-introduction/, https://github.com/aishack/
+// http://aishack.in/tutorials/sift-scale-invariant-feature-transform-introduction/, code at: https://github.com/aishack/
 
 // 3 SUrf with code:
 // http://docs.opencv.org/2.4/doc/tutorials/features2d/feature_flann_matcher/feature_flann_matcher.html

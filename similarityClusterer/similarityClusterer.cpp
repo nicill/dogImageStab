@@ -5,6 +5,7 @@
 #include <opencv2/opencv.hpp>
 #include "framewiseSimilarityMetric.h"
 #include "opencvHistComparer.h"
+#include "opencvImageMetric.h"
 #include "featureComparer.h"
 
 using namespace std;
@@ -43,13 +44,15 @@ int main(int argc, char **argv) {
              << "-l: Computer readable output." << endl;
         return 0;
     }
-    // Only valid cases of three arguments being given.
     else if (argc == 4 && string(argv[3]) == "-v") {
         verbose = true;
         cout << "Verbose output activated." << endl;
     }
     else if (argc == 4 && string(argv[3]) == "-l") {
         computerReadable = true;
+    }
+    else if (argc == 4 && ((atoi(argv[2]) == 1) || (atoi(argv[2]) == 3))) {
+        // Valid arguments; Better solution necessary
     }
     else if (argc != 3) {
         cout << "./computeMeasures [video] [metricIndex] [flags]" << endl;
@@ -65,19 +68,31 @@ int main(int argc, char **argv) {
         throw(couldNotOpen + argv[1]);
     }
 
-    Size refS = Size(
-            (int) capture.get(CV_CAP_PROP_FRAME_WIDTH),
-            (int) capture.get(CV_CAP_PROP_FRAME_HEIGHT));
     Mat current, previous;
     framewiseSimilarityMetric *comparer;
     int metricType = atoi(argv[2]);
 
     switch (metricType) {
         case 1  :
-            comparer = new opencvHistComparer();
+            comparer = new opencvHistComparer(atoi(argv[3]));
+            if(verbose)
+            {
+                cout << "Computing histogram measures with value " << argv[3] << endl;
+                //http://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html?highlight=comparehist#comparehist
+                cout << "Options - 0: Correlation 1: Chi-square 2: Intersection 3: Bhattacharyya" << endl;
+            }
             break;
         case 2 :
             comparer = new featureComparer(featureComparer::SIFT, featureComparer::BF_L2);
+            break;
+        case 3:
+            comparer = new opencvImageMetric(atoi(argv[3]));
+            if(verbose)
+            {
+                cout << "Computing image metrics with value "<<argv[3] << endl;
+                //http://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html?highlight=comparehist#comparehist
+                cout<<"Options 0: PSNR 1: SSIM "<<endl;
+            }
             break;
         default : // Optional
             cout << "Invalid metric index provided: " << metricType << endl;
@@ -134,5 +149,6 @@ int main(int argc, char **argv) {
         cout << info.frameNum << endl;
     }
 
+    delete comparer;
     return 0;
 }

@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 3.3)
 project(dogImageStabilization)
 find_package( OpenCV REQUIRED )
 
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ")
 
 #set(SOURCE_FILES main.cpp videostabExample.cpp)
 add_executable(computeMeasures computeMeasures.cpp videoStabilizationQualityMeasures.h videoStabilizationQualityMeasures.cpp)
@@ -27,7 +26,7 @@ target_link_libraries( showTwoTogether ${OpenCV_LIBS} )
 add_executable(brno brno.cpp Stabilizer.h StabilizerGCBPM.cpp StabilizerGCBPM.h Exceptions.h Parameters.cpp Parameters.h xgetopt.cpp xgetopt.h StabilizerSVD.cpp StabilizerSVD.h)
 target_link_libraries( brno ${OpenCV_LIBS} )
 
-add_executable(similarityClusterer similarityClusterer/similarityClusterer.cpp similarityClusterer/framewiseSimilarityMetric.h similarityClusterer/opencvHistComparer.cpp similarityClusterer/opencvHistComparer.h similarityClusterer/featureComparer.cpp similarityClusterer/featureComparer.h)
+add_executable(similarityClusterer similarityClusterer/similarityClusterer.cpp similarityClusterer/framewiseSimilarityMetric.h similarityClusterer/opencvHistComparer.cpp similarityClusterer/opencvHistComparer.h similarityClusterer/opencvImageMetric.cpp similarityClusterer/opencvImageMetric.h similarityClusterer/featureComparer.cpp similarityClusterer/featureComparer.h similarityClusterer/opencvImageMetric.cpp similarityClusterer/opencvImageMetric.h )
 target_link_libraries( similarityClusterer ${OpenCV_LIBS} )
 
 add_executable(similarityTEST similarityTEST.cpp similarityTEST.h)
