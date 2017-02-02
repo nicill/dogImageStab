@@ -15,16 +15,19 @@ struct FrameInfo
 {
     Mat frame;
     double frameNum;
+    double msec;
     double similarityToPrevious;
     double averageSimilarity;
 
     FrameInfo() {}
     FrameInfo(Mat _frame,
               double _frameNum,
+              double _msec,
               double _similarityToPrevious = -1,
               double _averageSimilarity = -1) {
         _frame.copyTo(this->frame);
         this->frameNum = _frameNum;
+        this->msec = _msec;
         this->similarityToPrevious = _similarityToPrevious;
         this->averageSimilarity = _averageSimilarity;
     }
@@ -101,9 +104,6 @@ int main(int argc, char **argv) {
     }
 
     if (verbose) comparer->activateVerbosity();
-    else if (computerReadable) {
-        cout << "Frame no.,Milliseconds,Similarity to last frame" << endl;
-    }
 
     // Framewise metric computation
     int frameCounter = 1;
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
 
     // Load first frame
     capture >> previous;
-    frameInfos.push_back(FrameInfo(previous, 0));
+    frameInfos.push_back(FrameInfo(previous, 1, 0));
     for (;;) {
         capture >> current;
 
@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
         frameCounter++;
 
         double currentSimilarity = comparer->computeSimilarity(&previous, &current);
-        frameInfos.push_back(FrameInfo(current, frameCounter, currentSimilarity));
+        frameInfos.push_back(FrameInfo(current, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity));
 
         current.copyTo(previous);
 
@@ -133,12 +133,10 @@ int main(int argc, char **argv) {
                  << " at " << capture.get(CAP_PROP_POS_MSEC) << " msec"
                  << " compared to the last frame" << endl;
         }
-        else if (computerReadable) {
-            string separator = ",";
-            cout << frameCounter << separator
-                 << capture.get(CAP_PROP_POS_MSEC) << separator
-                 << currentSimilarity << endl;
-        }
+    }
+
+    if (computerReadable) {
+        cout << "Frame no.,Milliseconds,Similarity to last frame,Average similarity in region" << endl;
     }
 
     // Clustering - get average similarity for region
@@ -156,6 +154,14 @@ int main(int argc, char **argv) {
             summedUpSimilarities += frameInfos[j].similarityToPrevious;
         }
         frameInfos[i].averageSimilarity = summedUpSimilarities / (1 + end - start);
+
+        if (computerReadable) {
+            string separator = ",";
+            cout << frameInfos[i].frameNum << separator
+                 << frameInfos[i].msec << separator
+                 << frameInfos[i].similarityToPrevious << separator
+                 << frameInfos[i].averageSimilarity << endl;
+        }
     }
 
     delete comparer;
