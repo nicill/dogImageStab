@@ -53,6 +53,7 @@ int main(int argc, char **argv) {
     }
     else if (argc == 4 && ((atoi(argv[2]) == 1) || (atoi(argv[2]) == 3))) {
         // Valid arguments; Better solution necessary
+        // TODO Currently, as far as I understand, the combination "verbose" and this case can never happen.
     }
     else if (argc != 3) {
         cout << "./computeMeasures [video] [metricIndex] [flags]" << endl;

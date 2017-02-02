@@ -111,3 +111,9 @@ double opencvImageMetric::computeSimilarity(Mat* im1, Mat* im2) {
        throw "WRONG METRIC TYPE AT double opencvImageMetric::computeSimilarity(Mat* im1, Mat* im2) ";
    }
 }
+
+// TODO implement!
+void opencvImageMetric::activateVerbosity() {
+    std::cerr << "Verbosity not yet implemented in opencvImageMetric.cpp" << std::endl;
+    return;
+}

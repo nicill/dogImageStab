@@ -14,14 +14,12 @@
 class opencvImageMetric: public framewiseSimilarityMetric {
 
 public:
-
-double computeSimilarity(Mat* im1, Mat* im2);
-opencvImageMetric(int i=0);
+    double computeSimilarity(Mat* im1, Mat* im2);
+    void activateVerbosity();
+    opencvImageMetric(int i=0);
 
 private:
-int comparisonType;
-
-
+    int comparisonType;
 };
 
 
