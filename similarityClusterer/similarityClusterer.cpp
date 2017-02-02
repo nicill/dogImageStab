@@ -10,8 +10,24 @@
 using namespace std;
 using namespace cv;
 
+struct FrameInfo
+{
+    FrameInfo(Mat _frame,
+              double _similarityToPrevious = -1,
+              double _averageSimilarity = -1) {
+        _frame.copyTo(this->frame);
+        this->similarityToPrevious = _similarityToPrevious;
+        this->averageSimilarity = _averageSimilarity;
+    }
+
+    double similarityToPrevious;
+    double averageSimilarity;
+    Mat frame;
+};
+
 int main(int argc, char **argv) {
     bool verbose = false;
+    bool computerReadable = false;
 
     // Only valid case of one argument being given.
     if (argc == 2 && string(argv[1]) == "--help") {
@@ -19,13 +35,17 @@ int main(int argc, char **argv) {
              << "./computeMeasures [video] [metricIndex]" << endl
              << endl
              << "Arguments:" << endl
-             << "-v: Enable verbose logging." << endl;
+             << "-v: Enable verbose output." << endl
+             << "-l: Computer readable output." << endl;
         return 0;
     }
-    // Only valid case of three arguments being given.
+    // Only valid cases of three arguments being given.
     else if (argc == 4 && string(argv[3]) == "-v") {
         verbose = true;
-        cout << "Verbose logging activated." << endl;
+        cout << "Verbose output activated." << endl;
+    }
+    else if (argc == 4 && string(argv[3]) == "-l") {
+        computerReadable = true;
     }
     else if (argc != 3) {
         cout << "./computeMeasures [video] [metricIndex] [flags]" << endl;
@@ -61,12 +81,18 @@ int main(int argc, char **argv) {
     }
 
     if (verbose) comparer->activateVerbosity();
-
-    // Load first frame
-    capture >> previous;
+    else if (computerReadable) {
+        cout << "Frame no.,Milliseconds,Similarity to last frame" << endl;
+    }
 
     // Framewise metric computation
     int frameCounter = 2;
+    double totalFrames = capture.get(CAP_PROP_FRAME_COUNT);
+    vector<FrameInfo> frameInfos = vector<FrameInfo>(totalFrames);
+
+    // Load first frame
+    capture >> previous;
+    frameInfos[0] = FrameInfo(previous);
     for (;;) {
         capture >> current;
 
@@ -77,10 +103,20 @@ int main(int argc, char **argv) {
         double currentSimilarity = comparer->computeSimilarity(&previous, &current);
 
         if (verbose) {
-            cout << "Frame #" << frameCounter
-                 << " has similarity " << currentSimilarity
-                 << " to the last frame" << endl;
+            cout << "Similarity " << currentSimilarity
+                 << " for frame #" << frameCounter << "/" << totalFrames
+                 << " at " << capture.get(CAP_PROP_POS_MSEC) << " msec"
+                 << " compared to the last frame" << endl;
         }
+        else if (computerReadable) {
+            string separator = ",";
+            cout << frameCounter << separator
+                 << capture.get(CAP_PROP_POS_MSEC) << separator
+                 << currentSimilarity << endl;
+        }
+
+        // frameCounter is 1-based
+        frameInfos[frameCounter-1] = FrameInfo(current, currentSimilarity);
 
         current.copyTo(previous);
         frameCounter++;
