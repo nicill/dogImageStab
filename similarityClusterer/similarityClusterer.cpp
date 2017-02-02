@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
     }
 
     // Framewise metric computation
-    int frameCounter = 2;
+    int frameCounter = 1;
     double totalFrames = capture.get(CAP_PROP_FRAME_COUNT);
     vector<FrameInfo> frameInfos;
 
@@ -120,7 +120,12 @@ int main(int argc, char **argv) {
             break;
         }
 
+        frameCounter++;
+
         double currentSimilarity = comparer->computeSimilarity(&previous, &current);
+        frameInfos.push_back(FrameInfo(current, frameCounter, currentSimilarity));
+
+        current.copyTo(previous);
 
         if (verbose) {
             cout << "Similarity " << currentSimilarity
@@ -134,12 +139,6 @@ int main(int argc, char **argv) {
                  << capture.get(CAP_PROP_POS_MSEC) << separator
                  << currentSimilarity << endl;
         }
-
-        // frameCounter is 1-based
-        frameInfos.push_back(FrameInfo(current, frameCounter, currentSimilarity));
-
-        current.copyTo(previous);
-        frameCounter++;
     }
 
     // Clustering - get average similarity for region
