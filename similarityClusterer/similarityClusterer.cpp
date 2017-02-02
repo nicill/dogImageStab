@@ -114,9 +114,6 @@ int main(int argc, char **argv) {
     capture >> previous;
     frameInfos.push_back(FrameInfo(previous, 0));
     for (;;) {
-        // TODO temp
-        if (frameCounter > 100) break;
-
         capture >> current;
 
         if (current.data == NULL) {
