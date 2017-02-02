@@ -12,17 +12,21 @@ using namespace cv;
 
 struct FrameInfo
 {
+    Mat frame;
+    double frameNum;
+    double similarityToPrevious;
+    double averageSimilarity;
+
+    FrameInfo() {}
     FrameInfo(Mat _frame,
+              double _frameNum,
               double _similarityToPrevious = -1,
               double _averageSimilarity = -1) {
         _frame.copyTo(this->frame);
+        this->frameNum = _frameNum;
         this->similarityToPrevious = _similarityToPrevious;
         this->averageSimilarity = _averageSimilarity;
     }
-
-    double similarityToPrevious;
-    double averageSimilarity;
-    Mat frame;
 };
 
 int main(int argc, char **argv) {
@@ -88,12 +92,15 @@ int main(int argc, char **argv) {
     // Framewise metric computation
     int frameCounter = 2;
     double totalFrames = capture.get(CAP_PROP_FRAME_COUNT);
-    vector<FrameInfo> frameInfos = vector<FrameInfo>(totalFrames);
+    vector<FrameInfo> frameInfos;
 
     // Load first frame
     capture >> previous;
-    frameInfos[0] = FrameInfo(previous);
+    frameInfos.push_back(FrameInfo(previous, 0));
     for (;;) {
+        // TODO temp
+        if (frameCounter > 100) break;
+
         capture >> current;
 
         if (current.data == NULL) {
@@ -116,10 +123,15 @@ int main(int argc, char **argv) {
         }
 
         // frameCounter is 1-based
-        frameInfos[frameCounter-1] = FrameInfo(current, currentSimilarity);
+        frameInfos.push_back(FrameInfo(current, frameCounter, currentSimilarity));
 
         current.copyTo(previous);
         frameCounter++;
+    }
+
+    // Clustering
+    for (FrameInfo info : frameInfos) {
+        cout << info.frameNum << endl;
     }
 
     return 0;
