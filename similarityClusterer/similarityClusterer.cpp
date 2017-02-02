@@ -5,13 +5,14 @@
 #include <opencv2/opencv.hpp>
 #include "framewiseSimilarityMetric.h"
 #include "opencvHistComparer.h"
+#include "opencvImageMetric.h"
 #include "featureComparer.h"
 
 using namespace std;
 using namespace cv;
 
 int main(int argc, char **argv) {
-    bool verbose = false;
+    bool verbose = true;
 
     // Only valid case of one argument being given.
     if (argc == 2 && string(argv[1]) == "--help") {
@@ -22,10 +23,28 @@ int main(int argc, char **argv) {
              << "-v: Enable verbose logging." << endl;
         return 0;
     }
-    // Only valid case of three arguments being given.
+    // Only two valid cases of three arguments being given.
     else if (argc == 4 && string(argv[3]) == "-v") {
         verbose = true;
         cout << "Verbose logging activated." << endl;
+    }
+    else if (argc == 4 && ( (atoi(argv[2]) == 1)||(atoi(argv[2]) == 3)) ) {
+        if(verbose)
+        {
+           if((atoi(argv[2]) == 1))
+           {
+               cout << "Computing histogram measures with value "<<argv[3] << endl;
+            //http://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html?highlight=comparehist#comparehist
+            cout<<"Options 0: Correlation 1:Chi-square 2:intersection 3:Bhattacharyya "<<endl;
+           }
+           else if((atoi(argv[2]) == 3))
+           {
+                cout << "Computing image metrics with value "<<argv[3] << endl;
+                //http://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html?highlight=comparehist#comparehist
+                cout<<"Options 0: PSNR 1: SSIM "<<endl;
+            }
+
+        }
     }
     else if (argc != 3) {
         cout << "./computeMeasures [video] [metricIndex] [flags]" << endl;
@@ -50,10 +69,13 @@ int main(int argc, char **argv) {
 
     switch (metricType) {
         case 1  :
-            comparer = new opencvHistComparer();
+            comparer = new opencvHistComparer(atoi(argv[3]));
             break;
         case 2 :
             comparer = new featureComparer(featureComparer::SIFT, featureComparer::BF_L2);
+            break;
+        case 3:
+            comparer = new opencvImageMetric(atoi(argv[3]));
             break;
         default : // Optional
             cout << "Invalid metric index provided: " << metricType << endl;

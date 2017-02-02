@@ -343,7 +343,8 @@ double videoStabilizationQualityMeasures::ITF(string video) {
         }
 
         //update prev
-        grayImagePrev=grayImageCurr;
+        //grayImagePrev=grayImageCurr;
+        grayImageCurr.copyTo(grayImagePrev);
 
         //////////////////////////////////// MSSIM /////////////////////////////////////////////////
        /* if (psnrV < psnrTriggerValue && psnrV)
@@ -474,8 +475,8 @@ double videoStabilizationQualityMeasures::SSIM(string video) {
            // c = (char) cvWaitKey(delay);
            // if (c == 27) break;
         }
-        prev=curr;
-
+        //prev=curr;
+        curr.copyTo(prev);
     }
 
     if(verbose) cout<<" SSIM going to return "<<accumulate/frameNum<<endl;
@@ -553,8 +554,8 @@ vector<int> *videoStabilizationQualityMeasures::ITFRegularThresholder(string vid
         }
 
         //update prev
-        grayImagePrev=grayImageCurr;
-
+        //grayImagePrev=grayImageCurr;
+        grayImageCurr.copyTo(grayImagePrev);
         //////////////////////////////////// MSSIM /////////////////////////////////////////////////
         /* if (psnrV < psnrTriggerValue && psnrV)
          {
