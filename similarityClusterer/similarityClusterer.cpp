@@ -142,9 +142,21 @@ int main(int argc, char **argv) {
         frameCounter++;
     }
 
-    // Clustering
-    for (FrameInfo info : frameInfos) {
-        cout << info.frameNum << endl;
+    // Clustering - get average similarity for region
+    int maxIndex = frameInfos.size() - 1;
+    for (int i = 0; i < maxIndex; i++) {
+        // calculate the average for each frame (5 back, 5 front)
+        int start = 0;
+        int end = maxIndex;
+
+        if (i >= 5) start = i - 5;
+        if (i <= maxIndex - 5) end = i + 5;
+
+        int summedUpSimilarities = 0;
+        for (int j = start; j <= end; j++) {
+            summedUpSimilarities += frameInfos[j].similarityToPrevious;
+        }
+        frameInfos[i].averageSimilarity = summedUpSimilarities / (1 + end - start);
     }
 
     delete comparer;
