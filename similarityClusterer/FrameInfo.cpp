@@ -2,6 +2,9 @@
 // Created by tokuyama on 17/02/03.
 //
 
+#ifndef DOGIMAGESTABILIZATION_FRAMEINFO_CPP
+#define DOGIMAGESTABILIZATION_FRAMEINFO_CPP
+
 #include <opencv2/opencv.hpp>
 
 using cv::Mat;
@@ -27,3 +30,5 @@ struct FrameInfo
         this->averageSimilarity = _averageSimilarity;
     }
 };
+
+#endif // DOGIMAGESTABILIZATION_FRAMEINFO_CPP

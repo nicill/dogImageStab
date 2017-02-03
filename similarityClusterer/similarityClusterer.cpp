@@ -8,6 +8,7 @@
 #include "opencvImageMetric.h"
 #include "featureComparer.h"
 #include "qualityMeasurer.h"
+#include "FrameInfo.cpp"
 
 using namespace std;
 using namespace cv;

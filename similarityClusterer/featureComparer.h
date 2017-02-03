@@ -2,8 +2,8 @@
 // Created by tokuyama on 17/01/30.
 //
 
-#ifndef FEATURECOMPARER_FEATURECOMPARER_H_
-#define FEATURECOMPARER_FEATURECOMPARER_H_
+#ifndef DOGIMAGESTABILIZATION_FEATURECOMPARER_H
+#define DOGIMAGESTABILIZATION_FEATURECOMPARER_H
 
 #include "framewiseSimilarityMetric.h"
 #include <opencv2/opencv.hpp>
@@ -43,4 +43,4 @@ private:
     void message(string text);
 };
 
-#endif  // FEATURECOMPARER_FEATURECOMPARER_H_
+#endif  // FEATURECOMPARER_FEATURECOMPARER_H
