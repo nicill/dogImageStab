@@ -11,6 +11,10 @@
 using namespace std;
 using namespace cv;
 
+// Declarations
+struct FrameInfo;
+double getClusterAverage(vector<FrameInfo>);
+
 struct FrameInfo
 {
     Mat frame;
@@ -174,6 +178,42 @@ int main(int argc, char **argv) {
         }
     }
 
+    // Find clusters
+    vector<vector<FrameInfo>> clusters;
+    int currentCluster = 0;
+    clusters.push_back(vector<FrameInfo>());
+    clusters[currentCluster].push_back(frameInfos[0]);
+    double currentClusterAverage = frameInfos[currentCluster].averageSimilarity;
+
+    for (int i = 1; i < frameInfos.size(); i++) {
+        // If the difference is too big, we create a new cluster.
+        if (abs(currentClusterAverage - frameInfos[i].averageSimilarity) > 0.1) {
+            currentCluster++;
+            clusters.push_back(vector<FrameInfo>());
+        }
+
+        clusters[currentCluster].push_back(frameInfos[i]);
+        currentClusterAverage = getClusterAverage(clusters[currentCluster]);
+    }
+
+    // TODO temp output
+    for (vector<FrameInfo> cluster : clusters) {
+        cout << "Cluster: " << cluster[0].frameNum << " - " << cluster[cluster.size() - 1].frameNum << endl;
+    }
+
     delete comparer;
     return 0;
+}
+
+/**
+ * Takes the given FrameInfo objects and calculates the average of their average similarity value.
+ * @param clusteredInfos FrameInfo objects.
+ * @return Average of all average similarity values.
+ */
+double getClusterAverage(vector<FrameInfo> clusteredInfos) {
+    double summedUpAverages = 0;
+    for (FrameInfo frameInfo : clusteredInfos) {
+        summedUpAverages += frameInfo.averageSimilarity;
+    }
+    return summedUpAverages / clusteredInfos.size();
 }
