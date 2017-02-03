@@ -7,39 +7,18 @@
 #include "opencvHistComparer.h"
 #include "opencvImageMetric.h"
 #include "featureComparer.h"
+#include "qualityMeasurer.h"
 
 using namespace std;
 using namespace cv;
 
 // Declarations
-struct FrameInfo;
 double getClusterAverage(vector<FrameInfo>);
-
-struct FrameInfo
-{
-    Mat frame;
-    double frameNum;
-    double msec;
-    double similarityToPrevious;
-    double averageSimilarity;
-
-    FrameInfo() {}
-    FrameInfo(Mat _frame,
-              double _frameNum,
-              double _msec,
-              double _similarityToPrevious = -1,
-              double _averageSimilarity = -1) {
-        _frame.copyTo(this->frame);
-        this->frameNum = _frameNum;
-        this->msec = _msec;
-        this->similarityToPrevious = _similarityToPrevious;
-        this->averageSimilarity = _averageSimilarity;
-    }
-};
 
 int main(int argc, char **argv) {
     bool verbose = false;
     bool computerReadable = false;
+    bool qualityMode = false;
     string validUsage = "./computeMeasures [video] [metricIndex] [sub specifier] (optional [flag])";
 
     if (argc == 2 && string(argv[1]) == "--help") {
@@ -49,7 +28,8 @@ int main(int argc, char **argv) {
              << endl
              << "Arguments:" << endl
              << "-v: Enable verbose output." << endl
-             << "-l: Computer readable output." << endl;
+             << "-l: Computer readable output." << endl
+             << "-q: Print quality score." << endl;
         return 0;
     }
 
@@ -79,6 +59,17 @@ int main(int argc, char **argv) {
         else if (last_arg == "-l") {
             computerReadable = true;
         }
+        else if (last_arg == "-q") {
+            qualityMode = true;
+            cout << "Quality score will be calculated." << endl;
+        }
+    }
+
+    string pathToTagFiles = "";
+    if (qualityMode) {
+        cout << "Please input the directory which contains the tag files..." << endl;
+        cin >> pathToTagFiles;
+        // TODO verify path?
     }
 
     // Setting indices
@@ -195,6 +186,11 @@ int main(int argc, char **argv) {
                  << frameInfos[i].similarityToPrevious << separator
                  << frameInfos[i].averageSimilarity << endl;
         }
+    }
+
+    if (qualityMode) {
+        // TODO what to do with the score? Where to display?
+        qualityMeasurer::scoreQuality(pathToTagFiles, clusters);
     }
 
     delete comparer;
