@@ -11,11 +11,11 @@ using cv::Mat;
 
 struct FrameInfo
 {
-    Mat frame;
-    double frameNum;
-    double msec;
-    double similarityToPrevious;
-    double averageSimilarity;
+    Mat frame = Mat();
+    double frameNum = -1;
+    double msec = -1;
+    double similarityToPrevious = -1;
+    double averageSimilarity = -1;
 
     FrameInfo() {}
     FrameInfo(Mat _frame,

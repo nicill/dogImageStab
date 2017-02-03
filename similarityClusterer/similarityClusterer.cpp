@@ -2,13 +2,14 @@
 // Created by yago on 17/01/20.
 //
 
+#include <sys/types.h>
+#include <dirent.h>
 #include <opencv2/opencv.hpp>
 #include "framewiseSimilarityMetric.h"
 #include "opencvHistComparer.h"
 #include "opencvImageMetric.h"
 #include "featureComparer.h"
 #include "qualityMeasurer.h"
-#include "FrameInfo.cpp"
 
 using namespace std;
 using namespace cv;
@@ -70,7 +71,14 @@ int main(int argc, char **argv) {
     if (qualityMode) {
         cout << "Please input the directory which contains the tag files..." << endl;
         cin >> pathToTagFiles;
-        // TODO verify path?
+
+        DIR *tagFileDir = opendir(pathToTagFiles.c_str());
+        if (tagFileDir == nullptr || readdir(tagFileDir) == nullptr) {
+            cerr << "Could not open directory for tag files supplied: " << pathToTagFiles << endl;
+            return 1;
+        }
+
+        closedir(tagFileDir);
     }
 
     // Setting indices
@@ -124,6 +132,10 @@ int main(int argc, char **argv) {
         }
 
         frameCounter++;
+
+        // TODO temp (select section of video to compute)
+//        if (frameCounter < 990) continue; // 1371
+//        else if (frameCounter > 1440) break; // 1429
 
         double currentSimilarity = comparer->computeSimilarity(&previous, &current);
         frameInfos.push_back(FrameInfo(current, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity));
@@ -191,7 +203,8 @@ int main(int argc, char **argv) {
 
     if (qualityMode) {
         // TODO what to do with the score? Where to display?
-        qualityMeasurer::scoreQuality(pathToTagFiles, clusters);
+        double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters);
+        cout << "Achieved a quality score of " << score << " for the video " << argv[1] << endl;
     }
 
     delete comparer;

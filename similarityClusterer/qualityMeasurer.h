@@ -5,14 +5,21 @@
 #ifndef DOGIMAGESTABILIZATION_QUALITYMEASURER_H
 #define DOGIMAGESTABILIZATION_QUALITYMEASURER_H
 
+#include <sys/types.h>
+#include <dirent.h>
+#include <regex>
 #include "FrameInfo.cpp"
+#include "ClusterInfo.cpp"
 
-using std::string;
-using std::vector;
+using namespace std;
 
 class qualityMeasurer {
 public:
-    static void scoreQuality(string pathToTagFiles, vector<vector<FrameInfo>> clusters);
+    static double scoreQuality(string pathToTagFileDirectory, vector<vector<FrameInfo>> clusters);
+
+private:
+    static vector<ClusterInfo> readTagFile(string pathToTagFile);
+    static vector<string> splitLine(string inputString);
 };
 
-#endif //DOGIMAGESTABILIZATION_QUALITYMEASURER_H
+#endif // DOGIMAGESTABILIZATION_QUALITYMEASURER_H
