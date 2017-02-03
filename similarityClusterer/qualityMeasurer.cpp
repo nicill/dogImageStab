@@ -12,7 +12,7 @@
  */
 double qualityMeasurer::scoreQuality(string pathToTagFileDirectory, vector<vector<FrameInfo>> clusters) {
     // TODO implement
-    // throw("NOT IMPLEMENTED");
+    throw("NOT IMPLEMENTED");
 
     DIR *tagFileDir = opendir(pathToTagFileDirectory.c_str());
     struct dirent *fileEntity;
