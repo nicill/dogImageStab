@@ -157,9 +157,11 @@ int main(int argc, char **argv) {
         if (i >= 5) start = i - 5;
         if (i <= maxIndex - 5) end = i + 5;
 
-        int summedUpSimilarities = 0;
+        double summedUpSimilarities = 0;
         for (int j = start; j <= end; j++) {
-            summedUpSimilarities += frameInfos[j].similarityToPrevious;
+            if (frameInfos[j].similarityToPrevious != -1) {
+                summedUpSimilarities += frameInfos[j].similarityToPrevious;
+            }
         }
         frameInfos[i].averageSimilarity = summedUpSimilarities / (1 + end - start);
 
