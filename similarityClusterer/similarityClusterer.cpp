@@ -146,10 +146,6 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (computerReadable) {
-        cout << "Frame no.,Milliseconds,Similarity to last frame,Average similarity in region" << endl;
-    }
-
     // ----- Clustering -----
     // Get average similarity for region
     int maxIndex = frameInfos.size() - 1;
@@ -168,14 +164,10 @@ int main(int argc, char **argv) {
             }
         }
         frameInfos[i].averageSimilarity = summedUpSimilarities / (1 + end - start);
+    }
 
-        if (computerReadable) {
-            string separator = ",";
-            cout << frameInfos[i].frameNum << separator
-                 << frameInfos[i].msec << separator
-                 << frameInfos[i].similarityToPrevious << separator
-                 << frameInfos[i].averageSimilarity << endl;
-        }
+    if (computerReadable) {
+        cout << "Cluster,Frame no.,Milliseconds,Similarity to last frame,Average similarity in region" << endl;
     }
 
     // Find clusters
@@ -194,11 +186,15 @@ int main(int argc, char **argv) {
 
         clusters[currentCluster].push_back(frameInfos[i]);
         currentClusterAverage = getClusterAverage(clusters[currentCluster]);
-    }
 
-    // TODO temp output
-    for (vector<FrameInfo> cluster : clusters) {
-        cout << "Cluster: " << cluster[0].frameNum << " - " << cluster[cluster.size() - 1].frameNum << endl;
+        if (computerReadable) {
+            string separator = ",";
+            cout << currentCluster << separator
+                 << frameInfos[i].frameNum << separator
+                 << frameInfos[i].msec << separator
+                 << frameInfos[i].similarityToPrevious << separator
+                 << frameInfos[i].averageSimilarity << endl;
+        }
     }
 
     delete comparer;
