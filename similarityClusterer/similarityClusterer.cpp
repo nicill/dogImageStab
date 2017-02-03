@@ -36,71 +36,78 @@ struct FrameInfo
 int main(int argc, char **argv) {
     bool verbose = false;
     bool computerReadable = false;
+    string validUsage = "./computeMeasures [video] [metricIndex] [sub specifier] (optional [flag])";
 
-    // Only valid case of one argument being given.
     if (argc == 2 && string(argv[1]) == "--help") {
         cout << "Usage:" << endl
-             << "./computeMeasures [video] [metricIndex]" << endl
+             << validUsage << endl
+             << "./computeMeasures --help" << endl
              << endl
              << "Arguments:" << endl
              << "-v: Enable verbose output." << endl
              << "-l: Computer readable output." << endl;
         return 0;
     }
-    else if (argc == 4 && string(argv[3]) == "-v") {
-        verbose = true;
-        cout << "Verbose output activated." << endl;
-    }
-    else if (argc == 4 && string(argv[3]) == "-l") {
-        computerReadable = true;
-    }
-    else if (argc == 4 && ((atoi(argv[2]) == 1) || (atoi(argv[2]) == 3))) {
-        // Valid arguments; Better solution necessary
-        // TODO Currently, as far as I understand, the combination "verbose" and this case can never happen.
-    }
-    else if (argc != 3) {
-        cout << "./computeMeasures [video] [metricIndex] [flags]" << endl;
-        return 0;
+
+    // Check for flag
+    string last_arg = string(argv[argc - 1]);
+    bool hasFlag = last_arg.find("-") != string::npos;
+
+    // Valid cases: Has flag and 5 arguments, or 4 arguments.
+    if (!((hasFlag && argc == 5) || argc == 4)) {
+        cerr << "Usage: " << validUsage << endl;
+        return 1;
     }
 
-    // Open the video capture.
+    // Try opening the video
     VideoCapture capture(argv[1]);
-
     if (!capture.isOpened()) {
-        const string couldNotOpen = "similarityClusterer::main - Could not open video ";
-        cout << couldNotOpen << argv[1] << endl;
-        throw(couldNotOpen + argv[1]);
+        cerr << "Could not open the video supplied: " << argv[1] << endl;
+        return 1;
     }
+
+    // Read provided flag, if given
+    if (hasFlag) {
+        if (last_arg == "-v") {
+            verbose = true;
+            cout << "Verbose output activated." << endl;
+        }
+        else if (last_arg == "-l") {
+            computerReadable = true;
+        }
+    }
+
+    // Setting indices
+    int metricIndex = atoi(argv[2]);
+    int subSpecifier = atoi(argv[3]);
 
     Mat current, previous;
     framewiseSimilarityMetric *comparer;
-    int metricType = atoi(argv[2]);
 
-    switch (metricType) {
+    switch (metricIndex) {
         case 1  :
-            comparer = new opencvHistComparer(atoi(argv[3]));
+            comparer = new opencvHistComparer(subSpecifier);
             if(verbose)
             {
-                cout << "Computing histogram measures with value " << argv[3] << endl;
-                //http://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html?highlight=comparehist#comparehist
-                cout << "Options - 0: Correlation 1: Chi-square 2: Intersection 3: Bhattacharyya" << endl;
+                // http://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html?highlight=comparehist#comparehist
+                cout << "Computing histogram measures with value " << subSpecifier << endl;
+                cout << "Options - 0: Correlation, 1: Chi-square, 2: Intersection, 3: Bhattacharyya" << endl;
             }
             break;
         case 2 :
             comparer = new featureComparer(featureComparer::SIFT, featureComparer::BF_L2);
             break;
         case 3:
-            comparer = new opencvImageMetric(atoi(argv[3]));
+            comparer = new opencvImageMetric(subSpecifier);
             if(verbose)
             {
-                cout << "Computing image metrics with value "<<argv[3] << endl;
-                //http://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html?highlight=comparehist#comparehist
-                cout<<"Options 0: PSNR 1: SSIM "<<endl;
+                cout << "Computing image metrics with value " << subSpecifier << endl;
+                cout << "Options - 0: PSNR, 1: SSIM" << endl;
             }
             break;
         default : // Optional
-            cout << "Invalid metric index provided: " << metricType << endl;
-            return 0;
+            cerr << "Invalid metric index provided: " << metricIndex << endl;
+            return 1;
     }
 
     if (verbose) comparer->activateVerbosity();
@@ -139,7 +146,8 @@ int main(int argc, char **argv) {
         cout << "Frame no.,Milliseconds,Similarity to last frame,Average similarity in region" << endl;
     }
 
-    // Clustering - get average similarity for region
+    // ----- Clustering -----
+    // Get average similarity for region
     int maxIndex = frameInfos.size() - 1;
     for (int i = 0; i < maxIndex; i++) {
         // calculate the average for each frame (5 back, 5 front)

@@ -9,7 +9,7 @@ opencvHistComparer::opencvHistComparer(int i) { comparisonType=i;}
 double opencvHistComparer::computeSimilarity(Mat* im1, Mat* im2) {
 
     // Original code:
-    //http://docs.opencv.org/2.4/doc/tutorials/imgproc/histograms/histogram_comparison/histogram_comparison.html
+    // http://docs.opencv.org/2.4/doc/tutorials/imgproc/histograms/histogram_comparison/histogram_comparison.html
 
     Mat hsv1,hsv2;
 
