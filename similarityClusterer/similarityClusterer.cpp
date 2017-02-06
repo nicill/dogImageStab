@@ -2,7 +2,6 @@
 // Created by yago on 17/01/20.
 //
 
-#include <sys/types.h>
 #include <dirent.h>
 #include <opencv2/opencv.hpp>
 #include "framewiseSimilarityMetric.h"
@@ -69,8 +68,10 @@ int main(int argc, char **argv) {
 
     string pathToTagFiles = "";
     if (qualityMode) {
-        cout << "Please input the directory which contains the tag files..." << endl;
+        string defaultDir = "/home/tokuyama/dog/tags";
+        cout << "Please input the directory which contains the tag files (\"d\" for \"" << defaultDir << "\")..." << endl;
         cin >> pathToTagFiles;
+        if (pathToTagFiles == "d") pathToTagFiles = defaultDir;
 
         DIR *tagFileDir = opendir(pathToTagFiles.c_str());
         if (tagFileDir == nullptr || readdir(tagFileDir) == nullptr) {
@@ -152,7 +153,7 @@ int main(int argc, char **argv) {
 
     // ----- Clustering -----
     // Get average similarity for region
-    int maxIndex = frameInfos.size() - 1;
+    int maxIndex = (int) frameInfos.size() - 1;
     for (int i = 0; i < maxIndex; i++) {
         // calculate the average for each frame (5 back, 5 front)
         int start = 0;
@@ -203,7 +204,7 @@ int main(int argc, char **argv) {
 
     if (qualityMode) {
         // TODO what to do with the score? Where to display?
-        double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters);
+        double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
         cout << "Achieved a quality score of " << score << " for the video " << argv[1] << endl;
     }
 

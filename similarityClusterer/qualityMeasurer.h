@@ -15,10 +15,13 @@ using namespace std;
 
 class qualityMeasurer {
 public:
-    static double scoreQuality(string pathToTagFileDirectory, vector<vector<FrameInfo>> clusters);
+    static double scoreQuality(string pathToTagFileDirectory,
+                               vector<vector<FrameInfo>> determinedClusterFrameInfos,
+                               bool verbose = false);
 
 private:
-    static vector<ClusterInfo> readTagFile(string pathToTagFile);
+    static vector<ClusterInfo> frameInfosToClusterInfo(vector<vector<FrameInfo>> frameInfosList);
+    static vector<ClusterInfo>* readTagFile(string pathToTagFile);
     static vector<string> splitLine(string inputString);
 };
 
