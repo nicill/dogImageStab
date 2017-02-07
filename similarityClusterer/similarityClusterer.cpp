@@ -86,9 +86,7 @@ int main(int argc, char **argv) {
     int metricIndex = atoi(argv[2]);
     int subSpecifier = atoi(argv[3]);
 
-    Mat current, previous;
     framewiseSimilarityMetric *comparer;
-
     switch (metricIndex) {
         case 1  :
             comparer = new opencvHistComparer(subSpecifier);
@@ -118,6 +116,7 @@ int main(int argc, char **argv) {
     if (verbose) comparer->activateVerbosity();
 
     // Framewise metric computation
+    Mat current, previous;
     int frameCounter = 1;
     double totalFrames = capture.get(CAP_PROP_FRAME_COUNT);
     vector<FrameInfo> frameInfos;
@@ -134,10 +133,6 @@ int main(int argc, char **argv) {
 
         frameCounter++;
 
-        // TODO temp (select section of video to compute)
-//        if (frameCounter < 990) continue; // 1371
-//        else if (frameCounter > 1440) break; // 1429
-
         double currentSimilarity = comparer->computeSimilarity(&previous, &current);
         frameInfos.push_back(FrameInfo(current, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity));
 
@@ -151,9 +146,9 @@ int main(int argc, char **argv) {
         }
     }
 
-    delete &current;
-    delete &previous;
-    delete &capture;
+    current.~Mat();
+    previous.~Mat();
+    capture.~VideoCapture();
 
     // ----- Clustering -----
     // Get average similarity for region
