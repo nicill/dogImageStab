@@ -133,10 +133,6 @@ int main(int argc, char **argv) {
 
         frameCounter++;
 
-        // TODO temp (select section of video to compute)
-        if (frameCounter < 20) continue; // 1371
-        else if (frameCounter > 50) break; // 1429
-
         double currentSimilarity = comparer->computeSimilarity(&previous, &current);
         frameInfos.push_back(FrameInfo(current, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity));
 
