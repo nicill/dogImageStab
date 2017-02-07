@@ -36,6 +36,9 @@ featureComparer::featureComparer(
     }
 }
 
+/**
+ * Destructor.
+ */
 featureComparer::~featureComparer() {
     delete this->featureDetector;
     delete this->descriptorMatcher;

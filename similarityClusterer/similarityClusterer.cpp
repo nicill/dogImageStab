@@ -151,6 +151,10 @@ int main(int argc, char **argv) {
         }
     }
 
+    delete current;
+    delete previous;
+    delete capture;
+
     // ----- Clustering -----
     // Get average similarity for region
     int maxIndex = (int) frameInfos.size() - 1;

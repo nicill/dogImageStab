@@ -37,17 +37,17 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
         double clustersMatchedMsec = 0; // msec of overlap between determined and actual clusters
         while (determinedClustersIterator != determinedClusters.end()
                && clustersFromFileIterator != (*clustersFromFilePtr).end()) {
-            if ((*determinedClustersIterator).beginMsec > (*clustersFromFileIterator).endMsec) {
+            if ((*determinedClustersIterator).beginMsec >= (*clustersFromFileIterator).endMsec) {
                 clustersFromFileIterator++;
             }
 
-            if ((*determinedClustersIterator).endMsec < (*clustersFromFileIterator).beginMsec) {
+            if ((*determinedClustersIterator).endMsec <= (*clustersFromFileIterator).beginMsec) {
                 clustersTotalMsec += (*determinedClustersIterator).endMsec - (*determinedClustersIterator).beginMsec;
                 determinedClustersIterator++;
             }
 
-            if ((*determinedClustersIterator).beginMsec > (*clustersFromFileIterator).endMsec
-                || (*determinedClustersIterator).endMsec < (*clustersFromFileIterator).beginMsec)
+            if ((*determinedClustersIterator).beginMsec >= (*clustersFromFileIterator).endMsec
+                || (*determinedClustersIterator).endMsec <= (*clustersFromFileIterator).beginMsec)
                 continue;
 
             // Logic: If an overlap exists (neither is the begin after the end nor the end before the begin)
