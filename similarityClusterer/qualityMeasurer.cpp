@@ -67,10 +67,7 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
                     ? (*determinedClustersIterator).endMsec
                     : (*clustersFromFileIterator).endMsec;
 
-            double determinedClusterLength =
-                    (*determinedClustersIterator).endMsec - (*determinedClustersIterator).beginMsec;
             double matchedLength = smallerEnd - biggerBegin;
-            clustersTotalMsec += determinedClusterLength - matchedLength;
             clustersMatchedMsec += matchedLength;
 
             // Iterate the cluster that has been matched to its end.
@@ -82,7 +79,9 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
             else clustersFromFileIterator++;
         }
 
-        percentageMatchedPerFile.push_back(clustersMatchedMsec / clustersTotalMsec);
+        double ratioMatched = clustersMatchedMsec / clustersTotalMsec;
+        cout << "Matched " << ratioMatched * 100 << " % of clusters in file \"" << fileName << "\"." << endl;
+        percentageMatchedPerFile.push_back(ratioMatched);
         delete clustersFromFilePtr;
     }
 
@@ -140,7 +139,8 @@ vector<ClusterInfo>* qualityMeasurer::readTagFile(string pathToTagFile) {
     }
 
     tagFile.close();
-    return clustersFromFilePtr;
+    if (clustersFromFilePtr->size() == 0) return nullptr;
+    else return clustersFromFilePtr;
 }
 
 vector<string> qualityMeasurer::splitLine(string inputString) {
