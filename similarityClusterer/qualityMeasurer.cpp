@@ -20,12 +20,18 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
     DIR *tagFileDir = opendir(pathToTagFileDirectory.c_str());
     struct dirent *fileEntity;
     while ((fileEntity = readdir(tagFileDir)) != nullptr) {
-        if (verbose) cout << "Reading file " << fileEntity->d_name << "." << endl;
+        // Necessary for comparison with string literals.
+        string fileName(fileEntity->d_name);
+        if (fileName == "." || fileName == "..") {
+            if (verbose) cout << "Skipping \"" << fileName << "\"." << endl;
+            continue;
+        }
+        if (verbose) cout << "Reading file \"" << fileName << "\"." << endl;
 
-        vector<ClusterInfo>* clustersFromFilePtr = readTagFile(pathToTagFileDirectory + "/" + fileEntity->d_name);
+        vector<ClusterInfo>* clustersFromFilePtr = readTagFile(pathToTagFileDirectory + "/" + fileName);
 
         if (clustersFromFilePtr == nullptr) {
-            cerr << "Couldn't open file " << fileEntity->d_name << " as tag file. Skipping..." << endl;
+            cerr << "Couldn't open file " << fileName << " as tag file. Skipping..." << endl;
             continue;
         }
 
