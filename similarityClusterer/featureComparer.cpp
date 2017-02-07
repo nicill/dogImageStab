@@ -36,6 +36,11 @@ featureComparer::featureComparer(
     }
 }
 
+featureComparer::~featureComparer() {
+    delete this->featureDetector;
+    delete this->descriptorMatcher;
+}
+
 /**
  * Interface function. Compute similarity between two given frames.
  * @param im1 Frame #1
@@ -118,6 +123,10 @@ bool featureComparer::hasGoodMatch(vector<DMatch> possibleMatches) {
     else return possibleMatches[0].distance < 0.8 * possibleMatches[1].distance;
 }
 
+/**
+ * Handles showing output messages based on the verbosity setting.
+ * @param text The text to display on cout.
+ */
 void featureComparer::message(string text) {
     if (!this->verbose) {
         return;

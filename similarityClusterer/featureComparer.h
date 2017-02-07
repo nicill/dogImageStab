@@ -25,6 +25,7 @@ public:
     featureComparer(
             featureDetectorType givenDetectorType = SIFT,
             descriptorMatcherType givenMatcherType = BF_L2);
+    ~featureComparer();
 
 private:
     featureDetectorType detectorType;
