@@ -17,10 +17,12 @@ using namespace cv;
 double getClusterAverage(vector<FrameInfo>);
 
 int main(int argc, char **argv) {
+    time_t startTime = time(nullptr);
     bool verbose = false;
     bool computerReadable = false;
     bool qualityMode = false;
-    string validUsage = "./similarityClusterer <video> <metric index> <sub specifier> [flag]";
+    bool timeMode = false;
+    string validUsage = "./similarityClusterer <video> <metric index> <sub specifier> [flag(s)]";
     // http://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html?highlight=comparehist#comparehist
     string subSpecHist = "0: Correlation, 1: Chi-square, 2: Intersection, 3: Bhattacharyya";
     string subSpecFeat = "0: SIFT / BF_L2, 1: SURF / BF_L2";
@@ -37,10 +39,12 @@ int main(int argc, char **argv) {
              << "2: Feature detection | " << subSpecFeat << endl
              << "3: Image metrics     | " << subSpecImg << endl
              << endl
-             << "Flags:" << endl
+             << "Flags (all lowercase flags can be combined, e.g. '-tq'):" << endl
              << "-v: Enable verbose output." << endl
-             << "-l: Computer readable output." << endl
-             << "-q: Print quality score." << endl;
+             << "-q: Print quality score." << endl
+             << "-t: Measure time taken." << endl
+             << "    --- OR ---" << endl
+             << "-L: Computer readable output." << endl;
         return 0;
     }
 
@@ -63,16 +67,22 @@ int main(int argc, char **argv) {
 
     // Read provided flag, if given
     if (hasFlag) {
-        if (last_arg == "-v") {
-            verbose = true;
-            cout << "Verbose output activated." << endl;
-        }
-        else if (last_arg == "-l") {
+        if (last_arg.find('L') != string::npos) {
             computerReadable = true;
         }
-        else if (last_arg == "-q") {
-            qualityMode = true;
-            cout << "Quality score will be calculated." << endl;
+        else {
+            if (last_arg.find('v') != string::npos) {
+                verbose = true;
+                cout << "Verbose output activated." << endl;
+            }
+            if (last_arg.find('q') != string::npos) {
+                qualityMode = true;
+                cout << "Quality score will be calculated." << endl;
+            }
+            if (last_arg.find('t') != string::npos) {
+                timeMode = true;
+                cout << "Time taken will be measured." << endl;
+            }
         }
     }
 
@@ -217,10 +227,22 @@ int main(int argc, char **argv) {
         }
     }
 
+    time_t similarityFinishedTime = time(nullptr);
+
     if (qualityMode) {
         // TODO what to do with the score? Where to display?
         double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
         cout << "Achieved a quality score of " << score << " for the video \"" << argv[1] << "\"!" << endl;
+    }
+
+    time_t qualityFinishedTime = time(nullptr);
+
+    if (timeMode) {
+        cout    << "----------" << endl
+                << "Time taken" << endl
+                << "Total: " << qualityFinishedTime - startTime << " s" << endl
+                << "Similarity measurement: " << similarityFinishedTime - startTime << " s" << endl
+                << "Quality measurement: " << qualityFinishedTime - similarityFinishedTime << " s" << endl;
     }
 
     delete comparer;
