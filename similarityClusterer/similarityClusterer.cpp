@@ -17,7 +17,6 @@ using namespace cv;
 double getClusterAverage(vector<FrameInfo>);
 
 int main(int argc, char **argv) {
-    time_t startTime = time(nullptr);
     bool verbose = false;
     bool computerReadable = false;
     bool qualityMode = false;
@@ -50,7 +49,7 @@ int main(int argc, char **argv) {
 
     // Check for flag
     string last_arg = string(argv[argc - 1]);
-    bool hasFlag = last_arg.find("-") != string::npos;
+    bool hasFlag = last_arg.find("-") == 0;
 
     // Valid cases: Has flag and 5 arguments, or 4 arguments.
     if (!((hasFlag && argc == 5) || argc == 4)) {
@@ -140,6 +139,9 @@ int main(int argc, char **argv) {
         cout << "Using " << metricName << " with sub specifier " << subSpecifier << endl;
         cout << "Possible sub specifiers for this metric:" << endl << subSpecs << endl;
     }
+
+    // Get start time (after user i/o) for timeMode
+    time_t startTime = time(nullptr);
 
     // Framewise metric computation
     Mat current, previous;
