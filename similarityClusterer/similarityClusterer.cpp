@@ -106,7 +106,11 @@ int main(int argc, char **argv) {
             subSpecs = subSpecHist;
             break;
         case 2 :
-            comparer = new featureComparer(featureComparer::SIFT, featureComparer::BF_L2);
+            if (subSpecifier != 0 && subSpecifier != 1) {
+                cerr << "Invalid sub specifier provided: " << subSpecifier << " (Use one of: " << subSpecFeat << ")" << endl;
+                return 1;
+            }
+            comparer = new featureComparer((featureComparer::featureDetectorType)subSpecifier, featureComparer::BF_L2);
             metricName = "feature matching";
             subSpecs = subSpecFeat;
             break;
