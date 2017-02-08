@@ -22,6 +22,9 @@ featureComparer::featureComparer(
         case featureComparer::SIFT:
             this->featureDetector = xfeatures2d::SIFT::create();
             break;
+        case featureComparer::SURF:
+            this->featureDetector = xfeatures2d::SURF::create();
+            break;
         default:
             throw("This descriptor hasn't been implemented yet.");
     }
@@ -30,7 +33,6 @@ featureComparer::featureComparer(
         case featureComparer::BF_L2:
             this->descriptorMatcher = BFMatcher::create();
             break;
-            // TODO BF_HAMMING, BF_HAMMING2, FLANN
         default:
             throw("This matcher hasn't been implemented yet.");
     }
@@ -54,6 +56,7 @@ double featureComparer::computeSimilarity(Mat* im1, Mat* im2) {
     this->processedComparisons++;
 
     vector<vector<DMatch>> matchesOfAllKeypoints = this->getMatches(im1, im2);
+    if (matchesOfAllKeypoints.size() == 0) return 0;
 
     vector<DMatch> goodMatches;
     for (vector<DMatch> matchesAtKeypoint : matchesOfAllKeypoints) {
@@ -69,8 +72,7 @@ double featureComparer::computeSimilarity(Mat* im1, Mat* im2) {
         }
     }
 
-    if (matchesOfAllKeypoints.size() == 0) return 0;
-    else return (double)goodMatches.size() / matchesOfAllKeypoints.size();
+    return (double)goodMatches.size() / matchesOfAllKeypoints.size();
 }
 
 /**
@@ -96,6 +98,12 @@ vector<vector<DMatch>> featureComparer::getMatches(Mat* img1, Mat* img2) {
     this->featureDetector->detectAndCompute(*img1, noArray(), keypoints_1, descriptors_1);
     this->featureDetector->detectAndCompute(*img2, noArray(), keypoints_2, descriptors_2);
 
+    // Make sure that keypoints have been found in both images before matching.
+    if (keypoints_1.size() == 0 || keypoints_2.size() == 0) {
+        message("No keypoints found!");
+        return vector<vector<DMatch>>();
+    }
+
     // Match descriptors and retrieve the k=2 best results
     this->descriptorMatcher->knnMatch(
             descriptors_1,
@@ -104,7 +112,7 @@ vector<vector<DMatch>> featureComparer::getMatches(Mat* img1, Mat* img2) {
             2);
 
     if (matchesOfAllKeypoints.size() == 0) {
-        message("No keypoints found!");
+        message("No matches found!");
     }
 
     return matchesOfAllKeypoints;
@@ -112,14 +120,14 @@ vector<vector<DMatch>> featureComparer::getMatches(Mat* img1, Mat* img2) {
 
 /**
  * Checks the given list of matches if the best one can be considered "good".
- * Currently only works with SIFT!
+ * Uses ratio test proposed by Lowe.
  * @param possibleMatches All possible matches for a keypoint.
  * Must be of size 2!
  */
 bool featureComparer::hasGoodMatch(vector<DMatch> possibleMatches) {
-    // Filter matches based on metric proposed by Lowe (2004), p. 104.
-    // TODO WARNING: Only to be used with SIFT!
     // Alternatively use crosscheck? http://docs.opencv.org/3.0-beta/doc/py_tutorials/py_feature2d/py_matcher/py_matcher.html
+
+    // Filter matches based on metric proposed by Lowe (2004), p. 104.
     assert(possibleMatches.size() <= 2);
 
     if (possibleMatches.size() != 2) return false;
