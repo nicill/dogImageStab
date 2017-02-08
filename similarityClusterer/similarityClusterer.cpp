@@ -20,14 +20,24 @@ int main(int argc, char **argv) {
     bool verbose = false;
     bool computerReadable = false;
     bool qualityMode = false;
-    string validUsage = "./computeMeasures [video] [metricIndex] [sub specifier] (optional [flag])";
+    string validUsage = "./similarityClusterer <video> <metric index> <sub specifier> [flag]";
+    // http://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html?highlight=comparehist#comparehist
+    string subSpecHist = "0: Correlation, 1: Chi-square, 2: Intersection, 3: Bhattacharyya";
+    string subSpecFeat = "0: SIFT / BF_L2, 1: SURF / BF_L2";
+    string subSpecImg = "0: PSNR, 1: SSIM";
 
     if (argc == 2 && string(argv[1]) == "--help") {
         cout << "Usage:" << endl
              << validUsage << endl
-             << "./computeMeasures --help" << endl
+             << "./similarityClusterer --help" << endl
              << endl
-             << "Arguments:" << endl
+             << "Metric index         | Sub specifiers" << endl
+             << "-------------------------------------------" << endl
+             << "1: Histogram         | " << subSpecHist << endl
+             << "2: Feature detection | " << subSpecFeat << endl
+             << "3: Image metrics     | " << subSpecImg << endl
+             << endl
+             << "Flags:" << endl
              << "-v: Enable verbose output." << endl
              << "-l: Computer readable output." << endl
              << "-q: Print quality score." << endl;
@@ -86,34 +96,36 @@ int main(int argc, char **argv) {
     int metricIndex = atoi(argv[2]);
     int subSpecifier = atoi(argv[3]);
 
+    string metricName = "NOT SET";
+    string subSpecs = "NOT SET";
     framewiseSimilarityMetric *comparer;
     switch (metricIndex) {
         case 1  :
             comparer = new opencvHistComparer(subSpecifier);
-            if(verbose)
-            {
-                // http://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html?highlight=comparehist#comparehist
-                cout << "Computing histogram measures with value " << subSpecifier << endl;
-                cout << "Options - 0: Correlation, 1: Chi-square, 2: Intersection, 3: Bhattacharyya" << endl;
-            }
+            metricName = "histogram comparison";
+            subSpecs = subSpecHist;
             break;
         case 2 :
             comparer = new featureComparer(featureComparer::SIFT, featureComparer::BF_L2);
+            metricName = "feature matching";
+            subSpecs = subSpecFeat;
             break;
         case 3:
             comparer = new opencvImageMetric(subSpecifier);
-            if(verbose)
-            {
-                cout << "Computing image metrics with value " << subSpecifier << endl;
-                cout << "Options - 0: PSNR, 1: SSIM" << endl;
-            }
+            metricName = "image metric comparison";
+            subSpecs = subSpecImg;
             break;
         default : // Optional
             cerr << "Invalid metric index provided: " << metricIndex << endl;
             return 1;
     }
 
-    if (verbose) comparer->activateVerbosity();
+    if (verbose) {
+        comparer->activateVerbosity();
+
+        cout << "Using " << metricName << " with sub specifier " << subSpecifier << endl;
+        cout << "Possible sub specifiers for this metric:" << endl << subSpecs << endl;
+    }
 
     // Framewise metric computation
     Mat current, previous;
@@ -204,7 +216,7 @@ int main(int argc, char **argv) {
     if (qualityMode) {
         // TODO what to do with the score? Where to display?
         double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
-        cout << "Achieved a quality score of " << score << " for the video " << argv[1] << endl;
+        cout << "Achieved a quality score of " << score << " for the video \"" << argv[1] << "\"!" << endl;
     }
 
     delete comparer;
