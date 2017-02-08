@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     string validUsage = "./similarityClusterer <video> <metric index> <sub specifier> [flag(s)]";
     // http://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html?highlight=comparehist#comparehist
     string subSpecHist = "0: Correlation, 1: Chi-square, 2: Intersection, 3: Bhattacharyya";
-    string subSpecFeat = "0: SIFT / BF_L2, 1: SURF / BF_L2";
+    string subSpecFeat = "0: SIFT + BF_L2, 1: SURF + BF_L2, 2: ORB + BF_HAMMING";
     string subSpecImg = "0: PSNR, 1: SSIM";
 
     if (argc == 2 && string(argv[1]) == "--help") {
@@ -115,11 +115,11 @@ int main(int argc, char **argv) {
             subSpecs = subSpecHist;
             break;
         case 2 :
-            if (subSpecifier != 0 && subSpecifier != 1) {
+            if (subSpecifier < 0 && subSpecifier > 2) {
                 cerr << "Invalid sub specifier provided: " << subSpecifier << " (Use one of: " << subSpecFeat << ")" << endl;
                 return 1;
             }
-            comparer = new featureComparer((featureComparer::featureDetectorType)subSpecifier, featureComparer::BF_L2);
+            comparer = new featureComparer((featureComparer::type)subSpecifier);
             metricName = "feature matching";
             subSpecs = subSpecFeat;
             break;

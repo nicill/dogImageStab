@@ -16,15 +16,14 @@ using cv::DMatch;
 
 class featureComparer : public framewiseSimilarityMetric {
 public:
-    enum featureDetectorType { SIFT = 0, SURF = 1 }; // ORB?
-    enum descriptorMatcherType { BF_L2 = 0 }; // BF_HAMMING, BF_HAMMING2, FLANN?
+    enum type { SIFT_BFL2 = 0, SURF_BFL2 = 1, ORB_BFHAMMING = 2 };
+    enum featureDetectorType { SIFT = 0, SURF = 1, ORB = 2 };
+    enum descriptorMatcherType { BF_L2 = 0, BF_HAMMING = 1 }; // BF_HAMMING2, FLANN?
 
     double computeSimilarity(Mat* im1, Mat* im2);
     void activateVerbosity();
 
-    featureComparer(
-            featureDetectorType givenDetectorType = SIFT,
-            descriptorMatcherType givenMatcherType = BF_L2);
+    featureComparer(type givenType = SIFT_BFL2);
     ~featureComparer();
 
 private:

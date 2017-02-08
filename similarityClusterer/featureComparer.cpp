@@ -11,30 +11,34 @@
  * For SIFT, SURF etc. use L2. For ORB, BRIEF, BRISK etc. use HAMMING.
  * If ORB is using WTA_K == 3 or 4 use HAMMING2.
  */
-featureComparer::featureComparer(
-        featureDetectorType givenDetectorType,
-        descriptorMatcherType givenMatcherType) {
-    this->detectorType = givenDetectorType;
-    this->matcherType = givenMatcherType;
+featureComparer::featureComparer(type givenType) {
     this->processedComparisons = 0;
 
-    switch (givenDetectorType) {
-        case featureComparer::SIFT:
+    switch (givenType) {
+        case featureComparer::SIFT_BFL2:
+            this->detectorType = featureComparer::SIFT;
             this->featureDetector = xfeatures2d::SIFT::create();
             break;
-        case featureComparer::SURF:
+        case featureComparer::SURF_BFL2:
+            this->detectorType = featureComparer::SURF;
             this->featureDetector = xfeatures2d::SURF::create();
+            break;
+        case featureComparer::ORB_BFHAMMING:
+            this->featureDetector = cv::ORB::create();
             break;
         default:
             throw("This descriptor hasn't been implemented yet.");
     }
 
-    switch (givenMatcherType) {
-        case featureComparer::BF_L2:
+    switch (givenType) {
+        case featureComparer::SIFT_BFL2:
+        case featureComparer::SURF_BFL2:
+            this->matcherType = featureComparer::BF_L2;
             this->descriptorMatcher = BFMatcher::create();
             break;
-        default:
-            throw("This matcher hasn't been implemented yet.");
+        case featureComparer::ORB_BFHAMMING:
+            this->matcherType = featureComparer::BF_HAMMING;
+            this->descriptorMatcher = BFMatcher::create(BFMatcher::BRUTEFORCE_HAMMING);
     }
 }
 
