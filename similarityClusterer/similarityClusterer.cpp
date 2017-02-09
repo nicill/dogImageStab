@@ -21,6 +21,7 @@ int main(int argc, char **argv) {
     bool computerReadable = false;
     bool qualityMode = false;
     bool timeMode = false;
+    bool useDefaults = false;
     string validUsage = "./similarityClusterer <video> <metric index> <sub specifier> [flag(s)]";
     // http://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html?highlight=comparehist#comparehist
     string subSpecHist = "0: Correlation, 1: Chi-square, 2: Intersection, 3: Bhattacharyya";
@@ -42,6 +43,7 @@ int main(int argc, char **argv) {
              << "-v: Enable verbose output." << endl
              << "-q: Print quality score." << endl
              << "-t: Measure time taken." << endl
+             << "-d: Use default values for all options." << endl
              << "    --- OR ---" << endl
              << "-L: Computer readable output." << endl;
         return 0;
@@ -82,15 +84,21 @@ int main(int argc, char **argv) {
                 timeMode = true;
                 cout << "Time taken will be measured." << endl;
             }
+            if (last_arg.find('d') != string::npos) {
+                useDefaults = true;
+                cout << "Default values will be used." << endl;
+            }
         }
     }
 
     string pathToTagFiles = "";
     if (qualityMode) {
         string defaultDir = "/home/tokuyama/dog/tags";
-        cout << "Please input the directory which contains the tag files (\"d\" for \"" << defaultDir << "\")..." << endl;
-        cin >> pathToTagFiles;
-        if (pathToTagFiles == "d") pathToTagFiles = defaultDir;
+        if (!useDefaults) {
+            cout << "Please input the directory which contains the tag files (\"d\" for \"" << defaultDir << "\")..." << endl;
+            cin >> pathToTagFiles;
+        }
+        if (useDefaults || pathToTagFiles == "d") pathToTagFiles = defaultDir;
 
         DIR *tagFileDir = opendir(pathToTagFiles.c_str());
         if (tagFileDir == nullptr || readdir(tagFileDir) == nullptr) {
