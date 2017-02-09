@@ -28,9 +28,9 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
         }
         if (verbose) cout << "Reading file \"" << fileName << "\"." << endl;
 
-        vector<ClusterInfo>* clustersFromFilePtr = readTagFile(pathToTagFileDirectory + "/" + fileName);
+        vector<ClusterInfo> clustersFromFile = readTagFile(pathToTagFileDirectory + "/" + fileName);
 
-        if (clustersFromFilePtr == nullptr) {
+        if (clustersFromFile.size() == 0) {
             cerr << "Couldn't open file " << fileName << " as tag file. Skipping..." << endl;
             continue;
         }
@@ -38,11 +38,11 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
         // Try to match the clusters from the tag files to the determined clusters. We aim to find
         // out what percentage of the clusters determined before overlaps with actual clusters.
         vector<ClusterInfo>::iterator determinedClustersIterator = determinedClusters.begin();
-        vector<ClusterInfo>::iterator clustersFromFileIterator = (*clustersFromFilePtr).begin();
+        vector<ClusterInfo>::iterator clustersFromFileIterator = clustersFromFile.begin();
         double clustersTotalMsec = 0; // total msec of determined clusters
         double clustersMatchedMsec = 0; // msec of overlap between determined and actual clusters
         while (determinedClustersIterator != determinedClusters.end()
-               && clustersFromFileIterator != (*clustersFromFilePtr).end()) {
+               && clustersFromFileIterator != clustersFromFile.end()) {
             if ((*determinedClustersIterator).beginMsec >= (*clustersFromFileIterator).endMsec) {
                 clustersFromFileIterator++;
             }
@@ -82,7 +82,6 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
         double ratioMatched = clustersMatchedMsec / clustersTotalMsec;
         cout << "Matched " << ratioMatched * 100 << " % of clusters in file \"" << fileName << "\"." << endl;
         percentageMatchedPerFile.push_back(ratioMatched);
-        delete clustersFromFilePtr;
     }
 
     closedir(tagFileDir);
@@ -115,14 +114,14 @@ vector<ClusterInfo> qualityMeasurer::frameInfosToClusterInfo(vector<vector<Frame
 /**
  * Tries to read the file at the given path as a tag file and interpret its clusterings.
  * @param pathToTagFile The path, including the file name.
- * @return A vector of clusterings if successful, otherwise a nullptr.
+ * @return A vector of clusterings if successful, otherwise an empty vector.
  */
-vector<ClusterInfo>* qualityMeasurer::readTagFile(string pathToTagFile) {
+vector<ClusterInfo> qualityMeasurer::readTagFile(string pathToTagFile) {
     ifstream tagFile;
     tagFile.open(pathToTagFile);
-    if (!tagFile.is_open()) return nullptr;
+    if (!tagFile.is_open()) return vector<ClusterInfo>();
 
-    vector<ClusterInfo> *clustersFromFilePtr = new vector<ClusterInfo>();
+    vector<ClusterInfo> clustersFromFile = vector<ClusterInfo>();
     string line;
     while (getline(tagFile, line)) {
         // Check correctness with RegEx?
@@ -135,12 +134,11 @@ vector<ClusterInfo>* qualityMeasurer::readTagFile(string pathToTagFile) {
         double endMsec = strtod(split[2].c_str(), &end);
         assert(strtod(split[3].c_str(), &end) == (endMsec - beginMsec));
 
-        (*clustersFromFilePtr).push_back(ClusterInfo(split[0], beginMsec, endMsec));
+        clustersFromFile.push_back(ClusterInfo(split[0], beginMsec, endMsec));
     }
 
     tagFile.close();
-    if (clustersFromFilePtr->size() == 0) return nullptr;
-    else return clustersFromFilePtr;
+    return clustersFromFile;
 }
 
 vector<string> qualityMeasurer::splitLine(string inputString) {

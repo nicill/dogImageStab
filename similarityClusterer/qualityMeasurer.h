@@ -21,7 +21,7 @@ public:
 
 private:
     static vector<ClusterInfo> frameInfosToClusterInfo(vector<vector<FrameInfo>> frameInfosList);
-    static vector<ClusterInfo>* readTagFile(string pathToTagFile);
+    static vector<ClusterInfo> readTagFile(string pathToTagFile);
     static vector<string> splitLine(string inputString);
 };
 
