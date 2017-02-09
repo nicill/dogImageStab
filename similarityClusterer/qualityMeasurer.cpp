@@ -35,12 +35,17 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
             continue;
         }
 
+
         // Try to match the clusters from the tag files to the determined clusters. We aim to find
         // out what percentage of the clusters determined before overlaps with actual clusters.
+        double clustersTotalMsec = 0; // total msec of determined clusters
+        for (ClusterInfo clusterInfo : determinedClusters) {
+            clustersTotalMsec += clusterInfo.length;
+        }
+        double clustersMatchedMsec = 0; // msec of overlap between determined and actual clusters
+
         vector<ClusterInfo>::iterator determinedClustersIterator = determinedClusters.begin();
         vector<ClusterInfo>::iterator clustersFromFileIterator = clustersFromFile.begin();
-        double clustersTotalMsec = 0; // total msec of determined clusters
-        double clustersMatchedMsec = 0; // msec of overlap between determined and actual clusters
         while (determinedClustersIterator != determinedClusters.end()
                && clustersFromFileIterator != clustersFromFile.end()) {
             if ((*determinedClustersIterator).beginMsec >= (*clustersFromFileIterator).endMsec) {
@@ -48,13 +53,13 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
             }
 
             if ((*determinedClustersIterator).endMsec <= (*clustersFromFileIterator).beginMsec) {
-                clustersTotalMsec += (*determinedClustersIterator).endMsec - (*determinedClustersIterator).beginMsec;
                 determinedClustersIterator++;
             }
 
             if ((*determinedClustersIterator).beginMsec >= (*clustersFromFileIterator).endMsec
-                || (*determinedClustersIterator).endMsec <= (*clustersFromFileIterator).beginMsec)
+                || (*determinedClustersIterator).endMsec <= (*clustersFromFileIterator).beginMsec) {
                 continue;
+            }
 
             // Logic: If an overlap exists (neither is the begin after the end nor the end before the begin)
             //        it is between the bigger begin and the smaller end value.
@@ -73,7 +78,6 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
             // Iterate the cluster that has been matched to its end.
             // Caution! Assumes that the clusters in both lists do NOT overlap with others in their list!
             if (smallerEnd == (*determinedClustersIterator).endMsec) {
-                clustersTotalMsec += (*determinedClustersIterator).endMsec - (*determinedClustersIterator).beginMsec;
                 determinedClustersIterator++;
             }
             else clustersFromFileIterator++;
