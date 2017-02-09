@@ -212,7 +212,7 @@ int main(int argc, char **argv) {
 
     // TODO temp (?)
     time_t similarityFinishedTime = time(nullptr);
-    for (double t = 38; t <= 48; t+=2) {
+    for (double t = 10; t <= 35; t+=5) {
 
         // Find clusters
         vector<vector<FrameInfo>> clusters;

@@ -36,6 +36,23 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
         }
 
 
+        // TODO TODO TODO NEW QUALITY METRIC
+        // For each cluster in tag file:
+        //    For each determined cluster:
+        //       if (overlap):                  (given clustering:         |-------|
+        //          1.) Calculate overlap in %  (determined clust.:     |~~~~~|       => 50 % overlap
+        //          2.) Calculate ratio of overlap vs. non overlap  (   non|yes       => 50/50, aka 50 %
+        //          3.) Get overlap score (overlap % * overlap ratio, e.g. 50 % * 50 % = 25 %)
+        //    malus = 0
+        //    For each overlapping cluster additional to the best match:
+        //       if (overlap / best overlap) > 0.1:
+        //          malus += 25 * (overlap / best overlap) (in ]2.5,25])
+        //    Add up all overlaps and multiply by (100 - malus) - can be negative!
+
+
+
+
+
         // Try to match the clusters from the tag files to the determined clusters. We aim to find
         // out what percentage of the clusters determined before overlaps with actual clusters.
         double clustersTotalMsec = 0; // total msec of determined clusters
