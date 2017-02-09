@@ -210,40 +210,47 @@ int main(int argc, char **argv) {
         cout << "Cluster,Frame no.,Milliseconds,Similarity to last frame,Average similarity in region" << endl;
     }
 
-    // Find clusters
-    vector<vector<FrameInfo>> clusters;
-    int currentCluster = 0;
-    clusters.push_back(vector<FrameInfo>());
-    clusters[currentCluster].push_back(frameInfos[0]);
-    double currentClusterAverage = frameInfos[currentCluster].averageSimilarity;
-
-    for (int i = 1; i < frameInfos.size(); i++) {
-        // If the difference is too big, we create a new cluster.
-        if (abs(currentClusterAverage - frameInfos[i].averageSimilarity) > 0.1) {
-            currentCluster++;
-            clusters.push_back(vector<FrameInfo>());
-        }
-
-        clusters[currentCluster].push_back(frameInfos[i]);
-        currentClusterAverage = getClusterAverage(clusters[currentCluster]);
-
-        if (computerReadable) {
-            string separator = ",";
-            cout << currentCluster << separator
-                 << frameInfos[i].frameNum << separator
-                 << frameInfos[i].msec << separator
-                 << frameInfos[i].similarityToPrevious << separator
-                 << frameInfos[i].averageSimilarity << endl;
-        }
-    }
-
+    // TODO temp (?)
     time_t similarityFinishedTime = time(nullptr);
+    for (double t = 38; t <= 48; t+=2) {
 
-    if (qualityMode) {
-        // TODO what to do with the score? Where to display?
-        double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
-        cout << "Achieved a quality score of " << score << " for the video \"" << argv[1] << "\"!" << endl;
+        // Find clusters
+        vector<vector<FrameInfo>> clusters;
+        int currentCluster = 0;
+        clusters.push_back(vector<FrameInfo>());
+        clusters[currentCluster].push_back(frameInfos[0]);
+        double currentClusterAverage = frameInfos[currentCluster].averageSimilarity;
+
+        for (int i = 1; i < frameInfos.size(); i++) {
+            // If the difference is too big, we create a new cluster.
+            if (abs(currentClusterAverage - frameInfos[i].averageSimilarity) > (t/100)) {
+                currentCluster++;
+                clusters.push_back(vector<FrameInfo>());
+            }
+
+            clusters[currentCluster].push_back(frameInfos[i]);
+            currentClusterAverage = getClusterAverage(clusters[currentCluster]);
+
+            if (computerReadable) {
+                string separator = ",";
+                cout << currentCluster << separator
+                     << frameInfos[i].frameNum << separator
+                     << frameInfos[i].msec << separator
+                     << frameInfos[i].similarityToPrevious << separator
+                     << frameInfos[i].averageSimilarity << endl;
+            }
+        }
+
+        // TODO temp
+        cout << "------------------" << endl << "USING CUT OFF " << (t/100) << endl;
+
+        if (qualityMode) {
+            double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
+            cout << "Achieved a quality score of " << score << " for the video \"" << argv[1] << "\"!" << endl;
+        }
+
     }
+    // TODO END TODO
 
     time_t qualityFinishedTime = time(nullptr);
 
