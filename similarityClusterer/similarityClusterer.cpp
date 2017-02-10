@@ -4,6 +4,8 @@
 
 #include <dirent.h>
 #include <opencv2/opencv.hpp>
+#include <sys/stat.h>
+#include <libgen.h>
 #include "framewiseSimilarityMetric.h"
 #include "opencvHistComparer.h"
 #include "opencvImageMetric.h"
@@ -14,13 +16,16 @@ using namespace std;
 using namespace cv;
 
 // Declarations
-double getClusterAverage(vector<FrameInfo>);
+bool canOpenDir(string path);
+vector<FrameInfo> readFrameInfosFromCsv(string filePath);
+void appendToCsv(string filePath, double frameNo, double msec, double similarity);
+double getClusterAverage(vector<FrameInfo> cluster);
 
 int main(int argc, char **argv) {
     bool verbose = false;
-    bool computerReadable = false;
     bool qualityMode = false;
     bool timeMode = false;
+    bool fileIO = false;
     bool useDefaults = false;
     string validUsage = "./similarityClusterer <video> <metric index> <sub specifier> [flag(s)]";
     // http://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html?highlight=comparehist#comparehist
@@ -43,9 +48,8 @@ int main(int argc, char **argv) {
              << "-v: Enable verbose output." << endl
              << "-q: Print quality score." << endl
              << "-t: Measure time taken." << endl
-             << "-d: Use default values for all options." << endl
-             << "    --- OR ---" << endl
-             << "-L: Computer readable output." << endl;
+             << "-f: Write similarity values to / read it from file." << endl
+             << "-d: Use default values for all options." << endl;
         return 0;
     }
 
@@ -68,45 +72,44 @@ int main(int argc, char **argv) {
 
     // Read provided flag, if given
     if (hasFlag) {
-        if (last_arg.find('L') != string::npos) {
-            computerReadable = true;
+        if (last_arg.find('v') != string::npos) {
+            verbose = true;
+            cout << "Verbose output activated." << endl;
         }
-        else {
-            if (last_arg.find('v') != string::npos) {
-                verbose = true;
-                cout << "Verbose output activated." << endl;
-            }
-            if (last_arg.find('q') != string::npos) {
-                qualityMode = true;
-                cout << "Quality score will be calculated." << endl;
-            }
-            if (last_arg.find('t') != string::npos) {
-                timeMode = true;
-                cout << "Time taken will be measured." << endl;
-            }
-            if (last_arg.find('d') != string::npos) {
-                useDefaults = true;
-                cout << "Default values will be used." << endl;
-            }
+        if (last_arg.find('q') != string::npos) {
+            qualityMode = true;
+            cout << "Quality score will be calculated." << endl;
+        }
+        if (last_arg.find('t') != string::npos) {
+            timeMode = true;
+            cout << "Time taken will be measured." << endl;
+        }
+        if (last_arg.find('f') != string::npos) {
+            fileIO = true;
+            cout << "Similarity values will be written to / read from file." << endl;
+        }
+        if (last_arg.find('d') != string::npos) {
+            useDefaults = true;
+            cout << "Default values will be used." << endl;
         }
     }
 
-    string pathToTagFiles = "";
+    // Quality mode: Verify that the tag file directory exists.
+    string pathToTagFiles = "INVALID";
     if (qualityMode) {
-        string defaultDir = "/home/tokuyama/dog/tags";
+        pathToTagFiles = "/home/tokuyama/dog/tags";
         if (!useDefaults) {
-            cout << "Please input the directory which contains the tag files (\"d\" for \"" << defaultDir << "\")..." << endl;
-            cin >> pathToTagFiles;
-        }
-        if (useDefaults || pathToTagFiles == "d") pathToTagFiles = defaultDir;
+            string userInput = "";
+            cout << "Please input the directory which contains the tag files (\"d\" for \"" << pathToTagFiles << "\")..." << endl;
+            cin >> userInput;
 
-        DIR *tagFileDir = opendir(pathToTagFiles.c_str());
-        if (tagFileDir == nullptr || readdir(tagFileDir) == nullptr) {
-            cerr << "Could not open directory for tag files supplied: " << pathToTagFiles << endl;
+            if (userInput != "d") pathToTagFiles = userInput;
+        }
+
+        if (!canOpenDir(pathToTagFiles)) {
+            cerr << "Could not open tag file directory \"" << pathToTagFiles << "\"" << endl;
             return 1;
         }
-
-        closedir(tagFileDir);
     }
 
     // Setting indices
@@ -206,13 +209,11 @@ int main(int argc, char **argv) {
         frameInfos[i].averageSimilarity = summedUpSimilarities / (1 + end - start);
     }
 
-    if (computerReadable) {
-        cout << "Cluster,Frame no.,Milliseconds,Similarity to last frame,Average similarity in region" << endl;
-    }
-
     // TODO temp (?)
     time_t similarityFinishedTime = time(nullptr);
-    for (double t = 10; t <= 35; t+=5) {
+
+    vector<std::tuple<double, double>> cutOffVsQualityScores;
+    for (double t = 5; t <= 15; t++) {
 
         // Find clusters
         vector<vector<FrameInfo>> clusters;
@@ -230,26 +231,25 @@ int main(int argc, char **argv) {
 
             clusters[currentCluster].push_back(frameInfos[i]);
             currentClusterAverage = getClusterAverage(clusters[currentCluster]);
-
-            if (computerReadable) {
-                string separator = ",";
-                cout << currentCluster << separator
-                     << frameInfos[i].frameNum << separator
-                     << frameInfos[i].msec << separator
-                     << frameInfos[i].similarityToPrevious << separator
-                     << frameInfos[i].averageSimilarity << endl;
-            }
         }
 
         // TODO temp
         cout << "------------------" << endl << "USING CUT OFF " << (t/100) << endl;
 
+        double score = 0;
         if (qualityMode) {
-            double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
+            score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
             cout << "Achieved a quality score of " << score << " for the video \"" << argv[1] << "\"!" << endl;
         }
 
+        cutOffVsQualityScores.push_back(std::tuple<double, double>((t/100), score));
     }
+
+    cout << "Cut off | Quality score achieved" << endl;
+    for (std::tuple<double, double> cutOffVsQualityScore : cutOffVsQualityScores) {
+        cout << std::get<0>(cutOffVsQualityScore) << "     | " << std::get<1>(cutOffVsQualityScore) << endl;
+    }
+
     // TODO END TODO
 
     time_t qualityFinishedTime = time(nullptr);
@@ -264,6 +264,60 @@ int main(int argc, char **argv) {
 
     delete comparer;
     return 0;
+}
+
+/**
+ * Checks to see if a given directory can be opened.
+ * @param path The directory to check.
+ * @return True for success.
+ */
+bool canOpenDir(string path) {
+    DIR *directory = opendir(path.c_str());
+    if (directory == nullptr || readdir(directory) == nullptr) {
+        return false;
+    }
+
+    closedir(directory);
+    return true;
+}
+
+/**
+ * Reads in the given csv file to retrieve the saved frame infos.
+ * @param csvStream The file stream. Needs to be open.
+ * @return An empty vector if unsuccessful.
+ */
+vector<FrameInfo> readFrameInfosFromCsv(string filePath) {
+    ifstream csvStream;
+    csvStream.open(filePath);
+    assert(csvStream.is_open());
+
+    vector<FrameInfo> frameInfos;
+    string line;
+    // Read in header line.
+    if (!getline(csvStream, line)) return vector<FrameInfo>();
+    while (getline(csvStream, line)) {
+        vector<char> charLine(line.c_str(), line.c_str() + line.size() + 1u);
+
+        double frameNo = stod(strtok(&charLine[0], ","));
+        double msec = stod(strtok(nullptr, ","));
+        double similarity = stod(strtok(nullptr, ","));
+        assert(nullptr == strtok(nullptr, ","));
+
+        frameInfos.push_back(FrameInfo(Mat(), frameNo, msec, similarity));
+    }
+
+    csvStream.close();
+    return frameInfos;
+}
+
+void appendToCsv(string filePath, double frameNo, double msec, double similarity) {
+    char sep = ',';
+    ofstream ioFileStream;
+    // Setting the precision is not strictly necessary, but useful to preserve exact similarity values.
+    ioFileStream << setprecision(100);
+    ioFileStream.open(filePath, ios::app); // append
+    ioFileStream << frameNo << sep << msec << sep << similarity << endl;
+    ioFileStream.close();
 }
 
 /**
