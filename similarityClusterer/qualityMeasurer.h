@@ -10,6 +10,7 @@
 #include <regex>
 #include "FrameInfo.cpp"
 #include "ClusterInfo.cpp"
+#include "ClusterInfoContainer.cpp"
 
 using namespace std;
 
@@ -18,14 +19,18 @@ public:
     static double scoreQuality(string pathToTagFileDirectory,
                                vector<vector<FrameInfo>> determinedClusterFrameInfos,
                                bool verbose = false);
+    static double getOverlap(string pathToTagFileDirectory,
+                             vector<FrameInfo> frames,
+                             bool verbose = false);
 
 private:
-    static vector<ClusterInfo> frameInfosToClusterInfo(vector<vector<FrameInfo>> frameInfosList);
-    static vector<ClusterInfo> readTagFile(string pathToTagFile);
+    static ClusterInfoContainer frameInfosToClusterInfo(string name, vector<vector<FrameInfo>> frameInfosList);
+    static vector<ClusterInfoContainer> readTagFiles(string pathToTagFileDirectory, bool verbose);
+    static ClusterInfoContainer readTagFile(string pathToTagFile);
     static vector<string> splitLine(string inputString);
 
-    static double getQualityScore(vector<ClusterInfo> clustersFromFile, vector<ClusterInfo> determinedClusters);
-    static double getClusterOverlap(vector<ClusterInfo> clustersFromFile, vector<ClusterInfo> determinedClusters);
+    static double getQualityScore(ClusterInfoContainer clustersFromFile, ClusterInfoContainer determinedClusters);
+    static double getClusterOverlap(ClusterInfoContainer clustersFromFile, ClusterInfoContainer determinedClusters);
 };
 
 #endif // DOGIMAGESTABILIZATION_QUALITYMEASURER_H
