@@ -263,48 +263,31 @@ int main(int argc, char **argv) {
         frameInfos[i].averageSimilarity = summedUpSimilarities / (1 + end - start);
     }
 
-    // TODO temp (?)
     time_t similarityFinishedTime = time(nullptr);
 
-    vector<std::tuple<double, double>> cutOffVsQualityScores;
-    for (double t = 5; t <= 15; t++) {
+    // Find clusters
+    vector<vector<FrameInfo>> clusters;
+    int currentCluster = 0;
+    clusters.push_back(vector<FrameInfo>());
+    clusters[currentCluster].push_back(frameInfos[0]);
+    double currentClusterAverage = frameInfos[currentCluster].averageSimilarity;
 
-        // Find clusters
-        vector<vector<FrameInfo>> clusters;
-        int currentCluster = 0;
-        clusters.push_back(vector<FrameInfo>());
-        clusters[currentCluster].push_back(frameInfos[0]);
-        double currentClusterAverage = frameInfos[currentCluster].averageSimilarity;
-
-        for (int i = 1; i < frameInfos.size(); i++) {
-            // If the difference is too big, we create a new cluster.
-            if (abs(currentClusterAverage - frameInfos[i].averageSimilarity) > (t/100)) {
-                currentCluster++;
-                clusters.push_back(vector<FrameInfo>());
-            }
-
-            clusters[currentCluster].push_back(frameInfos[i]);
-            currentClusterAverage = getClusterAverage(clusters[currentCluster]);
+    for (int i = 1; i < frameInfos.size(); i++) {
+        // If the difference is too big, we create a new cluster.
+        if (abs(currentClusterAverage - frameInfos[i].averageSimilarity) > 0.1) {
+            currentCluster++;
+            clusters.push_back(vector<FrameInfo>());
         }
 
-        // TODO temp
-        cout << "------------------" << endl << "USING CUT OFF " << (t/100) << endl;
-
-        double score = 0;
-        if (qualityMode) {
-            score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
-            cout << "Achieved a quality score of " << score << " for the video \"" << argv[1] << "\"!" << endl;
-        }
-
-        cutOffVsQualityScores.push_back(std::tuple<double, double>((t/100), score));
+        clusters[currentCluster].push_back(frameInfos[i]);
+        currentClusterAverage = getClusterAverage(clusters[currentCluster]);
     }
 
-    cout << "Cut off | Quality score achieved" << endl;
-    for (std::tuple<double, double> cutOffVsQualityScore : cutOffVsQualityScores) {
-        cout << std::get<0>(cutOffVsQualityScore) << "     | " << std::get<1>(cutOffVsQualityScore) << endl;
+    double score = 0;
+    if (qualityMode) {
+        score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
+        cout << "Achieved a quality score of " << score << " for the video \"" << argv[1] << "\"!" << endl;
     }
-
-    // TODO END TODO
 
     time_t qualityFinishedTime = time(nullptr);
 
