@@ -151,43 +151,97 @@ int main(int argc, char **argv) {
         cout << "Possible sub specifiers for this metric:" << endl << subSpecs << endl;
     }
 
-    // Get start time (after user i/o) for timeMode
-    time_t startTime = time(nullptr);
+    // File I/O: Verify the working directory can be opened and check if a file for the current video exists.
+    string workingDirectory = "/home/tokuyama/similarityClusterer_files";
+    string ioFilePath = "INVALID";
+    bool fileExists = false;
+    if (fileIO) {
+        string videoName = basename(argv[1]);
+        string ioFileName = videoName + "_" + to_string(metricIndex) + "_" + to_string(subSpecifier) + ".csv";
+        ioFilePath = workingDirectory + "/" + ioFileName;
 
-    // Framewise metric computation
-    Mat current, previous;
-    int frameCounter = 1;
-    double totalFrames = capture.get(CAP_PROP_FRAME_COUNT);
-    vector<FrameInfo> frameInfos;
+        if (!canOpenDir(workingDirectory)) {
+            int directoryNotCreated = mkdir(workingDirectory.c_str(), 0777);
+            if (directoryNotCreated) {
+                cerr << "Could not create or access working directory \"" << workingDirectory << "\"" << endl;
+                return 1;
+            }
 
-    // Load first frame
-    capture >> previous;
-    frameInfos.push_back(FrameInfo(previous, 1, 0));
-    for (;;) {
-        capture >> current;
-
-        if (current.data == NULL) {
-            break;
+            if (verbose) cout << "Created working directory at \"" << workingDirectory << "\"" << endl;
         }
+        else if (verbose) cout << "Found working directory at \"" << workingDirectory << "\"" << endl;
 
-        frameCounter++;
+        // Check to see if a CSV file with the name of the video exists.
+        if (!useDefaults) {
+            string userInput = "";
+            cout << "Please input the file name to write to / read from (\"d\" for \"" << ioFileName << "\")..." << endl;
+            cin >> userInput;
 
-        double currentSimilarity = comparer->computeSimilarity(&previous, &current);
-        frameInfos.push_back(FrameInfo(current, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity));
-
-        current.copyTo(previous);
-
-        if (verbose) {
-            cout << "Similarity " << currentSimilarity
-                 << " for frame #" << frameCounter << "/" << totalFrames
-                 << " at " << capture.get(CAP_PROP_POS_MSEC) << " msec"
-                 << " compared to the last frame" << endl;
+            if (userInput != "d") ioFilePath = workingDirectory + "/" + userInput;
+        }
+        struct stat result;
+        int fileNotFound = stat(ioFilePath.c_str(), &result);
+        if (fileNotFound) {
+            if (verbose) cout << "No IO file \"" << ioFilePath << "\" found. Will recalculate "
+                              << "similarity and save to file." << endl;
+            ofstream ioFileStream;
+            ioFileStream.open(ioFilePath);
+            ioFileStream << "Frame no.,Milliseconds,Similarity to last frame" << endl;
+            ioFileStream.close();
+        } else {
+            fileExists = true;
+            if (verbose) cout << "Found IO file \"" << ioFilePath << "\". Will skip "
+                              << "similarity calculation and read from file." << endl;
         }
     }
 
-    current.~Mat();
-    previous.~Mat();
-    capture.~VideoCapture();
+    // Get start time (after user I/O) for timeMode
+    time_t startTime = time(nullptr);
+
+    // Don't calculate similarity if file I/O is not active or if the file doesn't exist yet.
+    vector<FrameInfo> frameInfos;
+    if (!fileIO || !fileExists) {
+        // Framewise metric computation
+        Mat current, previous;
+        double totalFrames = capture.get(CAP_PROP_FRAME_COUNT);
+
+        // Load first frame
+        capture >> previous;
+        frameInfos.push_back(FrameInfo(previous, 1, 0));
+        if (fileIO) {
+            appendToCsv(ioFilePath, 1, 0, -1);
+        }
+        for (int frameCounter = 2; frameCounter <= totalFrames; frameCounter++) {
+            capture >> current;
+
+            if (current.data == NULL) {
+                break;
+            }
+
+            double currentSimilarity = comparer->computeSimilarity(&previous, &current);
+            frameInfos.push_back(FrameInfo(current, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity));
+            if (fileIO) {
+                appendToCsv(ioFilePath, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity);
+            }
+
+            current.copyTo(previous);
+
+            if (verbose) {
+                cout << "Similarity " << currentSimilarity
+                     << " for frame #" << frameCounter << "/" << totalFrames
+                     << " at " << capture.get(CAP_PROP_POS_MSEC) << " msec"
+                     << " compared to the last frame" << endl;
+            }
+        }
+
+        current.~Mat();
+        previous.~Mat();
+        capture.~VideoCapture();
+    } else {
+        // Read in data from file.
+        frameInfos = readFrameInfosFromCsv(ioFilePath);
+        assert(frameInfos.size() != 0);
+    }
 
     // ----- Clustering -----
     // Get average similarity for region
