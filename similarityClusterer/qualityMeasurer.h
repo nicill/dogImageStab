@@ -23,6 +23,9 @@ private:
     static vector<ClusterInfo> frameInfosToClusterInfo(vector<vector<FrameInfo>> frameInfosList);
     static vector<ClusterInfo> readTagFile(string pathToTagFile);
     static vector<string> splitLine(string inputString);
+
+    static double getQualityScore(vector<ClusterInfo> clustersFromFile, vector<ClusterInfo> determinedClusters);
+    static double getClusterOverlap(vector<ClusterInfo> clustersFromFile, vector<ClusterInfo> determinedClusters);
 };
 
 #endif // DOGIMAGESTABILIZATION_QUALITYMEASURER_H
