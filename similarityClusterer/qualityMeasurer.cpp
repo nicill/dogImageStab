@@ -15,6 +15,7 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
                                      vector<vector<FrameInfo>> determinedClusterFrameInfos,
                                      bool verbose) {
     vector<double> percentageMatchedPerFile;
+    vector<double> qualityScoresPerFile;
     vector<ClusterInfo> determinedClusters = frameInfosToClusterInfo(determinedClusterFrameInfos);
 
     DIR *tagFileDir = opendir(pathToTagFileDirectory.c_str());
@@ -35,24 +36,87 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
             continue;
         }
 
-
-        // TODO TODO TODO NEW QUALITY METRIC
         // For each cluster in tag file:
         //    For each determined cluster:
         //       if (overlap):                  (given clustering:         |-------|
-        //          1.) Calculate overlap in %  (determined clust.:     |~~~~~|       => 50 % overlap
-        //          2.) Calculate ratio of overlap vs. non overlap  (   non|yes       => 50/50, aka 50 %
-        //          3.) Get overlap score (overlap % * overlap ratio, e.g. 50 % * 50 % = 25 %)
+        //          1.) Calculate overlap in %  (determined clust.:     |~~~~~|       => 30 % overlap
+        //          2.) Calculate ratio of overlap vs. non overlap:     non|yes       => 50/50, aka 50 %
+        //          3.) Get overlap score (overlap % * overlap ratio, e.g. 30 % * 50 % = 15 %)
         //    malus = 0
         //    For each overlapping cluster additional to the best match:
         //       if (overlap / best overlap) > 0.1:
         //          malus += 25 * (overlap / best overlap) (in ]2.5,25])
         //    Add up all overlaps and multiply by (100 - malus) - can be negative!
+        vector<double> scoresForCFF;
+        for (ClusterInfo clusterFromFile : clustersFromFile) {
+            vector<double> overlapScoresOfDC;
+            for (ClusterInfo determinedCluster : determinedClusters) {
+                if (determinedCluster.endMsec <= clusterFromFile.beginMsec
+                    || determinedCluster.beginMsec >= clusterFromFile.endMsec) {
+                    continue;
+                }
+
+                // Logic: If an overlap exists (neither is the begin after the end nor the end before
+                //        the begin) it is between the bigger begin and the smaller end value.
+                double biggerBegin =
+                        (determinedCluster.beginMsec > clusterFromFile.beginMsec)
+                        ? determinedCluster.beginMsec
+                        : clusterFromFile.beginMsec;
+                double smallerEnd =
+                        (determinedCluster.endMsec < clusterFromFile.endMsec)
+                        ? determinedCluster.endMsec
+                        : clusterFromFile.endMsec;
+                double overlapLength = smallerEnd - biggerBegin;
+
+                // Percentage of cluster from file that is overlapped
+                assert(clusterFromFile.length != 0);
+                double overlapPercent = overlapLength / clusterFromFile.length;
+                // Ratio of overlap vs. non overlap in determined cluster
+                double overlapRatioInDC = 0;
+                if (determinedCluster.length != 0) overlapRatioInDC = overlapLength / determinedCluster.length;
+                // Overlap score (overlap percentage * overlap ratio)
+                overlapScoresOfDC.push_back(overlapPercent * overlapRatioInDC);
+            }
+
+            // Get best overlap
+            double bestOverlapScore = 0;
+            double sumOfOverlaps = 0;
+            for (double overlapScore : overlapScoresOfDC) {
+                sumOfOverlaps += overlapScore;
+
+                if (overlapScore > bestOverlapScore) {
+                    bestOverlapScore = overlapScore;
+                }
+            }
+
+            // Sum up overlaps and calculate malus for extra overlaps
+            double malus = 0;
+            if (overlapScoresOfDC.size() > 1) {
+                for (double overlapScore : overlapScoresOfDC) {
+                    double ratioOfOverlaps = overlapScore / bestOverlapScore;
+                    if (ratioOfOverlaps > 0.1) {
+                        malus += 0.25 * ratioOfOverlaps; // in ]2.5,25]
+                    }
+                }
+            }
+
+            // Calculate quality score for cluster (can be negative!)
+            // Exemplary scores: No overlap => 0, Perfect overlap of exactly one cluster => 1
+            scoresForCFF.push_back(sumOfOverlaps * (1 - malus));
+        }
+
+        double totalQualityScore = 0;
+        for (double qualityScore : scoresForCFF) {
+            totalQualityScore += qualityScore;
+        }
+
+        cout << "Calculated quality score of " << totalQualityScore << " in file \"" << fileName << "\"." << endl;
+        qualityScoresPerFile.push_back(totalQualityScore);
 
 
 
 
-
+        // TODO old overlap calculation
         // Try to match the clusters from the tag files to the determined clusters. We aim to find
         // out what percentage of the clusters determined before overlaps with actual clusters.
         double clustersTotalMsec = 0; // total msec of determined clusters
