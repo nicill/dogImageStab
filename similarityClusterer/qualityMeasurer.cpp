@@ -54,7 +54,7 @@ void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, vector<Fra
             }
         }
         double overlapRatio = overlappingFrames / frames.size();
-        cout << overlapRatio * 100 << " % of frames supplied match the clusters in " << clustersFromFile.name << endl;
+        cout << overlapRatio * 100 << " % of frames overlap clusters in " << clustersFromFile.name << endl;
     }
 }
 
@@ -67,8 +67,7 @@ ClusterInfoContainer qualityMeasurer::frameInfosToClusterInfo(string name, vecto
         clusterings.clusterInfos.push_back(
                 ClusterInfo(
                         "Cluster from " + to_string((int)beginMsec) + " to " + to_string((int)endMsec),
-                        beginMsec,
-                        endMsec));
+                        frameInfos));
     }
 
     return clusterings;
@@ -89,7 +88,6 @@ vector<ClusterInfoContainer> qualityMeasurer::readTagFiles(string pathToTagFileD
         if (verbose) cout << "Reading file \"" << fileName << "\"." << endl;
 
         ClusterInfoContainer clustersFromFile = readTagFile(pathToTagFileDirectory + "/" + fileName);
-        clustersFromFile.name = fileName;
 
         if (clustersFromFile.clusterInfos.size() == 0) {
             cerr << "Couldn't open file " << fileName << " as tag file. Skipping..." << endl;

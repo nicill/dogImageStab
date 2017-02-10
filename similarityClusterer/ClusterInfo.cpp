@@ -6,7 +6,7 @@
 #define DOGIMAGESTABILIZATION_CLUSTERINFO_CPP
 
 #include <string>
-#include <assert.h>
+#include "FrameInfo.cpp"
 
 struct ClusterInfo {
     std::string name = "INVALID";
@@ -14,13 +14,64 @@ struct ClusterInfo {
     double endMsec = -1;
     double length = -1;
 
+    bool hasFrames = false;
+    std::vector<FrameInfo> frames;
+    double beginFrameNo = -1;
+    double endFrameNo = -1;
+    double averageSimilarity = -1;
+
     ClusterInfo() {};
-    ClusterInfo(std::string _name, double _beginMsec, double _endMsec) {
+    ClusterInfo(std::string _name,
+                double _beginMsec,
+                double _endMsec) {
+            this->name = _name;
+            this->beginMsec = _beginMsec;
+            this->endMsec = _endMsec;
+            this->length = this->endMsec - this->beginMsec;
+            assert(this->length >= 0);
+    }
+    ClusterInfo(std::string _name,
+                std::vector<FrameInfo> _frames) {
         this->name = _name;
-        this->beginMsec = _beginMsec;
-        this->endMsec = _endMsec;
-        this->length = _endMsec - _beginMsec;
+        this->beginMsec = _frames.front().msec;
+        this->endMsec = _frames.back().msec;
+
+        this->hasFrames = true;
+        this->frames = _frames;
+        this->beginFrameNo = _frames.front().frameNo;
+        this->endFrameNo = _frames.back().frameNo;
+        assert(this->endFrameNo - this->beginFrameNo + 1 == this->frames.size());
+
+        updateValues();
         assert(this->length >= 0);
+    }
+
+    /**
+     * Add a frame to the back of this cluster. Only possible if the cluster contains frames.
+     * @param frame The frame to add.
+     */
+    void addFrameAtBack(FrameInfo frame) {
+        assert(this->hasFrames
+               && frame.msec > this->beginMsec
+               && frame.frameNo == this->endFrameNo + 1);
+
+        this->frames.push_back(frame);
+        this->endMsec = frame.msec;
+        this->endFrameNo = frame.frameNo;
+        updateValues();
+    }
+
+    /**
+     * Updates length and average similarity fields of this object.
+     */
+    void updateValues() {
+        this->length = this->endMsec - this->beginMsec;
+        // Average similarity
+        double summedUpAverages = 0;
+        for (FrameInfo frameInfo : this->frames) {
+            summedUpAverages += frameInfo.averageSimilarity;
+        }
+        this->averageSimilarity = summedUpAverages / this->frames.size();
     }
 };
 

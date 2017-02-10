@@ -16,12 +16,14 @@ using namespace std;
 using namespace cv;
 
 // Declarations
+void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
+void clusterFrame(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
 void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
 void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose);
 bool canOpenDir(string path);
 vector<FrameInfo> readFrameInfosFromCsv(string filePath);
 void appendToCsv(string filePath, double frameNo, double msec, double similarity);
-double getClusterAverage(vector<FrameInfo> cluster);
+double getAverageSimilarity(vector<FrameInfo> cluster);
 
 /**
  * Main method.
@@ -31,7 +33,10 @@ int main(int argc, char **argv) {
     bool measureTime = false;
     bool fileIO = false;
     bool useDefaults = false;
-    bool clusterMode = false;
+
+    bool qualityMeasurement = false;
+    bool clusterRegionMode = false;
+    bool clusterFrameMode = false;
     bool frameMode = false;
     string validUsage = "./similarityClusterer <video> <metric index> <sub specifier> [flag(s)]";
     // http://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html?highlight=comparehist#comparehist
@@ -56,7 +61,8 @@ int main(int argc, char **argv) {
              << "-f: Write similarity values to / read it from file." << endl
              << "-d: Use default values for all options." << endl
              << "Mode flags:" << endl
-             << "-C: Cluster and print quality score." << endl
+             << "-R: Cluster based on region average and print quality score." << endl
+             << "-C: Cluster based on frame classification and print quality score." << endl
              << "-F: Classify frames and print overlap percentage." << endl;
         return 0;
     }
@@ -81,11 +87,18 @@ int main(int argc, char **argv) {
     // Read provided flag, if given
     if (hasFlag) {
         // Mode flag
+        if (last_arg.find('R') != string::npos) {
+            qualityMeasurement = true;
+            clusterRegionMode = true;
+            cout << "Clustering mode based on region activated." << endl;
+        }
         if (last_arg.find('C') != string::npos) {
-            clusterMode = true;
-            cout << "Clustering mode activated." << endl;
+            qualityMeasurement = true;
+            clusterFrameMode = true;
+            cout << "Clustering mode based on frame classification activated." << endl;
         }
         if (last_arg.find('F') != string::npos) {
+            qualityMeasurement = true;
             frameMode = true;
             cout << "Frame classification mode activated." << endl;
         }
@@ -111,7 +124,7 @@ int main(int argc, char **argv) {
 
     // Quality mode: Verify that the tag file directory exists.
     string pathToTagFiles = "INVALID";
-    if (clusterMode) {
+    if (qualityMeasurement) {
         pathToTagFiles = "/home/tokuyama/dog/tags";
         if (!useDefaults) {
             string userInput = "";
@@ -259,8 +272,11 @@ int main(int argc, char **argv) {
 
     time_t similarityFinishedTime = time(nullptr);
 
-    if (clusterMode) {
-        cluster(frameInfos, pathToTagFiles, verbose);
+    if (clusterRegionMode) {
+        clusterRegion(frameInfos, pathToTagFiles, verbose);
+    }
+    if (clusterFrameMode) {
+        clusterFrame(frameInfos, pathToTagFiles, verbose);
     }
     if (frameMode) {
         classify(frameInfos, pathToTagFiles, verbose);
@@ -281,12 +297,12 @@ int main(int argc, char **argv) {
 }
 
 /**
- * Clusters the frames based on a clustering strategy and evaluates the result with the tag files given.
+ * Clusters the frames based on a region average score and evaluates the result with the tag files given.
  * @param frameInfos Frames to cluster.
  * @param pathToTagFiles Directory containing the tag files. Must exist.
  * @param verbose Activate verbosity to cout.
  */
-void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) {
+void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) {
     // Get average similarity for region
     int maxIndex = (int) frameInfos.size() - 1;
     for (int i = 0; i < maxIndex; i++) {
@@ -306,6 +322,36 @@ void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) 
         frameInfos[i].averageSimilarity = summedUpSimilarities / (1 + end - start);
     }
 
+    cluster(frameInfos, pathToTagFiles, verbose);
+}
+
+/**
+ * Clusters the frames based on single frame classification and evaluates the result with the tag files given.
+ * @param frameInfos Frames to cluster.
+ * @param pathToTagFiles Directory containing the tag files. Must exist.
+ * @param verbose Activate verbosity to cout.
+ */
+void clusterFrame(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) {
+    for (FrameInfo frame : frameInfos) {
+        frame.averageSimilarity = frame.similarityToPrevious;
+    }
+
+    cluster(frameInfos, pathToTagFiles, verbose);
+}
+
+/**
+ * Clusters frames based on average similarity and evaluates the result with the tag files given.
+ * @param frameInfos Frames to cluster.
+ * @param pathToTagFiles Directory containing the tag files. Must exist.
+ * @param verbose Activate verbosity to cout.
+ */
+void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) {
+    // Classify frames
+    // Cluster
+    // Repeat until stable:
+    //    Calculate average similarity per cluster
+    //    Cluster again
+
     // Find clusters
     vector<vector<FrameInfo>> clusters;
     int currentCluster = 0;
@@ -321,7 +367,7 @@ void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) 
         }
 
         clusters[currentCluster].push_back(frameInfos[i]);
-        currentClusterAverage = getClusterAverage(clusters[currentCluster]);
+        currentClusterAverage = getAverageSimilarity(clusters[currentCluster]);
     }
 
     double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
@@ -329,7 +375,7 @@ void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) 
 }
 
 /**
- * Clusters the frames based on a clustering strategy and evaluates the result with the tag files given.
+ * Classifies the frames based on threshold values and compares the result with the tag files given.
  * @param frames Frames to cluster.
  * @param pathToTagFiles Directory containing the tag files. Must exist.
  * @param verbose Activate verbosity to cout.
@@ -340,8 +386,8 @@ void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
     vector<FrameInfo> lowSimilarityFrames;
 
     for (FrameInfo frame : frames) {
-        if (frame.similarityToPrevious > 0.5) highSimilarityFrames.push_back(frame);
-        else if (frame.similarityToPrevious > 0.2) averageSimilarityFrames.push_back(frame);
+        if (frame.similarityToPrevious > 0.6) highSimilarityFrames.push_back(frame);
+        else if (frame.similarityToPrevious > 0.3) averageSimilarityFrames.push_back(frame);
         else lowSimilarityFrames.push_back(frame);
     }
 
@@ -399,6 +445,10 @@ vector<FrameInfo> readFrameInfosFromCsv(string filePath) {
     return frameInfos;
 }
 
+/**
+ * Appends the given values to the given csv file (must be writable) with highest precision.
+ * @param filePath File path of the csv file.
+ */
 void appendToCsv(string filePath, double frameNo, double msec, double similarity) {
     char sep = ',';
     ofstream ioFileStream;
@@ -414,7 +464,7 @@ void appendToCsv(string filePath, double frameNo, double msec, double similarity
  * @param clusteredInfos FrameInfo objects.
  * @return Average of all average similarity values.
  */
-double getClusterAverage(vector<FrameInfo> clusteredInfos) {
+double getAverageSimilarity(std::vector<FrameInfo> clusteredInfos) {
     double summedUpAverages = 0;
     for (FrameInfo frameInfo : clusteredInfos) {
         summedUpAverages += frameInfo.averageSimilarity;

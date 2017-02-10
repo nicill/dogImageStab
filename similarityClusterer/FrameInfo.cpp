@@ -12,21 +12,26 @@ using cv::Mat;
 struct FrameInfo
 {
     Mat frame = Mat();
-    double frameNum = -1;
+    double frameNo = -1;
     double msec = -1;
     double similarityToPrevious = -1;
+
+    std::string label = "NO LABEL";
     double averageSimilarity = -1;
 
     FrameInfo() {}
     FrameInfo(Mat _frame,
-              double _frameNum,
+              double _frameNo,
               double _msec,
               double _similarityToPrevious = -1,
+              std::string _label = "NO LABEL",
               double _averageSimilarity = -1) {
         _frame.copyTo(this->frame);
-        this->frameNum = _frameNum;
+        this->frameNo = _frameNo;
         this->msec = _msec;
         this->similarityToPrevious = _similarityToPrevious;
+
+        this->label = _label;
         this->averageSimilarity = _averageSimilarity;
     }
 };
