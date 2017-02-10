@@ -200,10 +200,10 @@ int main(int argc, char **argv) {
 
     // Don't calculate similarity if file I/O is not active or if the file doesn't exist yet.
     vector<FrameInfo> frameInfos;
+    double totalFrames = capture.get(CAP_PROP_FRAME_COUNT);
     if (!fileIO || !fileExists) {
         // Framewise metric computation
         Mat current, previous;
-        double totalFrames = capture.get(CAP_PROP_FRAME_COUNT);
 
         // Load first frame
         capture >> previous;
@@ -236,12 +236,12 @@ int main(int argc, char **argv) {
 
         current.~Mat();
         previous.~Mat();
-        capture.~VideoCapture();
     } else {
         // Read in data from file.
         frameInfos = readFrameInfosFromCsv(ioFilePath);
-        assert(frameInfos.size() != 0);
+        assert(frameInfos.size() == totalFrames);
     }
+    capture.~VideoCapture();
 
     // ----- Clustering -----
     // Get average similarity for region
