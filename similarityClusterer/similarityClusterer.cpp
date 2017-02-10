@@ -283,9 +283,8 @@ int main(int argc, char **argv) {
         currentClusterAverage = getClusterAverage(clusters[currentCluster]);
     }
 
-    double score = 0;
     if (qualityMode) {
-        score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
+        double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
         cout << "Achieved a quality score of " << score << " for the video \"" << argv[1] << "\"!" << endl;
     }
 
