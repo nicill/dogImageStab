@@ -16,17 +16,23 @@ using namespace std;
 using namespace cv;
 
 // Declarations
+void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
+void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose);
 bool canOpenDir(string path);
 vector<FrameInfo> readFrameInfosFromCsv(string filePath);
 void appendToCsv(string filePath, double frameNo, double msec, double similarity);
 double getClusterAverage(vector<FrameInfo> cluster);
 
+/**
+ * Main method.
+ */
 int main(int argc, char **argv) {
     bool verbose = false;
-    bool qualityMode = false;
-    bool timeMode = false;
+    bool measureTime = false;
     bool fileIO = false;
     bool useDefaults = false;
+    bool clusterMode = false;
+    bool frameMode = false;
     string validUsage = "./similarityClusterer <video> <metric index> <sub specifier> [flag(s)]";
     // http://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html?highlight=comparehist#comparehist
     string subSpecHist = "0: Correlation, 1: Chi-square, 2: Intersection, 3: Bhattacharyya";
@@ -44,12 +50,14 @@ int main(int argc, char **argv) {
              << "2: Feature detection | " << subSpecFeat << endl
              << "3: Image metrics     | " << subSpecImg << endl
              << endl
-             << "Flags (all lowercase flags can be combined, e.g. '-tq'):" << endl
+             << "Modifier flags (flags can be combined, e.g. '-Ctv'):" << endl
              << "-v: Enable verbose output." << endl
-             << "-q: Print quality score." << endl
              << "-t: Measure time taken." << endl
              << "-f: Write similarity values to / read it from file." << endl
-             << "-d: Use default values for all options." << endl;
+             << "-d: Use default values for all options." << endl
+             << "Mode flags:" << endl
+             << "-C: Cluster and print quality score." << endl
+             << "-F: Classify frames and print overlap percentage." << endl;
         return 0;
     }
 
@@ -72,16 +80,23 @@ int main(int argc, char **argv) {
 
     // Read provided flag, if given
     if (hasFlag) {
+        // Mode flag
+        if (last_arg.find('C') != string::npos) {
+            clusterMode = true;
+            cout << "Clustering mode activated." << endl;
+        }
+        if (last_arg.find('F') != string::npos) {
+            frameMode = true;
+            cout << "Frame classification mode activated." << endl;
+        }
+
+        // Additional modifier flags
         if (last_arg.find('v') != string::npos) {
             verbose = true;
             cout << "Verbose output activated." << endl;
         }
-        if (last_arg.find('q') != string::npos) {
-            qualityMode = true;
-            cout << "Quality score will be calculated." << endl;
-        }
         if (last_arg.find('t') != string::npos) {
-            timeMode = true;
+            measureTime = true;
             cout << "Time taken will be measured." << endl;
         }
         if (last_arg.find('f') != string::npos) {
@@ -96,7 +111,7 @@ int main(int argc, char **argv) {
 
     // Quality mode: Verify that the tag file directory exists.
     string pathToTagFiles = "INVALID";
-    if (qualityMode) {
+    if (clusterMode) {
         pathToTagFiles = "/home/tokuyama/dog/tags";
         if (!useDefaults) {
             string userInput = "";
@@ -168,8 +183,7 @@ int main(int argc, char **argv) {
             }
 
             if (verbose) cout << "Created working directory at \"" << workingDirectory << "\"" << endl;
-        }
-        else if (verbose) cout << "Found working directory at \"" << workingDirectory << "\"" << endl;
+        } else if (verbose) cout << "Found working directory at \"" << workingDirectory << "\"" << endl;
 
         // Check to see if a CSV file with the name of the video exists.
         if (!useDefaults) {
@@ -195,7 +209,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    // Get start time (after user I/O) for timeMode
+    // Get start time (after user I/O) for time measurement
     time_t startTime = time(nullptr);
 
     // Don't calculate similarity if file I/O is not active or if the file doesn't exist yet.
@@ -243,7 +257,36 @@ int main(int argc, char **argv) {
     }
     capture.~VideoCapture();
 
-    // ----- Clustering -----
+    time_t similarityFinishedTime = time(nullptr);
+
+    if (clusterMode) {
+        cluster(frameInfos, pathToTagFiles, verbose);
+    }
+    if (frameMode) {
+        classify(frameInfos, pathToTagFiles, verbose);
+    }
+
+    time_t qualityFinishedTime = time(nullptr);
+
+    if (measureTime) {
+        cout    << "----------" << endl
+                << "Time taken" << endl
+                << "Total: " << qualityFinishedTime - startTime << " s" << endl
+                << "Similarity measurement: " << similarityFinishedTime - startTime << " s" << endl
+                << "Quality measurement: " << qualityFinishedTime - similarityFinishedTime << " s" << endl;
+    }
+
+    delete comparer;
+    return 0;
+}
+
+/**
+ * Clusters the frames based on a clustering strategy and evaluates the result with the tag files given.
+ * @param frameInfos Frames to cluster.
+ * @param pathToTagFiles Directory containing the tag files. Must exist.
+ * @param verbose Activate verbosity to cout.
+ */
+void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) {
     // Get average similarity for region
     int maxIndex = (int) frameInfos.size() - 1;
     for (int i = 0; i < maxIndex; i++) {
@@ -263,8 +306,6 @@ int main(int argc, char **argv) {
         frameInfos[i].averageSimilarity = summedUpSimilarities / (1 + end - start);
     }
 
-    time_t similarityFinishedTime = time(nullptr);
-
     // Find clusters
     vector<vector<FrameInfo>> clusters;
     int currentCluster = 0;
@@ -283,23 +324,35 @@ int main(int argc, char **argv) {
         currentClusterAverage = getClusterAverage(clusters[currentCluster]);
     }
 
-    if (qualityMode) {
-        double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
-        cout << "Achieved a quality score of " << score << " for the video \"" << argv[1] << "\"!" << endl;
+    double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
+    cout << "Achieved a quality score of " << score << "!" << endl;
+}
+
+/**
+ * Clusters the frames based on a clustering strategy and evaluates the result with the tag files given.
+ * @param frames Frames to cluster.
+ * @param pathToTagFiles Directory containing the tag files. Must exist.
+ * @param verbose Activate verbosity to cout.
+ */
+void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
+    vector<FrameInfo> highSimilarityFrames;
+    vector<FrameInfo> averageSimilarityFrames;
+    vector<FrameInfo> lowSimilarityFrames;
+
+    for (FrameInfo frame : frames) {
+        if (frame.similarityToPrevious > 0.5) highSimilarityFrames.push_back(frame);
+        else if (frame.similarityToPrevious > 0.2) averageSimilarityFrames.push_back(frame);
+        else lowSimilarityFrames.push_back(frame);
     }
 
-    time_t qualityFinishedTime = time(nullptr);
+    cout << "Matching high similarity frames..." << endl;
+    qualityMeasurer::calculateOverlap(pathToTagFiles, highSimilarityFrames, verbose);
 
-    if (timeMode) {
-        cout    << "----------" << endl
-                << "Time taken" << endl
-                << "Total: " << qualityFinishedTime - startTime << " s" << endl
-                << "Similarity measurement: " << similarityFinishedTime - startTime << " s" << endl
-                << "Quality measurement: " << qualityFinishedTime - similarityFinishedTime << " s" << endl;
-    }
+    cout << "Matching average similarity frames..." << endl;
+    qualityMeasurer::calculateOverlap(pathToTagFiles, averageSimilarityFrames, verbose);
 
-    delete comparer;
-    return 0;
+    cout << "Matching low similarity frames..." << endl;
+    qualityMeasurer::calculateOverlap(pathToTagFiles, lowSimilarityFrames, verbose);
 }
 
 /**
