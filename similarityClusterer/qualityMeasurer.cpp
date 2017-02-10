@@ -37,14 +37,25 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
 }
 
 /**
- * Calculates the overlap of the given frames with each of the clusterings in the given tag files.
+ * Calculates the overlap of the given frames with each of the clusterings in the given tag files and outputs it.
  * @param pathToTagFileDirectory A directory containing tag files. Must be a valid directory.
  * @param frames The frames to be evaluated.
  * @param verbose Activate verbosity to cout.
- * @return Overlap percentage in [0,1].
  */
-double qualityMeasurer::getOverlap(string pathToTagFileDirectory, vector<FrameInfo> frames, bool verbose) {
-    throw("");
+void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, vector<FrameInfo> frames, bool verbose) {
+    vector<ClusterInfoContainer> clustersFromAllFiles = readTagFiles(pathToTagFileDirectory, verbose);
+    for (ClusterInfoContainer clustersFromFile : clustersFromAllFiles) {
+        double overlappingFrames = 0;
+        for (ClusterInfo cluster : clustersFromFile.clusterInfos) {
+            for (FrameInfo frame : frames) {
+                if (frame.msec >= cluster.beginMsec && frame.msec <= cluster.endMsec) {
+                    overlappingFrames++;
+                }
+            }
+        }
+        double overlapRatio = overlappingFrames / frames.size();
+        cout << overlapRatio * 100 << " % of frames supplied match the clusters in " << clustersFromFile.name << endl;
+    }
 }
 
 ClusterInfoContainer qualityMeasurer::frameInfosToClusterInfo(string name, vector<vector<FrameInfo>> frameInfosList) {

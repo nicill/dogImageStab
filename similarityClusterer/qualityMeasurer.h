@@ -19,9 +19,9 @@ public:
     static double scoreQuality(string pathToTagFileDirectory,
                                vector<vector<FrameInfo>> determinedClusterFrameInfos,
                                bool verbose = false);
-    static double getOverlap(string pathToTagFileDirectory,
-                             vector<FrameInfo> frames,
-                             bool verbose = false);
+    static void calculateOverlap(string pathToTagFileDirectory,
+                                 vector<FrameInfo> frames,
+                                 bool verbose = false);
 
 private:
     static ClusterInfoContainer frameInfosToClusterInfo(string name, vector<vector<FrameInfo>> frameInfosList);
