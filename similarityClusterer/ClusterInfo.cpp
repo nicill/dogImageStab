@@ -61,6 +61,19 @@ struct ClusterInfo {
         updateValues();
     }
 
+    bool equals(ClusterInfo compare) {
+        bool equal (this->hasFrames == compare.hasFrames
+                    && this->beginMsec == compare.beginMsec
+                    && this->endMsec == compare.endMsec);
+
+        if (this->hasFrames) {
+            equal &= (this->beginFrameNo == compare.beginFrameNo
+                      && this->endFrameNo == compare.endFrameNo);
+        }
+
+        return equal;
+    }
+
     /**
      * Updates length and average similarity fields of this object.
      */
