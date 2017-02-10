@@ -17,7 +17,7 @@ using namespace std;
 class qualityMeasurer {
 public:
     static double scoreQuality(string pathToTagFileDirectory,
-                               vector<vector<FrameInfo>> determinedClusterFrameInfos,
+                               vector<ClusterInfo> determinedClusterFrameInfos,
                                bool verbose = false);
     static void calculateOverlap(string pathToTagFileDirectory,
                                  vector<FrameInfo> frames,

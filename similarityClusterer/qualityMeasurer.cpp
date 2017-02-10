@@ -12,10 +12,10 @@
  * @return A quality score in [0,1].
  */
 double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
-                                     vector<vector<FrameInfo>> determinedClusterFrameInfos,
+                                     vector<ClusterInfo> determinedClusterClusterInfos,
                                      bool verbose) {
     vector<double> qualityScoresPerFile;
-    ClusterInfoContainer determinedClusters = frameInfosToClusterInfo("Determined clusters", determinedClusterFrameInfos);
+    ClusterInfoContainer determinedClusters = ClusterInfoContainer("Determined clusters", determinedClusterClusterInfos);
 
     vector<ClusterInfoContainer> clustersFromAllFiles = readTagFiles(pathToTagFileDirectory, verbose);
     for (ClusterInfoContainer clustersFromFile : clustersFromAllFiles) {
