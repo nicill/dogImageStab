@@ -91,12 +91,15 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
 
             // Sum up overlaps and calculate malus for extra overlaps
             double malus = 0;
-            if (overlapScoresOfDC.size() > 1) {
-                for (double overlapScore : overlapScoresOfDC) {
-                    double ratioOfOverlaps = overlapScore / bestOverlapScore;
-                    if (ratioOfOverlaps > 0.1) {
-                        malus += 0.25 * ratioOfOverlaps; // in ]2.5,25]
-                    }
+            for (double overlapScore : overlapScoresOfDC) {
+                // Skip best overlap
+                if (overlapScore == bestOverlapScore) {
+                    continue;
+                }
+
+                double ratioOfOverlaps = overlapScore / bestOverlapScore;
+                if (ratioOfOverlaps > 0.1) {
+                    malus += 0.25 * ratioOfOverlaps; // in ]2.5,25]
                 }
             }
 
@@ -105,13 +108,13 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
             scoresForCFF.push_back(sumOfOverlaps * (1 - malus));
         }
 
-        double totalQualityScore = 0;
+        double averageQualityScoreForCFF = 0;
         for (double qualityScore : scoresForCFF) {
-            totalQualityScore += qualityScore;
+            averageQualityScoreForCFF += qualityScore / scoresForCFF.size();
         }
 
-        cout << "Calculated quality score of " << totalQualityScore << " in file \"" << fileName << "\"." << endl;
-        qualityScoresPerFile.push_back(totalQualityScore);
+        cout << "Calculated quality score of " << averageQualityScoreForCFF << " in file \"" << fileName << "\"." << endl;
+        qualityScoresPerFile.push_back(averageQualityScoreForCFF);
 
 
 
@@ -171,13 +174,13 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
 
     closedir(tagFileDir);
 
-    // Calculate success rate based on all tag files. Option to prioritise files could be necessary.
-    double successRate = 0;
-    for (double percentageMatched : percentageMatchedPerFile) {
-        successRate += percentageMatched / percentageMatchedPerFile.size();
+    // Calculate average quality score based on all tag files. Option to prioritise files could be necessary.
+    double averageQualityScore = 0;
+    for (double qualityScoreInFile : qualityScoresPerFile) {
+        averageQualityScore += qualityScoreInFile / qualityScoresPerFile.size();
     }
 
-    return successRate;
+    return averageQualityScore;
 }
 
 vector<ClusterInfo> qualityMeasurer::frameInfosToClusterInfo(vector<vector<FrameInfo>> frameInfosList) {
