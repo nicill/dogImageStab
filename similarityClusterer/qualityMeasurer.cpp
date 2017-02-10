@@ -88,10 +88,9 @@ vector<ClusterInfo> qualityMeasurer::readTagFile(string pathToTagFile) {
 
         // Split should contain: Name, start (msec), end (msec), duration (msec)
         assert(split.size() == 4);
-        char* end;
-        double beginMsec = strtod(split[1].c_str(), &end);
-        double endMsec = strtod(split[2].c_str(), &end);
-        assert(strtod(split[3].c_str(), &end) == (endMsec - beginMsec));
+        double beginMsec = stod(split[1].c_str());
+        double endMsec = stod(split[2].c_str());
+        assert(stod(split[3].c_str()) == (endMsec - beginMsec));
 
         clustersFromFile.push_back(ClusterInfo(split[0], beginMsec, endMsec));
     }
