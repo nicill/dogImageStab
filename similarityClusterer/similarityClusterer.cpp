@@ -332,8 +332,8 @@ void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool ver
  * @param verbose Activate verbosity to cout.
  */
 void clusterFrame(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) {
-    for (FrameInfo frame : frameInfos) {
-        frame.averageSimilarity = frame.similarityToPrevious;
+    for (int i = 0; i < frameInfos.size(); i++) {
+        frameInfos[i].averageSimilarity = frameInfos[i].similarityToPrevious;
     }
 
     cluster(frameInfos, pathToTagFiles, verbose);
@@ -353,21 +353,58 @@ void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) 
     //    Cluster again
 
     // Find clusters
-    vector<vector<FrameInfo>> clusters;
-    int currentCluster = 0;
-    clusters.push_back(vector<FrameInfo>());
-    clusters[currentCluster].push_back(frameInfos[0]);
-    double currentClusterAverage = frameInfos[currentCluster].averageSimilarity;
+    vector<ClusterInfo> clusters = { ClusterInfo("All frames", frameInfos) };
+    for (;;) {
+        vector<ClusterInfo> newClusters;
 
-    for (int i = 1; i < frameInfos.size(); i++) {
-        // If the difference is too big, we create a new cluster.
-        if (abs(currentClusterAverage - frameInfos[i].averageSimilarity) > 0.1) {
-            currentCluster++;
-            clusters.push_back(vector<FrameInfo>());
+        int currentCluster = 0;
+        // First frame needs to be given
+        newClusters.push_back(ClusterInfo(to_string(currentCluster), { clusters[0].frames.front() }));
+
+        int overrideJ = 1;
+        for (int i = 0; i < clusters.size(); i++) {
+            for (int j = overrideJ; j < clusters[i].frames.size(); j++) {
+                overrideJ = 0;
+                // If the difference is too big, we create a new cluster.
+                if (abs(newClusters[currentCluster].averageSimilarity - clusters[i].frames[j].averageSimilarity) > 0.1) {
+                    currentCluster++;
+                    newClusters.push_back(ClusterInfo(to_string(currentCluster), { clusters[i].frames[j] }));
+                } else {
+                    newClusters[currentCluster].addFrameAtBack(clusters[i].frames[j]);
+                }
+            }
         }
 
-        clusters[currentCluster].push_back(frameInfos[i]);
-        currentClusterAverage = getAverageSimilarity(clusters[currentCluster]);
+        for (int i = 0; i < clusters.size(); i++) {
+            assert(clusters[i].hasFrames);
+            for (int j = 0; j < clusters[i].frames.size(); j++) {
+                clusters[i].frames[j].averageSimilarity = clusters[i].averageSimilarity;
+            }
+        }
+
+        // First iteration
+        if (clusters.size() == 0) {
+            clusters = newClusters;
+            continue;
+        }
+
+        bool equal = true;
+        vector<ClusterInfo>::iterator clustersIterator = clusters.begin();
+        vector<ClusterInfo>::iterator newClustersIterator = newClusters.begin();
+        while (clustersIterator != clusters.end()
+               && newClustersIterator != newClusters.end()) {
+            if (!((*clustersIterator).equals(*newClustersIterator))) {
+                equal = false;
+                break;
+            } else {
+                clustersIterator++;
+                newClustersIterator++;
+            }
+        }
+        clusters = newClusters;
+
+        throw("NOT CORRECTLY IMPLEMENTED");
+        if (equal) break;
     }
 
     double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
