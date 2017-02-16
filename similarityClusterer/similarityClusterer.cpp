@@ -180,7 +180,8 @@ int main(int argc, char **argv) {
     }
 
     // File I/O: Verify the working directory can be opened and check if a file for the current video exists.
-    string workingDirectory = "/home/tokuyama/similarityClusterer_files";
+  //  string workingDirectory = "/home/tokuyama/similarityClusterer_files";
+    string workingDirectory = "./saspas";
     string ioFilePath = "INVALID";
     bool fileExists = false;
     if (fileIO) {
@@ -229,6 +230,7 @@ int main(int argc, char **argv) {
     vector<FrameInfo> frameInfos;
     double totalFrames = capture.get(CAP_PROP_FRAME_COUNT);
     if (!fileIO || !fileExists) {
+
         // Framewise metric computation
         Mat current, previous;
 
@@ -239,6 +241,7 @@ int main(int argc, char **argv) {
             appendToCsv(ioFilePath, 1, 0, -1);
         }
         for (int frameCounter = 2; frameCounter <= totalFrames; frameCounter++) {
+
             capture >> current;
 
             if (current.data == NULL) {
@@ -261,14 +264,14 @@ int main(int argc, char **argv) {
             }
         }
 
-        current.~Mat();
-        previous.~Mat();
+       // current.~Mat();
+       // previous.~Mat();
     } else {
         // Read in data from file.
         frameInfos = readFrameInfosFromCsv(ioFilePath);
         assert(frameInfos.size() == totalFrames);
     }
-    capture.~VideoCapture();
+    //capture.~VideoCapture();
 
     time_t similarityFinishedTime = time(nullptr);
 

@@ -116,9 +116,6 @@ Scalar getMSSIM( const Mat& i1, const Mat& i2) {
     i1.convertTo(I1, d);            // cannot calculate on one byte large values
     i2.convertTo(I2, d);
 
-    cout<<"value at 3,3"<<(double)I1.at<uchar>(3,3)<<endl;
-    cout<<"other value at 3,3"<<(double)I2.at<uchar>(3,3)<<endl;
-
     Mat I2_2 = I2.mul(I2);        // I2^2
     Mat I1_2 = I1.mul(I1);        // I1^2
     Mat I1_I2 = I1.mul(I2);        // I1 * I2
@@ -412,7 +409,7 @@ double videoStabilizationQualityMeasures::blackPixelPercent(string videoPath) {
 }
 
 double videoStabilizationQualityMeasures::SSIM(string video) {
-    bool verbose=true;
+    bool verbose=false;
 
     int psnrTriggerValue, delay;
 
