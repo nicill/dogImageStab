@@ -30,10 +30,14 @@ private:
     static ClusterInfoContainer readTagFile(string pathToTagFile);
     static vector<string> splitLine(string inputString);
 
-    static double getQualityScore(ClusterInfoContainer groundTruthClusters, ClusterInfoContainer evaluatedClusters);
-    static tuple<double, double> getAgreementValues(ClusterInfoContainer groundTruthClusters,ClusterInfoContainer evaluatedClusters);
-    static double getClusterOverlapMsec(ClusterInfoContainer groundTruthClusters, ClusterInfoContainer evaluatedClusters);
-    static double getClusterOverlapPercent(ClusterInfoContainer groundTruthClusters, ClusterInfoContainer evaluatedClusters);
+    static double getQualityScore(ClusterInfoContainer groundTruthClusters,
+                                  ClusterInfoContainer evaluatedClusters);
+    static double getClusterOverlapRecall(ClusterInfoContainer groundTruthClusters,
+                                          ClusterInfoContainer evaluatedClusters);
+    static double getClusterOverlapMsec(ClusterInfoContainer groundTruthClusters,
+                                        ClusterInfoContainer evaluatedClusters);
+    static double getClusterOverlapPrecision(ClusterInfoContainer groundTruthClusters,
+                                             ClusterInfoContainer evaluatedClusters);
     static double getClustersTotalMsec(ClusterInfoContainer clusters);
 };
 
