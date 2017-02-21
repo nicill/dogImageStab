@@ -1,10 +1,13 @@
-# Created by https://www.gitignore.io/api/linux,c,c++,cmake,jetbrains
+## Additional ignores
 
 cmake-build-debug/
 cmake-build-release/
 .idea/inspectionProfiles/
+similarityClusterer/defaults.h
 
-### Linux ###
+## Created by https://www.gitignore.io/api/linux,c,c++,cmake,jetbrains
+
+## Linux ###
 *~
 
 # temporary files which can be created if a process still has a handle open of a deleted file

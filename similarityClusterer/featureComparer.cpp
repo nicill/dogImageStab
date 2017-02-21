@@ -28,7 +28,7 @@ featureComparer::featureComparer(type givenType) {
             this->featureDetector = cv::ORB::create();
             break;
         default:
-            throw("This descriptor hasn't been implemented yet.");
+            throw("This type hasn't been implemented yet.");
     }
 
     switch (givenType) {
@@ -40,6 +40,7 @@ featureComparer::featureComparer(type givenType) {
         case featureComparer::ORB_BFHAMMING:
             this->matcherType = featureComparer::BF_HAMMING;
             this->descriptorMatcher = BFMatcher::create(BFMatcher::BRUTEFORCE_HAMMING);
+            break;
     }
 }
 
