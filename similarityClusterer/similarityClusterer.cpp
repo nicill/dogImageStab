@@ -25,6 +25,7 @@ bool canOpenDir(string path);
 vector<FrameInfo> readFrameInfosFromCsv(string filePath);
 void appendToCsv(string filePath, double frameNo, double msec, double similarity);
 double getAverageSimilarity(vector<FrameInfo> cluster);
+void announceMode(string mode);
 
 /**
  * Main method.
@@ -272,12 +273,15 @@ int main(int argc, char **argv) {
     time_t similarityFinishedTime = time(nullptr);
 
     if (clusterRegionMode) {
+        announceMode("Region-average-based clustering");
         clusterRegion(frameInfos, pathToTagFiles, verbose);
     }
     if (clusterFrameMode) {
+        announceMode("Frame-based clustering");
         clusterFrame(frameInfos, pathToTagFiles, verbose);
     }
     if (frameMode) {
+        announceMode("Frame classification");
         classify(frameInfos, pathToTagFiles, verbose);
     }
 
@@ -302,8 +306,6 @@ int main(int argc, char **argv) {
  * @param verbose Activate verbosity to cout.
  */
 void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) {
-    cout << endl << endl << "(MODE) Region-average-based clustering..." << endl;
-
     // Get average similarity for region
     int maxIndex = (int) frameInfos.size() - 1;
     for (int i = 0; i < maxIndex; i++) {
@@ -333,8 +335,6 @@ void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool ver
  * @param verbose Activate verbosity to cout.
  */
 void clusterFrame(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) {
-    cout << endl << endl << "(MODE) Frame-based clustering..." << endl;
-
     for (int i = 0; i < frameInfos.size(); i++) {
         frameInfos[i].averageSimilarity = frameInfos[i].similarityToPrevious;
     }
@@ -421,8 +421,6 @@ void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
     vector<FrameInfo> highSimilarityFrames;
     vector<FrameInfo> averageSimilarityFrames;
     vector<FrameInfo> lowSimilarityFrames;
-
-    cout << endl << endl << "(MODE) Frame classification..." << endl;
 
     for (FrameInfo frame : frames) {
         if (frame.similarityToPrevious > 0.6) highSimilarityFrames.push_back(frame);
@@ -515,4 +513,12 @@ double getAverageSimilarity(std::vector<FrameInfo> clusteredInfos) {
         summedUpAverages += frameInfo.averageSimilarity;
     }
     return summedUpAverages / clusteredInfos.size();
+}
+
+/**
+ * Outputs announcement about the given mode.
+ * @param mode Name of the mode to announce.
+ */
+void announceMode(string mode) {
+    cout << endl << "----------" << endl << "(MODE) " << mode << "..." << endl;
 }
