@@ -11,6 +11,7 @@
 #include "opencvImageMetric.h"
 #include "featureComparer.h"
 #include "qualityMeasurer.h"
+#include "defaults.h"
 
 using namespace std;
 using namespace cv;
@@ -125,7 +126,7 @@ int main(int argc, char **argv) {
     // Quality mode: Verify that the tag file directory exists.
     string pathToTagFiles = "INVALID";
     if (qualityMeasurement) {
-        pathToTagFiles = "/home/tokuyama/dog/tags";
+        pathToTagFiles = defaults::pathToTagFiles;
         if (!useDefaults) {
             string userInput = "";
             cout << "Please input the directory which contains the tag files (\"d\" for \"" << pathToTagFiles << "\")..." << endl;
@@ -180,8 +181,7 @@ int main(int argc, char **argv) {
     }
 
     // File I/O: Verify the working directory can be opened and check if a file for the current video exists.
-  //  string workingDirectory = "/home/tokuyama/similarityClusterer_files";
-    string workingDirectory = "./saspas";
+    string workingDirectory = defaults::workingDirectory;
     string ioFilePath = "INVALID";
     bool fileExists = false;
     if (fileIO) {
@@ -263,15 +263,11 @@ int main(int argc, char **argv) {
                      << " compared to the last frame" << endl;
             }
         }
-
-       // current.~Mat();
-       // previous.~Mat();
     } else {
         // Read in data from file.
         frameInfos = readFrameInfosFromCsv(ioFilePath);
         assert(frameInfos.size() == totalFrames);
     }
-    //capture.~VideoCapture();
 
     time_t similarityFinishedTime = time(nullptr);
 
