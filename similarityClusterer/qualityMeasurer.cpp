@@ -58,6 +58,11 @@ void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, vector<Fra
     }
 }
 
+/**
+ * Calculates the overlap of labels in the given tag files and outputs it.
+ * @param pathToTagFileDirectory A directory containing tag files. Must be a valid directory.
+ * @param verbose Activate verbosity to cout.
+ */
 void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, bool verbose) {
     vector<ClusterInfoContainer> clustersFromAllFiles = readTagFiles(pathToTagFileDirectory, verbose);
 
@@ -90,12 +95,7 @@ ClusterInfoContainer qualityMeasurer::frameInfosToClusterInfo(string name, vecto
     ClusterInfoContainer clusterings = ClusterInfoContainer(name);
 
     for (vector<FrameInfo> frameInfos : frameInfosList) {
-        double beginMsec = frameInfos.front().msec;
-        double endMsec = frameInfos.back().msec;
-        clusterings.clusterInfos.push_back(
-                ClusterInfo(
-                        "Cluster from " + to_string((int)beginMsec) + " to " + to_string((int)endMsec),
-                        frameInfos));
+        clusterings.clusterInfos.push_back(ClusterInfo(frameInfos));
     }
 
     return clusterings;

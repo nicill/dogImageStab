@@ -30,6 +30,8 @@ struct ClusterInfo {
             this->length = this->endMsec - this->beginMsec;
             assert(this->length >= 0);
     }
+    ClusterInfo(std::vector<FrameInfo> _frames)
+            : ClusterInfo(defaultName(_frames), _frames) {}
     ClusterInfo(std::string _name,
                 std::vector<FrameInfo> _frames) {
         this->name = _name;
@@ -85,6 +87,14 @@ struct ClusterInfo {
             summedUpAverages += frameInfo.averageSimilarity;
         }
         this->averageSimilarity = summedUpAverages / this->frames.size();
+    }
+
+    /**
+     * Creates a default name for the given cluster.
+     */
+    std::string defaultName(std::vector<FrameInfo> frames) {
+        return "Cluster from " + std::to_string(frames.front().msec) + " msec"
+               + " to " + std::to_string(frames.back().msec) + " msec";
     }
 };
 
