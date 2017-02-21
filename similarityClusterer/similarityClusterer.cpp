@@ -348,25 +348,23 @@ void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) 
     // Classify frames
     // Cluster
     // TODO cluster based on classification?
-    // Repeat until stable:
-    //    Calculate average similarity per cluster
-    //    Cluster again
 
     // Find clusters
     vector<ClusterInfo> clusters = { ClusterInfo("All frames", frameInfos) };
-    for (;;) {
+    int iteration = 0;
+    for (; iteration < 500; iteration++) {
         vector<ClusterInfo> newClusters;
 
         int currentCluster = 0;
         // First frame needs to be given
         newClusters.push_back(ClusterInfo(to_string(currentCluster), { clusters[0].frames.front() }));
 
-        int overrideJ = 1;
         for (int i = 0; i < clusters.size(); i++) {
-            for (int j = overrideJ; j < clusters[i].frames.size(); j++) {
-                overrideJ = 0;
-                // If the difference is too big, we create a new cluster.
-                if (abs(newClusters[currentCluster].averageSimilarity - clusters[i].frames[j].averageSimilarity) > 0.1) {
+            for (int j = 0; j < clusters[i].frames.size(); j++) {
+                // Skip first element (already added to cluster)
+                if (i == 0 && j == 0) continue;
+                // If the difference is too big, we create a new cluster, otherwise we add to the current one.
+                if (0.1 < abs(newClusters[currentCluster].averageSimilarity - clusters[i].frames[j].averageSimilarity)) {
                     currentCluster++;
                     newClusters.push_back(ClusterInfo(to_string(currentCluster), { clusters[i].frames[j] }));
                 } else {
@@ -375,17 +373,11 @@ void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) 
             }
         }
 
-        for (int i = 0; i < clusters.size(); i++) {
-            assert(clusters[i].hasFrames);
-            for (int j = 0; j < clusters[i].frames.size(); j++) {
-                clusters[i].frames[j].averageSimilarity = clusters[i].averageSimilarity;
+        for (int i = 0; i < newClusters.size(); i++) {
+            assert(newClusters[i].hasFrames);
+            for (int j = 0; j < newClusters[i].frames.size(); j++) {
+                newClusters[i].frames[j].averageSimilarity = newClusters[i].averageSimilarity;
             }
-        }
-
-        // First iteration
-        if (clusters.size() == 0) {
-            clusters = newClusters;
-            continue;
         }
 
         bool equal = true;
@@ -403,9 +395,11 @@ void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) 
         }
         clusters = newClusters;
 
-        throw("NOT CORRECTLY IMPLEMENTED");
         if (equal) break;
+        if (verbose) cout << "No stable clustering reached, recalculating...";
     }
+
+    if (verbose) cout << "Reached stable clustering in " << iteration << " iterations";
 
     double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
     cout << "Achieved a quality score of " << score << "!" << endl;
