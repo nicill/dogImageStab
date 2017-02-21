@@ -14,7 +14,7 @@ target_link_libraries( dogImageStabilization ${OpenCV_LIBS} )
 add_executable(videoStabExample videostabExample.cpp)
 target_link_libraries( videoStabExample ${OpenCV_LIBS} )
 
-add_executable(featureBasedStabilizer featureBasedStabilizer/featureBasedStabilizer.cpp )
+add_executable(featureBasedStabilizer featureBasedStabilizer/featureBasedStabilizer.cpp featureBasedStabilizer/featureStabilizer.cpp featureBasedStabilizer/featureStabilizer.h)
 target_link_libraries( featureBasedStabilizer ${OpenCV_LIBS} )
 
 add_executable(showTwoTogether showTwoTogether.cpp)

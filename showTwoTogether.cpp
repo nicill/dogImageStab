@@ -25,13 +25,12 @@ int main(int argc, char **argv)
     VideoCapture cap2(argv[2]);
     assert(cap2.isOpened());
 
-
     //prepare output video
     int ex = static_cast<int>(cap1.get(CAP_PROP_FOURCC)); // Get Codec Type- Int form
     Size S = Size( 2*(((int) cap1.get(CAP_PROP_FRAME_WIDTH)))+10,(int) cap1.get(CAP_PROP_FRAME_HEIGHT));
     //Size S = Size( 336,1206);
 
-    VideoWriter outputVideo;
+   VideoWriter outputVideo;
     outputVideo.open(argv[3], ex, cap1.get(CAP_PROP_FPS), S, true);
     if (!outputVideo.isOpened())
     {
@@ -50,6 +49,9 @@ int main(int argc, char **argv)
     int max_frames = cap1.get(CV_CAP_PROP_FRAME_COUNT);
 
     while(k < max_frames-1) { // don't process the very last frame, no valid transform
+
+        //cout << "RAMBUTAN " <<k<< endl;
+
         cap1 >> cur;
         cap2 >> cur2;
 
@@ -86,14 +88,14 @@ int main(int argc, char **argv)
 
 
         // If too big to fit on the screen, then scale it down by 2, hopefully it'll fit :)
-        //if(canvas.cols > 1920) {
-        //    resize(canvas, canvas, Size(canvas.cols/2, canvas.rows/2));
-        //}
+        if(canvas.cols > 1920) {
+            resize(canvas, canvas, Size(canvas.cols/2, canvas.rows/2));
+        }
 
         imshow("Showing videos side by side ", canvas);
         // save the output video and the comparison side by side
-        outputVideo << canvas;
-       // waitKey(20);
+        //outputVideo << canvas;
+        waitKey(20);
 
         k++;
 
