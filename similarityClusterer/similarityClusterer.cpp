@@ -25,6 +25,7 @@ bool canOpenDir(string path);
 vector<FrameInfo> readFrameInfosFromCsv(string filePath);
 void appendToCsv(string filePath, double frameNo, double msec, double similarity);
 double getAverageSimilarity(vector<FrameInfo> cluster);
+void announceMode(string mode);
 
 /**
  * Main method.
@@ -272,12 +273,15 @@ int main(int argc, char **argv) {
     time_t similarityFinishedTime = time(nullptr);
 
     if (clusterRegionMode) {
+        announceMode("Region-average-based clustering");
         clusterRegion(frameInfos, pathToTagFiles, verbose);
     }
     if (clusterFrameMode) {
+        announceMode("Frame-based clustering");
         clusterFrame(frameInfos, pathToTagFiles, verbose);
     }
     if (frameMode) {
+        announceMode("Frame classification");
         classify(frameInfos, pathToTagFiles, verbose);
     }
 
@@ -356,13 +360,15 @@ void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) 
         vector<ClusterInfo> newClusters;
 
         int currentCluster = 0;
-        // First frame needs to be given
-        newClusters.push_back(ClusterInfo(to_string(currentCluster), { clusters[0].frames.front() }));
 
         for (int i = 0; i < clusters.size(); i++) {
             for (int j = 0; j < clusters[i].frames.size(); j++) {
-                // Skip first element (already added to cluster)
-                if (i == 0 && j == 0) continue;
+                // Always add first frame of first cluster to allow for comparison.
+                if (i == 0 && j == 0) {
+                    newClusters.push_back(ClusterInfo(to_string(currentCluster), { clusters[0].frames.front() }));
+                    continue;
+                }
+
                 // If the difference is too big, we create a new cluster, otherwise we add to the current one.
                 if (0.1 < abs(newClusters[currentCluster].averageSimilarity - clusters[i].frames[j].averageSimilarity)) {
                     currentCluster++;
@@ -421,6 +427,12 @@ void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
         else if (frame.similarityToPrevious > 0.3) averageSimilarityFrames.push_back(frame);
         else lowSimilarityFrames.push_back(frame);
     }
+
+    double framesSize = frames.size();
+    cout << "High similarity:    " << highSimilarityFrames.size() << " of " << framesSize << " total frames" << endl
+         << "Average similarity: " << averageSimilarityFrames.size() << " of " << framesSize << " total frames" << endl
+         << "Low similarity:     " << lowSimilarityFrames.size() << " of " << framesSize << " total frames" << endl
+         << endl;
 
     cout << "Matching high similarity frames..." << endl;
     qualityMeasurer::calculateOverlap(pathToTagFiles, highSimilarityFrames, verbose);
@@ -501,4 +513,12 @@ double getAverageSimilarity(std::vector<FrameInfo> clusteredInfos) {
         summedUpAverages += frameInfo.averageSimilarity;
     }
     return summedUpAverages / clusteredInfos.size();
+}
+
+/**
+ * Outputs announcement about the given mode.
+ * @param mode Name of the mode to announce.
+ */
+void announceMode(string mode) {
+    cout << endl << "----------" << endl << "(MODE) " << mode << "..." << endl;
 }
