@@ -1,8 +1,8 @@
 //
-// Created by tokuyama on 17/01/30.
+// Created by yago on 17/02/20.
 //
 
-#include "featureComparer.h"
+#include "featureStabilizer.h"
 
 /**
  * Constructor.
@@ -11,46 +11,51 @@
  * For SIFT, SURF etc. use L2. For ORB, BRIEF, BRISK etc. use HAMMING.
  * If ORB is using WTA_K == 3 or 4 use HAMMING2.
  */
-featureComparer::featureComparer(type givenType) {
+featureStabilizer::featureStabilizer(type givenType) {
     this->processedComparisons = 0;
 
     switch (givenType) {
-        case featureComparer::SIFT_BFL2:
-            this->detectorType = featureComparer::SIFT;
+        case featureStabilizer::SIFT_BFL2:
+            this->detectorType = featureStabilizer::SIFT;
             this->featureDetector = xfeatures2d::SIFT::create();
             break;
-        case featureComparer::SURF_BFL2:
-            this->detectorType = featureComparer::SURF;
+        case featureStabilizer::SURF_BFL2:
+            this->detectorType = featureStabilizer::SURF;
             this->featureDetector = xfeatures2d::SURF::create();
             break;
-        case featureComparer::ORB_BFHAMMING:
-            this->detectorType = featureComparer::ORB;
+        case featureStabilizer::ORB_BFHAMMING:
+            this->detectorType = featureStabilizer::ORB;
             this->featureDetector = cv::ORB::create();
             break;
+        case featureStabilizer::BRISK_BFHAMMING:
+            this->detectorType = featureStabilizer::BRISK;
+            this->featureDetector = cv::BRISK::create();
+            break;
+
         default:
-            throw("This type hasn't been implemented yet.");
+            throw("This descriptor hasn't been implemented yet.");
     }
 
     switch (givenType) {
-        case featureComparer::SIFT_BFL2:
-        case featureComparer::SURF_BFL2:
-            this->matcherType = featureComparer::BF_L2;
+        case featureStabilizer::SIFT_BFL2:
+        case featureStabilizer::SURF_BFL2:
+            this->matcherType = featureStabilizer::BF_L2;
             this->descriptorMatcher = BFMatcher::create();
             break;
-        case featureComparer::ORB_BFHAMMING:
-            this->matcherType = featureComparer::BF_HAMMING;
+        case featureStabilizer::BRISK_BFHAMMING:
+        case featureStabilizer::ORB_BFHAMMING:
+            this->matcherType = featureStabilizer::BF_HAMMING;
             this->descriptorMatcher = BFMatcher::create(BFMatcher::BRUTEFORCE_HAMMING);
-            break;
     }
 }
 
 /**
  * Destructor.
  */
-featureComparer::~featureComparer() {
+featureStabilizer::~featureStabilizer() {
     featureDetector.release();
     descriptorMatcher.release();
-    }
+}
 
 /**
  * Interface function. Compute similarity between two given frames.
@@ -58,7 +63,7 @@ featureComparer::~featureComparer() {
  * @param im2 Subsequent frame #2
  * @return Similarity score [0,1]
  */
-double featureComparer::computeSimilarity(Mat* im1, Mat* im2) {
+/*double featureStabilizer::computeSimilarity(Mat* im1, Mat* im2) {
     this->processedComparisons++;
 
     vector<vector<DMatch>> matchesOfAllKeypoints = this->getMatches(im1, im2);
@@ -79,12 +84,12 @@ double featureComparer::computeSimilarity(Mat* im1, Mat* im2) {
     }
 
     return (double)goodMatches.size() / matchesOfAllKeypoints.size();
-}
+}*/
 
 /**
  * Interface function. Activates output.
  */
-void featureComparer::activateVerbosity() {
+void featureStabilizer::activateVerbosity() {
     this->verbose = true;
 }
 
@@ -95,30 +100,30 @@ void featureComparer::activateVerbosity() {
  * @return A list of the best two matches for each determined keypoint.
  * Elements might contain no matches!
  */
-vector<vector<DMatch>> featureComparer::getMatches(Mat* img1, Mat* img2) {
-    vector<KeyPoint> keypoints_1, keypoints_2;
+vector<vector<DMatch>> featureStabilizer::getMatches(Mat* img1, Mat* img2, vector<KeyPoint> * keypoints_1, vector<KeyPoint> * keypoints_2) {
+   // vector<KeyPoint> keypoints_1, keypoints_2;
     Mat descriptors_1, descriptors_2;
     vector<vector<DMatch>> matchesOfAllKeypoints;
 
     // Detect keypoints and compute descriptors (feature vectors)
-    this->featureDetector->detectAndCompute(*img1, noArray(), keypoints_1, descriptors_1);
-    this->featureDetector->detectAndCompute(*img2, noArray(), keypoints_2, descriptors_2);
+    this->featureDetector->detectAndCompute(*img1, noArray(), *keypoints_1, descriptors_1);
+    this->featureDetector->detectAndCompute(*img2, noArray(), *keypoints_2, descriptors_2);
 
     // Make sure that keypoints have been found in both images before matching.
-    if (keypoints_1.size() == 0 || keypoints_2.size() == 0) {
+    if (keypoints_1->size() == 0 || keypoints_2->size() == 0) {
         message("No keypoints found!");
         return vector<vector<DMatch>>();
     }
 
     // Match descriptors and retrieve the k=2 best results
-    this->descriptorMatcher->knnMatch(
-            descriptors_1,
-            descriptors_2,
-            matchesOfAllKeypoints,
-            2);
+    this->descriptorMatcher->knnMatch(descriptors_1,descriptors_2, matchesOfAllKeypoints, 2);
+
+    //Other matching option!!!
+    //FlannBasedMatcher matcher;
+    //matcher.match( descriptors_1, descriptors_2, matchesOfAllKeypoints,cv::noArray() ); // BEWARE!!!!!!!!!!!!!!! cv::noArray() added!
 
     if (matchesOfAllKeypoints.size() == 0) {
-        message("No matches found!");
+        message("featureStabilizer::getMatches No matches found!");
     }
 
     return matchesOfAllKeypoints;
@@ -130,7 +135,7 @@ vector<vector<DMatch>> featureComparer::getMatches(Mat* img1, Mat* img2) {
  * @param possibleMatches All possible matches for a keypoint.
  * Must be of size 2!
  */
-bool featureComparer::hasGoodMatch(vector<DMatch> possibleMatches) {
+bool featureStabilizer::hasGoodMatch(vector<DMatch> possibleMatches) {
     // Alternatively use crosscheck? http://docs.opencv.org/3.0-beta/doc/py_tutorials/py_feature2d/py_matcher/py_matcher.html
 
     // Filter matches based on metric proposed by Lowe (2004), p. 104.
@@ -140,14 +145,20 @@ bool featureComparer::hasGoodMatch(vector<DMatch> possibleMatches) {
     else return possibleMatches[0].distance < 0.8 * possibleMatches[1].distance;
 }
 
+
+
+
+
+
+
 /**
  * Handles showing output messages based on the verbosity setting.
  * @param text The text to display on cout.
  */
-void featureComparer::message(string text) {
+void featureStabilizer::message(string text) {
     if (!this->verbose) {
         return;
     }
 
-    std::cout << "[featureComparer] " << text << std::endl;
+    std::cout << "[featureStabilizer] " << text << std::endl;
 }
