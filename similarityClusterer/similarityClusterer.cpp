@@ -348,6 +348,7 @@ void clusterFrame(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verb
 void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) {
     // Classify frames
     // Cluster
+    // TODO cluster based on classification?
     // Repeat until stable:
     //    Calculate average similarity per cluster
     //    Cluster again
