@@ -188,13 +188,13 @@ vector<string> qualityMeasurer::splitLine(string inputString) {
 
 /**
  * Calculates a quality score with a ground truth and an estimation.
- * @param clustersFromFile Ground truth to compare to.
- * @param determinedClusters Estimation that will be evaluated.
+ * @param groundTruthClusters Ground truth to compare to.
+ * @param evaluatedClusters Estimation that will be evaluated.
  * @return Quality score in ]-inf,1]
  */
 double qualityMeasurer::getQualityScore(
-        ClusterInfoContainer clustersFromFile,
-        ClusterInfoContainer determinedClusters) {
+        ClusterInfoContainer groundTruthClusters,
+        ClusterInfoContainer evaluatedClusters) {
     // For each cluster in tag file:
     //    For each determined cluster:
     //       if (overlap):                  (given clustering:         |-------|
@@ -207,9 +207,9 @@ double qualityMeasurer::getQualityScore(
     //          malus += 25 * (overlap / best overlap) (in ]2.5,25])
     //    Add up all overlaps and multiply by (100 - malus) - can be negative!
     vector<double> scoresForCFF;
-    for (ClusterInfo clusterFromFile : clustersFromFile.clusterInfos) {
+    for (ClusterInfo clusterFromFile : groundTruthClusters.clusterInfos) {
         vector<double> overlapScoresOfDC;
-        for (ClusterInfo determinedCluster : determinedClusters.clusterInfos) {
+        for (ClusterInfo determinedCluster : evaluatedClusters.clusterInfos) {
             if (determinedCluster.endMsec <= clusterFromFile.beginMsec
                 || determinedCluster.beginMsec >= clusterFromFile.endMsec) {
                 continue;
@@ -275,6 +275,25 @@ double qualityMeasurer::getQualityScore(
     }
 
     return averageQualityScore;
+}
+
+/**
+ * Calculates agreement scores for a ground truth and an estimation.
+ * @param groundTruthClusters Ground truth to compare to.
+ * @param evaluatedClusters Estimation that will be evaluated.
+ * @return TODO
+ */
+double qualityMeasurer::getAgreementValues(
+        ClusterInfoContainer groundTruthClusters,
+        ClusterInfoContainer evaluatedClusters) {
+    // TODO implement
+    throw("NOT IMPLEMENTED");
+
+    // We want to calculate:
+    // - How many selected items are relevant?
+    // - How many relevant items are selected?
+    // Use overlap?
+    double overlap = getClusterOverlapMsec(groundTruthClusters, evaluatedClusters);
 }
 
 /**

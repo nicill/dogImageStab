@@ -30,7 +30,8 @@ private:
     static ClusterInfoContainer readTagFile(string pathToTagFile);
     static vector<string> splitLine(string inputString);
 
-    static double getQualityScore(ClusterInfoContainer clustersFromFile, ClusterInfoContainer determinedClusters);
+    static double getQualityScore(ClusterInfoContainer groundTruthClusters, ClusterInfoContainer evaluatedClusters);
+    static double getAgreementValues(ClusterInfoContainer groundTruthClusters,ClusterInfoContainer evaluatedClusters);
     static double getClusterOverlapMsec(ClusterInfoContainer groundTruthClusters, ClusterInfoContainer evaluatedClusters);
     static double getClusterOverlapPercent(ClusterInfoContainer groundTruthClusters, ClusterInfoContainer evaluatedClusters);
 };
