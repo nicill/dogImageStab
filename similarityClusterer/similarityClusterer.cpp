@@ -302,6 +302,8 @@ int main(int argc, char **argv) {
  * @param verbose Activate verbosity to cout.
  */
 void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) {
+    cout << endl << endl << "(MODE) Region-average-based clustering..." << endl;
+
     // Get average similarity for region
     int maxIndex = (int) frameInfos.size() - 1;
     for (int i = 0; i < maxIndex; i++) {
@@ -331,6 +333,8 @@ void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool ver
  * @param verbose Activate verbosity to cout.
  */
 void clusterFrame(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) {
+    cout << endl << endl << "(MODE) Frame-based clustering..." << endl;
+
     for (int i = 0; i < frameInfos.size(); i++) {
         frameInfos[i].averageSimilarity = frameInfos[i].similarityToPrevious;
     }
@@ -418,11 +422,19 @@ void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
     vector<FrameInfo> averageSimilarityFrames;
     vector<FrameInfo> lowSimilarityFrames;
 
+    cout << endl << endl << "(MODE) Frame classification..." << endl;
+
     for (FrameInfo frame : frames) {
         if (frame.similarityToPrevious > 0.6) highSimilarityFrames.push_back(frame);
         else if (frame.similarityToPrevious > 0.3) averageSimilarityFrames.push_back(frame);
         else lowSimilarityFrames.push_back(frame);
     }
+
+    double framesSize = frames.size();
+    cout << "High similarity:    " << highSimilarityFrames.size() << " of " << framesSize << " total frames" << endl
+         << "Average similarity: " << averageSimilarityFrames.size() << " of " << framesSize << " total frames" << endl
+         << "Low similarity:     " << lowSimilarityFrames.size() << " of " << framesSize << " total frames" << endl
+         << endl;
 
     cout << "Matching high similarity frames..." << endl;
     qualityMeasurer::calculateOverlap(pathToTagFiles, highSimilarityFrames, verbose);
