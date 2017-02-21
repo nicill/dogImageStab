@@ -31,9 +31,10 @@ private:
     static vector<string> splitLine(string inputString);
 
     static double getQualityScore(ClusterInfoContainer groundTruthClusters, ClusterInfoContainer evaluatedClusters);
-    static double getAgreementValues(ClusterInfoContainer groundTruthClusters,ClusterInfoContainer evaluatedClusters);
+    static tuple<double, double> getAgreementValues(ClusterInfoContainer groundTruthClusters,ClusterInfoContainer evaluatedClusters);
     static double getClusterOverlapMsec(ClusterInfoContainer groundTruthClusters, ClusterInfoContainer evaluatedClusters);
     static double getClusterOverlapPercent(ClusterInfoContainer groundTruthClusters, ClusterInfoContainer evaluatedClusters);
+    static double getClustersTotalMsec(ClusterInfoContainer clusters);
 };
 
 #endif // DOGIMAGESTABILIZATION_QUALITYMEASURER_H
