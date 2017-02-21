@@ -364,7 +364,7 @@ void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) 
                     newClusters.push_back(ClusterInfo(to_string(currentCluster), { clusters[0].frames.front() }));
                     continue;
                 }
-                
+
                 // If the difference is too big, we create a new cluster, otherwise we add to the current one.
                 if (0.1 < abs(newClusters[currentCluster].averageSimilarity - clusters[i].frames[j].averageSimilarity)) {
                     currentCluster++;

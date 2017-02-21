@@ -30,7 +30,7 @@ private:
     static vector<string> splitLine(string inputString);
 
     static double getQualityScore(ClusterInfoContainer clustersFromFile, ClusterInfoContainer determinedClusters);
-    static double getClusterOverlap(ClusterInfoContainer clustersFromFile, ClusterInfoContainer determinedClusters);
+    static double getClusterOverlap(ClusterInfoContainer groundTruthClusters, ClusterInfoContainer evaluatedClusters);
 };
 
 #endif // DOGIMAGESTABILIZATION_QUALITYMEASURER_H

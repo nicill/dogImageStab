@@ -255,58 +255,58 @@ double qualityMeasurer::getQualityScore(
 
 /**
  * Calculates the percentage of evaluated clusters that overlap with the ground truth.
- * @param clustersFromFile Ground truth to compare to.
- * @param determinedClusters Estimation that will be evaluated.
+ * @param groundTruthClusters Ground truth to compare to.
+ * @param evaluatedClusters Estimation that will be evaluated.
  * @return Ratio of matches to non-matches in [0,1].
  */
 double qualityMeasurer::getClusterOverlap(
-        ClusterInfoContainer clustersFromFile,
-        ClusterInfoContainer determinedClusters) {
-    // Try to match the clusters from the tag files to the determined clusters. We aim to find
-    // out what percentage of the determinedClusters overlaps with the clustersFromFile.
+        ClusterInfoContainer groundTruthClusters,
+        ClusterInfoContainer evaluatedClusters) {
+    // Try to match the evaluatedClusters to the groundTruthClusters. We aim to find out what
+    // percentage of the evaluatedClusters overlaps with the groundTruthClusters.
     double clustersTotalMsec = 0; // total msec of determined clusters
-    for (ClusterInfo clusterInfo : determinedClusters.clusterInfos) {
+    for (ClusterInfo clusterInfo : evaluatedClusters.clusterInfos) {
         clustersTotalMsec += clusterInfo.length;
     }
     double clustersMatchedMsec = 0; // msec of overlap between determined and actual clusters
 
-    vector<ClusterInfo>::iterator determinedClustersIterator = determinedClusters.clusterInfos.begin();
-    vector<ClusterInfo>::iterator clustersFromFileIterator = clustersFromFile.clusterInfos.begin();
-    while (determinedClustersIterator != determinedClusters.clusterInfos.end()
-           && clustersFromFileIterator != clustersFromFile.clusterInfos.end()) {
-        if ((*determinedClustersIterator).beginMsec >= (*clustersFromFileIterator).endMsec) {
-            clustersFromFileIterator++;
+    vector<ClusterInfo>::iterator evaluatedClustersIterator = evaluatedClusters.clusterInfos.begin();
+    vector<ClusterInfo>::iterator groundTruthClustersIterator = groundTruthClusters.clusterInfos.begin();
+    while (evaluatedClustersIterator != evaluatedClusters.clusterInfos.end()
+           && groundTruthClustersIterator != groundTruthClusters.clusterInfos.end()) {
+        if ((*evaluatedClustersIterator).beginMsec >= (*groundTruthClustersIterator).endMsec) {
+            groundTruthClustersIterator++;
         }
 
-        if ((*determinedClustersIterator).endMsec <= (*clustersFromFileIterator).beginMsec) {
-            determinedClustersIterator++;
+        if ((*evaluatedClustersIterator).endMsec <= (*groundTruthClustersIterator).beginMsec) {
+            evaluatedClustersIterator++;
         }
 
-        if ((*determinedClustersIterator).beginMsec >= (*clustersFromFileIterator).endMsec
-            || (*determinedClustersIterator).endMsec <= (*clustersFromFileIterator).beginMsec) {
+        if ((*evaluatedClustersIterator).beginMsec >= (*groundTruthClustersIterator).endMsec
+            || (*evaluatedClustersIterator).endMsec <= (*groundTruthClustersIterator).beginMsec) {
             continue;
         }
 
         // Logic: If an overlap exists (neither is the begin after the end nor the end before the begin)
         //        it is between the bigger begin and the smaller end value.
         double biggerBegin =
-                ((*determinedClustersIterator).beginMsec > (*clustersFromFileIterator).beginMsec)
-                ? (*determinedClustersIterator).beginMsec
-                : (*clustersFromFileIterator).beginMsec;
+                ((*evaluatedClustersIterator).beginMsec > (*groundTruthClustersIterator).beginMsec)
+                ? (*evaluatedClustersIterator).beginMsec
+                : (*groundTruthClustersIterator).beginMsec;
         double smallerEnd =
-                ((*determinedClustersIterator).endMsec < (*clustersFromFileIterator).endMsec)
-                ? (*determinedClustersIterator).endMsec
-                : (*clustersFromFileIterator).endMsec;
+                ((*evaluatedClustersIterator).endMsec < (*groundTruthClustersIterator).endMsec)
+                ? (*evaluatedClustersIterator).endMsec
+                : (*groundTruthClustersIterator).endMsec;
 
         double matchedLength = smallerEnd - biggerBegin;
         clustersMatchedMsec += matchedLength;
 
         // Iterate the cluster that has been matched to its end.
         // Caution! Assumes that the clusters in both lists do NOT overlap with others in their list!
-        if (smallerEnd == (*determinedClustersIterator).endMsec) {
-            determinedClustersIterator++;
+        if (smallerEnd == (*evaluatedClustersIterator).endMsec) {
+            evaluatedClustersIterator++;
         }
-        else clustersFromFileIterator++;
+        else groundTruthClustersIterator++;
     }
 
     return clustersMatchedMsec / clustersTotalMsec;
