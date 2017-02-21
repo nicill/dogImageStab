@@ -46,9 +46,9 @@ featureComparer::featureComparer(type givenType) {
  * Destructor.
  */
 featureComparer::~featureComparer() {
-    delete this->featureDetector;
-    delete this->descriptorMatcher;
-}
+    featureDetector.release();
+    descriptorMatcher.release();
+    }
 
 /**
  * Interface function. Compute similarity between two given frames.
