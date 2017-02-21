@@ -356,13 +356,15 @@ void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) 
         vector<ClusterInfo> newClusters;
 
         int currentCluster = 0;
-        // First frame needs to be given
-        newClusters.push_back(ClusterInfo(to_string(currentCluster), { clusters[0].frames.front() }));
 
         for (int i = 0; i < clusters.size(); i++) {
             for (int j = 0; j < clusters[i].frames.size(); j++) {
-                // Skip first element (already added to cluster)
-                if (i == 0 && j == 0) continue;
+                // Always add first frame of first cluster to allow for comparison.
+                if (i == 0 && j == 0) {
+                    newClusters.push_back(ClusterInfo(to_string(currentCluster), { clusters[0].frames.front() }));
+                    continue;
+                }
+                
                 // If the difference is too big, we create a new cluster, otherwise we add to the current one.
                 if (0.1 < abs(newClusters[currentCluster].averageSimilarity - clusters[i].frames[j].averageSimilarity)) {
                     currentCluster++;
