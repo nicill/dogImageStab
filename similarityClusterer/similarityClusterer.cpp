@@ -12,6 +12,7 @@
 #include "featureComparer.h"
 #include "qualityMeasurer.h"
 #include "defaults.h"
+#include "clusterer.h"
 
 using namespace std;
 using namespace cv;
@@ -19,7 +20,10 @@ using namespace cv;
 // Declarations
 void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
 void clusterFrame(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
-void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
+void clusterAndEvaluate(frameInfoClusterer::strategy givenStrategy,
+                        vector<FrameInfo> frameInfos,
+                        string pathToTagFiles,
+                        bool verbose);
 void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose);
 bool canOpenDir(string path);
 vector<FrameInfo> readFrameInfosFromCsv(string filePath);
@@ -325,7 +329,7 @@ void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool ver
         frameInfos[i].averageSimilarity = summedUpSimilarities / (1 + end - start);
     }
 
-    cluster(frameInfos, pathToTagFiles, verbose);
+    clusterAndEvaluate(frameInfoClusterer::AVERAGE_REFINED, frameInfos, pathToTagFiles, verbose);
 }
 
 /**
@@ -339,7 +343,7 @@ void clusterFrame(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verb
         frameInfos[i].averageSimilarity = frameInfos[i].similarityToPrevious;
     }
 
-    cluster(frameInfos, pathToTagFiles, verbose);
+    clusterAndEvaluate(frameInfoClusterer::LABELS, frameInfos, pathToTagFiles, verbose);
 }
 
 /**
@@ -348,65 +352,14 @@ void clusterFrame(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verb
  * @param pathToTagFiles Directory containing the tag files. Must exist.
  * @param verbose Activate verbosity to cout.
  */
-void cluster(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) {
-    // Classify frames
-    // Cluster
-    // TODO cluster based on classification?
+void clusterAndEvaluate(frameInfoClusterer::strategy givenStrategy,
+                        vector<FrameInfo> frameInfos,
+                        string pathToTagFiles,
+                        bool verbose) {
+    // Cluster with the given strategy
+    ClusterInfoContainer clusters = frameInfoClusterer::cluster(givenStrategy, frameInfos);
 
-    // Find clusters
-    vector<ClusterInfo> clusters = { ClusterInfo("All frames", frameInfos) };
-    int iteration = 0;
-    for (; iteration < 500; iteration++) {
-        vector<ClusterInfo> newClusters;
-
-        int currentCluster = 0;
-
-        for (int i = 0; i < clusters.size(); i++) {
-            for (int j = 0; j < clusters[i].frames.size(); j++) {
-                // Always add first frame of first cluster to allow for comparison.
-                if (i == 0 && j == 0) {
-                    newClusters.push_back(ClusterInfo(to_string(currentCluster), { clusters[0].frames.front() }));
-                    continue;
-                }
-
-                // If the difference is too big, we create a new cluster, otherwise we add to the current one.
-                if (0.1 < abs(newClusters[currentCluster].averageSimilarity - clusters[i].frames[j].averageSimilarity)) {
-                    currentCluster++;
-                    newClusters.push_back(ClusterInfo(to_string(currentCluster), { clusters[i].frames[j] }));
-                } else {
-                    newClusters[currentCluster].addFrameAtBack(clusters[i].frames[j]);
-                }
-            }
-        }
-
-        for (int i = 0; i < newClusters.size(); i++) {
-            assert(newClusters[i].hasFrames);
-            for (int j = 0; j < newClusters[i].frames.size(); j++) {
-                newClusters[i].frames[j].averageSimilarity = newClusters[i].averageSimilarity;
-            }
-        }
-
-        bool equal = true;
-        vector<ClusterInfo>::iterator clustersIterator = clusters.begin();
-        vector<ClusterInfo>::iterator newClustersIterator = newClusters.begin();
-        while (clustersIterator != clusters.end()
-               && newClustersIterator != newClusters.end()) {
-            if (!((*clustersIterator).equals(*newClustersIterator))) {
-                equal = false;
-                break;
-            } else {
-                clustersIterator++;
-                newClustersIterator++;
-            }
-        }
-        clusters = newClusters;
-
-        if (equal) break;
-        if (verbose) cout << "No stable clustering reached, recalculating...";
-    }
-
-    if (verbose) cout << "Reached stable clustering in " << iteration << " iterations";
-
+    // Evaluate clustering
     double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
     cout << "Achieved a quality score of " << score << "!" << endl;
 }
