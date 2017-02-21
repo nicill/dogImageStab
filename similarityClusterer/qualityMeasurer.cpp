@@ -91,16 +91,12 @@ void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, bool verbo
     }
 }
 
-ClusterInfoContainer qualityMeasurer::frameInfosToClusterInfo(string name, vector<vector<FrameInfo>> frameInfosList) {
-    ClusterInfoContainer clusterings = ClusterInfoContainer(name);
-
-    for (vector<FrameInfo> frameInfos : frameInfosList) {
-        clusterings.clusterInfos.push_back(ClusterInfo(frameInfos));
-    }
-
-    return clusterings;
-}
-
+/**
+ * Reads in the given tag files and creates ClusterInfoContainers to hold the info during run time.
+ * @param pathToTagFileDirectory A directory containing tag files. Must be a valid directory.
+ * @param verbose Activate verbosity to cout.
+ * @return A vector of ClusterInfoContainer objects, one for each file in the directory.
+ */
 vector<ClusterInfoContainer> qualityMeasurer::readTagFiles(string pathToTagFileDirectory, bool verbose) {
     vector<ClusterInfoContainer> tagFilesClusterings;
 

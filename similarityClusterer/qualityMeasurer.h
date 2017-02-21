@@ -26,7 +26,6 @@ public:
                                  bool verbose = false);
 
 private:
-    static ClusterInfoContainer frameInfosToClusterInfo(string name, vector<vector<FrameInfo>> frameInfosList);
     static vector<ClusterInfoContainer> readTagFiles(string pathToTagFileDirectory, bool verbose);
     static ClusterInfoContainer readTagFile(string pathToTagFile);
     static vector<string> splitLine(string inputString);
