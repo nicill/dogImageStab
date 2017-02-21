@@ -20,7 +20,7 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
     vector<ClusterInfoContainer> clustersFromAllFiles = readTagFiles(pathToTagFileDirectory, verbose);
     for (ClusterInfoContainer clustersFromFile : clustersFromAllFiles) {
         double qualityScoreForFile = getQualityScore(clustersFromFile, determinedClusters);
-        double ratioMatched = getClusterOverlap(clustersFromFile, determinedClusters);
+        double ratioMatched = getClusterOverlapPercent(clustersFromFile, determinedClusters);
 
         cout << "Calculated quality score of " << qualityScoreForFile << " (" << ratioMatched * 100 << " % overlap) "
                 << "for ground truth \"" << clustersFromFile.name << "\"." << endl;
@@ -55,6 +55,34 @@ void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, vector<Fra
         }
         double overlapRatio = overlappingFrames / frames.size();
         cout << overlapRatio * 100 << " % of frames overlap clusters in " << clustersFromFile.name << endl;
+    }
+}
+
+void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, bool verbose) {
+    vector<ClusterInfoContainer> clustersFromAllFiles = readTagFiles(pathToTagFileDirectory, verbose);
+
+    for (int i = 0; i < clustersFromAllFiles.size(); i++) {
+        for (int j = i + 1; j < clustersFromAllFiles.size(); j++) {
+            double overlapMsec = getClusterOverlapMsec(clustersFromAllFiles[i], clustersFromAllFiles[j]);
+
+            if (overlapMsec == 0) {
+                cout << "No overlap of " << clustersFromAllFiles[i].name << " and " << clustersFromAllFiles[j].name
+                     << endl;
+                continue;
+            }
+
+            cout << "Overlap of " << clustersFromAllFiles[i].name << " and " << clustersFromAllFiles[j].name << ": "
+                 << overlapMsec << " msec" << endl;
+
+            if (overlapMsec == 0) continue;
+
+            double percentageI = getClusterOverlapPercent(clustersFromAllFiles[i], clustersFromAllFiles[j]);
+            double percentageJ = getClusterOverlapPercent(clustersFromAllFiles[j], clustersFromAllFiles[i]);
+            cout << " -> " << percentageI * 100 << " % of " << clustersFromAllFiles[j].name << " matches "
+                 << clustersFromAllFiles[i].name << endl
+                 << " -> " << percentageJ * 100 << " % of " << clustersFromAllFiles[i].name << " matches "
+                 << clustersFromAllFiles[j].name << endl;
+        }
     }
 }
 
@@ -254,20 +282,15 @@ double qualityMeasurer::getQualityScore(
 }
 
 /**
- * Calculates the percentage of evaluated clusters that overlap with the ground truth.
+ * Calculates the milliseconds of overlap of evaluated clusters and ground truth.
  * @param groundTruthClusters Ground truth to compare to.
- * @param evaluatedClusters Estimation that will be evaluated.
- * @return Ratio of matches to non-matches in [0,1].
+ * @param evaluatedClusters Clustering that will be evaluated.
+ * @return Total msec of cluster overlaps.
  */
-double qualityMeasurer::getClusterOverlap(
+double qualityMeasurer::getClusterOverlapMsec(
         ClusterInfoContainer groundTruthClusters,
         ClusterInfoContainer evaluatedClusters) {
-    // Try to match the evaluatedClusters to the groundTruthClusters. We aim to find out what
-    // percentage of the evaluatedClusters overlaps with the groundTruthClusters.
-    double clustersTotalMsec = 0; // total msec of determined clusters
-    for (ClusterInfo clusterInfo : evaluatedClusters.clusterInfos) {
-        clustersTotalMsec += clusterInfo.length;
-    }
+    // Try to match the evaluatedClusters to the groundTruthClusters.
     double clustersMatchedMsec = 0; // msec of overlap between determined and actual clusters
 
     vector<ClusterInfo>::iterator evaluatedClustersIterator = evaluatedClusters.clusterInfos.begin();
@@ -309,5 +332,23 @@ double qualityMeasurer::getClusterOverlap(
         else groundTruthClustersIterator++;
     }
 
-    return clustersMatchedMsec / clustersTotalMsec;
+    return clustersMatchedMsec;
+}
+
+/**
+ * Calculates the percentage of evaluated clusters that overlap with the ground truth.
+ * @param groundTruthClusters Ground truth to compare to.
+ * @param evaluatedClusters Clustering that will be evaluated.
+ * @return An overlap ratio in [0,1].
+ */
+double qualityMeasurer::getClusterOverlapPercent(ClusterInfoContainer groundTruthClusters,
+                                                 ClusterInfoContainer evaluatedClusters) {
+    double clustersMatchedMsec = getClusterOverlapMsec(groundTruthClusters, evaluatedClusters);
+    // We aim to find out what percentage of the evaluatedClusters overlaps with the groundTruthClusters
+    // relative to the total length of clusters in the evaluatedClusters.
+    double evaluatedClustersTotalMsec = 0; // total msec of the evaluatedClusters
+    for (ClusterInfo clusterInfo : evaluatedClusters.clusterInfos) {
+        evaluatedClustersTotalMsec += clusterInfo.length;
+    }
+    return clustersMatchedMsec / evaluatedClustersTotalMsec;
 }

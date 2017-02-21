@@ -22,6 +22,8 @@ public:
     static void calculateOverlap(string pathToTagFileDirectory,
                                  vector<FrameInfo> frames,
                                  bool verbose = false);
+    static void calculateOverlap(string pathToTagFileDirectory,
+                                 bool verbose = false);
 
 private:
     static ClusterInfoContainer frameInfosToClusterInfo(string name, vector<vector<FrameInfo>> frameInfosList);
@@ -30,7 +32,8 @@ private:
     static vector<string> splitLine(string inputString);
 
     static double getQualityScore(ClusterInfoContainer clustersFromFile, ClusterInfoContainer determinedClusters);
-    static double getClusterOverlap(ClusterInfoContainer groundTruthClusters, ClusterInfoContainer evaluatedClusters);
+    static double getClusterOverlapMsec(ClusterInfoContainer groundTruthClusters, ClusterInfoContainer evaluatedClusters);
+    static double getClusterOverlapPercent(ClusterInfoContainer groundTruthClusters, ClusterInfoContainer evaluatedClusters);
 };
 
 #endif // DOGIMAGESTABILIZATION_QUALITYMEASURER_H
