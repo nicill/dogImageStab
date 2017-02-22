@@ -48,10 +48,9 @@ int main(int argc, char **argv) {
 
     bool qualityMeasurement = false;
     bool regionClusterMode = false;
-    bool classifyClusterMode = false;
-    bool frameMode = false;
+    bool classificationClusterMode = false;
+    bool frameClassifyMode = false;
     string validUsage = "./similarityClusterer <video> <metric index> <sub specifier> [flag(s)]";
-    // http://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html?highlight=comparehist#comparehist
     string subSpecHist = "0: Correlation, 1: Chi-square, 2: Intersection, 3: Bhattacharyya";
     string subSpecFeat = "0: SIFT + BF_L2, 1: SURF + BF_L2, 2: ORB + BF_HAMMING";
     string subSpecImg = "0: PSNR, 1: SSIM";
@@ -106,12 +105,12 @@ int main(int argc, char **argv) {
         }
         if (last_arg.find('C') != string::npos) {
             qualityMeasurement = true;
-            classifyClusterMode = true;
+            classificationClusterMode = true;
             cout << "Clustering mode based on frame classification activated." << endl;
         }
         if (last_arg.find('F') != string::npos) {
             qualityMeasurement = true;
-            frameMode = true;
+            frameClassifyMode = true;
             cout << "Frame classification mode activated." << endl;
         }
 
@@ -286,11 +285,11 @@ int main(int argc, char **argv) {
         announceMode("Region-average-based clustering");
         clusterRegion(frameInfos, pathToTagFiles, verbose);
     }
-    if (classifyClusterMode) {
+    if (classificationClusterMode) {
         announceMode("Frame-based clustering");
         clusterLabels(frameInfos, pathToTagFiles, verbose);
     }
-    if (frameMode) {
+    if (frameClassifyMode) {
         announceMode("Frame classification");
         classify(frameInfos, pathToTagFiles, verbose);
     }
@@ -298,11 +297,11 @@ int main(int argc, char **argv) {
     time_t qualityFinishedTime = time(nullptr);
 
     if (measureTime) {
-        cout    << "----------" << endl
-                << "Time taken" << endl
-                << "Total: " << qualityFinishedTime - startTime << " s" << endl
-                << "Similarity measurement: " << similarityFinishedTime - startTime << " s" << endl
-                << "Quality measurement: " << qualityFinishedTime - similarityFinishedTime << " s" << endl;
+        cout << "----------" << endl
+             << "Time taken" << endl
+             << "Total: " << qualityFinishedTime - startTime << " s" << endl
+             << "Similarity measurement: " << similarityFinishedTime - startTime << " s" << endl
+             << "Quality measurement: " << qualityFinishedTime - similarityFinishedTime << " s" << endl;
     }
 
     delete comparer;
@@ -467,19 +466,6 @@ void appendToCsv(string filePath, double frameNo, double msec, double similarity
     ioFileStream.open(filePath, ios::app); // append
     ioFileStream << frameNo << sep << msec << sep << similarity << endl;
     ioFileStream.close();
-}
-
-/**
- * Takes the given FrameInfo objects and calculates the average of their average similarity value.
- * @param clusteredInfos FrameInfo objects.
- * @return Average of all average similarity values.
- */
-double getAverageSimilarity(std::vector<FrameInfo> clusteredInfos) {
-    double summedUpAverages = 0;
-    for (FrameInfo frameInfo : clusteredInfos) {
-        summedUpAverages += frameInfo.averageSimilarity;
-    }
-    return summedUpAverages / clusteredInfos.size();
 }
 
 /**
