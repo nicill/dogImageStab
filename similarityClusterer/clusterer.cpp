@@ -142,22 +142,21 @@ vector<ClusterInfoContainer> clusterer::clusterLabelsAndGroup(vector<FrameInfo> 
     ClusterInfoContainer clustering = clusterLabels(frameInfos, false);
     vector<ClusterInfoContainer> allClusterings;
 
-    // Always add the first element.
-    allClusterings.push_back(ClusterInfoContainer(clustering.clusterInfos[0].name, clustering.clusterInfos[0]));
-
     for (int i = 1; i < clustering.clusterInfos.size(); i++) {
         string name = clustering.clusterInfos[i].name;
+        bool found = false;
 
         for (int j = 0; j < allClusterings.size(); j++) {
             // Container with name exists.
             if (name == allClusterings[j].name) {
                 allClusterings[j].clusterInfos.push_back(clustering.clusterInfos[i]);
-                continue;
+                found = true;
+                break;
             }
-
-            // Name hasn't been seen before.
-            allClusterings.push_back(ClusterInfoContainer(name, clustering.clusterInfos[i]));
         }
+
+        // Name hasn't been seen before.
+        if (!found) allClusterings.push_back(ClusterInfoContainer(name, clustering.clusterInfos[i]));
     }
 
     return allClusterings;
