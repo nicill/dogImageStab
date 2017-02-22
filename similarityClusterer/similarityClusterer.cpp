@@ -339,7 +339,7 @@ void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool ver
  * @param verbose Activate verbosity to cout.
  */
 void clusterLabels(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
-    vector<FrameInfo> classifiedFrames = classifier::classifyFrames(frames);
+    vector<FrameInfo> classifiedFrames = classifier::classifyFramesSingle(frames);
     clusterAndEvaluate(clusterer::LABELS, classifiedFrames, pathToTagFiles, verbose);
 }
 
@@ -382,7 +382,7 @@ void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
     vector<FrameInfo> averageSimilarityFrames;
     vector<FrameInfo> lowSimilarityFrames;
 
-    vector<FrameInfo> classifiedFrames = classifier::classifyFrames(frames);
+    vector<FrameInfo> classifiedFrames = classifier::classifyFramesSingle(frames);
     for (FrameInfo frame : classifiedFrames) {
         if (frame.label == classifier::highSimLabel) highSimilarityFrames.push_back(frame);
         else if (frame.label == classifier::mediumSimLabel) averageSimilarityFrames.push_back(frame);

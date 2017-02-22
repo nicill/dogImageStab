@@ -8,9 +8,9 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <regex>
-#include "FrameInfo.cpp"
-#include "ClusterInfo.cpp"
-#include "ClusterInfoContainer.cpp"
+#include "storageClasses/FrameInfo.cpp"
+#include "storageClasses/ClusterInfo.cpp"
+#include "storageClasses/ClusterInfoContainer.cpp"
 
 using namespace std;
 

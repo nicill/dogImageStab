@@ -6,7 +6,8 @@
 #define DOGIMAGESTABILIZATION_CLASSIFIER_H
 
 #include <vector>
-#include "FrameInfo.cpp"
+#include "storageClasses/FrameInfo.cpp"
+#include "storageClasses/ClusterInfoContainer.cpp"
 
 using std::vector;
 
@@ -17,12 +18,12 @@ public:
     static constexpr const char* mediumSimLabel = "Medium similarity";
     static constexpr const char* lowSimLabel = "Low similarity";
 
-    static vector<FrameInfo> classifyFrames(vector<FrameInfo> frames);
+    static vector<FrameInfo> classifyFramesSingle(vector<FrameInfo> frames);
+    static vector<FrameInfo> classifyFramesAverage(vector<FrameInfo> frames);
+    static ClusterInfoContainer classifyClusters(ClusterInfoContainer clusters);
 
 private:
-    enum classification { HIGH, MEDIUM, LOW };
-
-    static classification classifySimilarity(double value);
+    static string classifySimilarity(double value);
 };
 
 #endif //DOGIMAGESTABILIZATION_CLASSIFIER_H

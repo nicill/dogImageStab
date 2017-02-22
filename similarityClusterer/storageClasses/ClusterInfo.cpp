@@ -6,14 +6,14 @@
 #define DOGIMAGESTABILIZATION_CLUSTERINFO_CPP
 
 #include <string>
-#include "utils.cpp"
+#include "../utils.cpp"
 #include "FrameInfo.cpp"
 
 using std::string;
 using std::vector;
 
 struct ClusterInfo {
-    string name = "INVALID";
+    string label = "INVALID";
     double beginMsec = -1;
     double endMsec = -1;
     double length = -1;
@@ -35,7 +35,7 @@ struct ClusterInfo {
     ClusterInfo(string _name,
                 double _beginMsec,
                 double _endMsec) {
-            this->name = _name;
+            this->label = _name;
             this->beginMsec = _beginMsec;
             this->endMsec = _endMsec;
             this->length = this->endMsec - this->beginMsec;
@@ -64,7 +64,7 @@ struct ClusterInfo {
      * Constructor.
      */
     ClusterInfo(string _name, vector<FrameInfo> _frames) {
-        this->name = _name;
+        this->label = _name;
         this->beginMsec = _frames.front().msec;
         this->endMsec = _frames.back().msec;
 

@@ -6,8 +6,8 @@
 #define DOGIMAGESTABILIZATION_FRAMEINFOCLUSTERER_H
 
 #include <vector>
-#include "FrameInfo.cpp"
-#include "ClusterInfoContainer.cpp"
+#include "storageClasses/FrameInfo.cpp"
+#include "storageClasses/ClusterInfoContainer.cpp"
 
 using std::vector;
 

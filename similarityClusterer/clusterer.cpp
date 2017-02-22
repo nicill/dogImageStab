@@ -120,7 +120,7 @@ ClusterInfoContainer clusterer::clusterLabels(vector<FrameInfo> frameInfos, bool
     clusters.push_back(ClusterInfo(frameInfos.front().label, frameInfos.front()));
 
     for (int i = 1; i < frameInfos.size(); i++) {
-        if (clusters[currentCluster].name != frameInfos[i].label) {
+        if (clusters[currentCluster].label != frameInfos[i].label) {
             currentCluster++;
             clusters.push_back(ClusterInfo(frameInfos[i].label, frameInfos[i]));
         } else {
@@ -143,7 +143,7 @@ vector<ClusterInfoContainer> clusterer::clusterLabelsAndGroup(vector<FrameInfo> 
     vector<ClusterInfoContainer> allClusterings;
 
     for (int i = 1; i < clustering.clusterInfos.size(); i++) {
-        string name = clustering.clusterInfos[i].name;
+        string name = clustering.clusterInfos[i].label;
         bool found = false;
 
         for (int j = 0; j < allClusterings.size(); j++) {
