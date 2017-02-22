@@ -19,7 +19,7 @@ using namespace cv;
 
 // Declarations
 void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
-void clusterFrame(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
+void clusterLabels(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
 void clusterAndEvaluate(clusterer::strategy givenStrategy,
                         vector<FrameInfo> frameInfos,
                         string pathToTagFiles,
@@ -41,8 +41,8 @@ int main(int argc, char **argv) {
     bool useDefaults = false;
 
     bool qualityMeasurement = false;
-    bool clusterRegionMode = false;
-    bool clusterFrameMode = false;
+    bool regionClusterMode = false;
+    bool classifyClusterMode = false;
     bool frameMode = false;
     string validUsage = "./similarityClusterer <video> <metric index> <sub specifier> [flag(s)]";
     // http://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html?highlight=comparehist#comparehist
@@ -95,12 +95,12 @@ int main(int argc, char **argv) {
         // Mode flag
         if (last_arg.find('R') != string::npos) {
             qualityMeasurement = true;
-            clusterRegionMode = true;
+            regionClusterMode = true;
             cout << "Clustering mode based on region activated." << endl;
         }
         if (last_arg.find('C') != string::npos) {
             qualityMeasurement = true;
-            clusterFrameMode = true;
+            classifyClusterMode = true;
             cout << "Clustering mode based on frame classification activated." << endl;
         }
         if (last_arg.find('F') != string::npos) {
@@ -276,13 +276,13 @@ int main(int argc, char **argv) {
 
     time_t similarityFinishedTime = time(nullptr);
 
-    if (clusterRegionMode) {
+    if (regionClusterMode) {
         announceMode("Region-average-based clustering");
         clusterRegion(frameInfos, pathToTagFiles, verbose);
     }
-    if (clusterFrameMode) {
+    if (classifyClusterMode) {
         announceMode("Frame-based clustering");
-        clusterFrame(frameInfos, pathToTagFiles, verbose);
+        clusterLabels(frameInfos, pathToTagFiles, verbose);
     }
     if (frameMode) {
         announceMode("Frame classification");
@@ -338,7 +338,7 @@ void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool ver
  * @param pathToTagFiles Directory containing the tag files. Must exist.
  * @param verbose Activate verbosity to cout.
  */
-void clusterFrame(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) {
+void clusterLabels(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) {
     for (int i = 0; i < frameInfos.size(); i++) {
         frameInfos[i].averageSimilarity = frameInfos[i].similarityToPrevious;
     }
