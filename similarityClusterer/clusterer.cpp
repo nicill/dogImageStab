@@ -14,48 +14,17 @@ using std::to_string;
  * @param frameInfos Frames to cluster.
  * @param verbose Activate verbosity to cout.
  */
-ClusterInfoContainer clusterer::cluster(strategy givenStrategy, vector<FrameInfo> frameInfos, bool verbose) {
+vector<ClusterInfoContainer> clusterer::cluster(strategy givenStrategy, vector<FrameInfo> frameInfos, bool verbose) {
     switch (givenStrategy) {
         case clusterer::AVERAGE:
-            return clusterAverage(frameInfos, false);
+            return { clusterAverage(frameInfos, false) };
         case clusterer::AVERAGE_REFINED:
-            return clusterAverageRefined(frameInfos, false);
+            return { clusterAverageRefined(frameInfos, false) };
         case clusterer::LABELS:
-            return clusterLabels(frameInfos, false);
+            return clusterLabelsAndGroup(frameInfos, false);
         default:
             throw("Clustering strategy not implemented yet!");
     }
-}
-
-/**
- * Cluster the given frameInfos with the givenStrategy as multiple clusterings.
- * @param givenStrategy A strategy to follow. No internal sanity check! Currently only works with label-based clustering.
- * @param frameInfos Frames to cluster.
- * @param verbose Activate verbosity to cout.
- */
-vector<ClusterInfoContainer> clusterer::clusterAndGroup(vector<FrameInfo> frameInfos, bool verbose) {
-    ClusterInfoContainer clustering = clusterLabels(frameInfos, false);
-    vector<ClusterInfoContainer> allClusterings;
-
-    // Always add the first element.
-    allClusterings.push_back(ClusterInfoContainer(clustering.clusterInfos[0].name, clustering.clusterInfos[0]));
-
-    for (int i = 1; i < clustering.clusterInfos.size(); i++) {
-        string name = clustering.clusterInfos[i].name;
-
-        for (int j = 0; j < allClusterings.size(); j++) {
-            // Container with name exists.
-            if (name == allClusterings[j].name) {
-                allClusterings[j].clusterInfos.push_back(clustering.clusterInfos[i]);
-                continue;
-            }
-
-            // Name hasn't been seen before.
-            allClusterings.push_back(ClusterInfoContainer(name, clustering.clusterInfos[i]));
-        }
-    }
-
-    return allClusterings;
 }
 
 /**
@@ -162,4 +131,34 @@ ClusterInfoContainer clusterer::clusterLabels(vector<FrameInfo> frameInfos, bool
     ClusterInfoContainer clustering =
             ClusterInfoContainer("Determined clusters (label-based clustering)", clusters);
     return clustering;
+}
+
+/**
+ * Cluster the given frameInfos with a label-based clustering and group based on label.
+ * @param frameInfos Frames to cluster.
+ * @param verbose Activate verbosity to cout.
+ */
+vector<ClusterInfoContainer> clusterer::clusterLabelsAndGroup(vector<FrameInfo> frameInfos, bool verbose) {
+    ClusterInfoContainer clustering = clusterLabels(frameInfos, false);
+    vector<ClusterInfoContainer> allClusterings;
+
+    // Always add the first element.
+    allClusterings.push_back(ClusterInfoContainer(clustering.clusterInfos[0].name, clustering.clusterInfos[0]));
+
+    for (int i = 1; i < clustering.clusterInfos.size(); i++) {
+        string name = clustering.clusterInfos[i].name;
+
+        for (int j = 0; j < allClusterings.size(); j++) {
+            // Container with name exists.
+            if (name == allClusterings[j].name) {
+                allClusterings[j].clusterInfos.push_back(clustering.clusterInfos[i]);
+                continue;
+            }
+
+            // Name hasn't been seen before.
+            allClusterings.push_back(ClusterInfoContainer(name, clustering.clusterInfos[i]));
+        }
+    }
+
+    return allClusterings;
 }
