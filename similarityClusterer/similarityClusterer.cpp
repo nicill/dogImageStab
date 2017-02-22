@@ -13,14 +13,10 @@
 #include "qualityMeasurer.h"
 #include "defaults.h"
 #include "clusterer.h"
+#include "classifier.h"
 
 using namespace std;
 using namespace cv;
-
-// Constants
-const string highSimLabel = "High similarity";
-const string avgSimLabel = "Average similarity";
-const string lowSimLabel = "Low similarity";
 
 // Declarations
 void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
@@ -30,7 +26,6 @@ void clusterAndEvaluate(clusterer::strategy givenStrategy,
                         string pathToTagFiles,
                         bool verbose);
 void classify(vector<FrameInfo> classifiedFrames, string pathToTagFiles, bool verbose);
-vector<FrameInfo> classifyFrames(vector<FrameInfo> frames);
 bool canOpenDir(string path);
 vector<FrameInfo> readFrameInfosFromCsv(string filePath);
 void appendToCsv(string filePath, double frameNo, double msec, double similarity);
@@ -344,7 +339,7 @@ void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool ver
  * @param verbose Activate verbosity to cout.
  */
 void clusterLabels(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
-    vector<FrameInfo> classifiedFrames = classifyFrames(frames);
+    vector<FrameInfo> classifiedFrames = classifier::classifyFrames(frames);
     clusterAndEvaluate(clusterer::LABELS, classifiedFrames, pathToTagFiles, verbose);
 }
 
@@ -387,10 +382,10 @@ void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
     vector<FrameInfo> averageSimilarityFrames;
     vector<FrameInfo> lowSimilarityFrames;
 
-    vector<FrameInfo> classifiedFrames = classifyFrames(frames);
+    vector<FrameInfo> classifiedFrames = classifier::classifyFrames(frames);
     for (FrameInfo frame : classifiedFrames) {
-        if (frame.label == highSimLabel) highSimilarityFrames.push_back(frame);
-        else if (frame.label == avgSimLabel) averageSimilarityFrames.push_back(frame);
+        if (frame.label == classifier::highSimLabel) highSimilarityFrames.push_back(frame);
+        else if (frame.label == classifier::avgSimLabel) averageSimilarityFrames.push_back(frame);
         else lowSimilarityFrames.push_back(frame);
     }
 
@@ -408,16 +403,6 @@ void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
 
     cout << "Matching low similarity frames..." << endl;
     qualityMeasurer::calculateOverlap(pathToTagFiles, lowSimilarityFrames, verbose);
-}
-
-vector<FrameInfo> classifyFrames(vector<FrameInfo> frames) {
-    for (int i = 0; i < frames.size(); i++) {
-        if (frames[i].similarityToPrevious > 0.6) frames[i].label = highSimLabel;
-        else if (frames[i].similarityToPrevious > 0.3) frames[i].label = avgSimLabel;
-        else frames[i].label = lowSimLabel;
-    }
-
-    return frames;
 }
 
 /**
