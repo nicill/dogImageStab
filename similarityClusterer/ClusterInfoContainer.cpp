@@ -8,12 +8,28 @@
 #include <vector>
 #include "ClusterInfo.cpp"
 
+using std::string;
+using std::vector;
+
 struct ClusterInfoContainer {
     std::string name = "INVALID";
     std::vector<ClusterInfo> clusterInfos;
 
+    /**
+     * Empty constructor.
+     */
     ClusterInfoContainer() {};
-    ClusterInfoContainer(std::string _name, std::vector<ClusterInfo> _clusterInfos = std::vector<ClusterInfo>()) {
+
+    /**
+     * Nested constructor for a single element.
+     */
+    ClusterInfoContainer(string _name, ClusterInfo _clusterInfo)
+            : ClusterInfoContainer(_name, utils::package(_clusterInfo)) {}
+
+    /**
+     * Constructor.
+     */
+    ClusterInfoContainer(string _name, vector<ClusterInfo> _clusterInfos = vector<ClusterInfo>()) {
         this->name = _name;
         this->clusterInfos = _clusterInfos;
     }
