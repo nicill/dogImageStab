@@ -6,6 +6,7 @@
 #define DOGIMAGESTABILIZATION_CLUSTERINFO_CPP
 
 #include <string>
+#include "utils.cpp"
 #include "FrameInfo.cpp"
 
 using std::string;
@@ -45,7 +46,7 @@ struct ClusterInfo {
      * Nested constructor with only one frame.
      */
     ClusterInfo(FrameInfo _frame)
-            : ClusterInfo(package(_frame)) {}
+            : ClusterInfo(utils::package(_frame)) {}
 
     /**
      * Nested constructor with only a frame vector.
@@ -57,7 +58,7 @@ struct ClusterInfo {
      * Nested constructor with name and one frame.
      */
     ClusterInfo(string _name, FrameInfo _frame)
-            : ClusterInfo(_name, package(_frame)) {}
+            : ClusterInfo(_name, utils::package(_frame)) {}
 
     /**
      * Constructor.
@@ -128,13 +129,6 @@ struct ClusterInfo {
     string defaultName(vector<FrameInfo> frames) {
         return "Cluster from " + std::to_string(frames.front().msec) + " msec"
                + " to " + std::to_string(frames.back().msec) + " msec";
-    }
-
-    /**
-     * Helper function necessary for the nested constructor.
-     */
-    vector<FrameInfo> package(FrameInfo frame) {
-        return { frame };
     }
 };
 
