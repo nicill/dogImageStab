@@ -14,7 +14,7 @@ class classifier {
 public:
     // Constants
     static constexpr const char* highSimLabel = "High similarity";
-    static constexpr const char* avgSimLabel = "Average similarity";
+    static constexpr const char* mediumSimLabel = "Medium similarity";
     static constexpr const char* lowSimLabel = "Low similarity";
 
     static vector<FrameInfo> classifyFrames(vector<FrameInfo> frames);

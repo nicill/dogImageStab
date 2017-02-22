@@ -6,14 +6,26 @@
 
 vector<FrameInfo> classifier::classifyFrames(vector<FrameInfo> frames) {
     for (int i = 0; i < frames.size(); i++) {
-        if (frames[i].similarityToPrevious > 0.6) frames[i].label = highSimLabel;
-        else if (frames[i].similarityToPrevious > 0.3) frames[i].label = avgSimLabel;
-        else frames[i].label = lowSimLabel;
+        switch (classifySimilarity(frames[i].similarityToPrevious)) {
+            case HIGH:
+                frames[i].label = highSimLabel;
+                break;
+            case MEDIUM:
+                frames[i].label = mediumSimLabel;
+                break;
+            case LOW:
+                frames[i].label = lowSimLabel;
+                break;
+            default:
+                throw("Classification not implemented!");
+        }
     }
 
     return frames;
 }
 
-classifier::classification classifier::classifySimilarity(double value) {
+classification classifier::classifySimilarity(double value) {
     if (value > 0.6) return HIGH;
+    else if (value > 0.3) return MEDIUM;
+    else return LOW;
 }

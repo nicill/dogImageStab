@@ -385,7 +385,7 @@ void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
     vector<FrameInfo> classifiedFrames = classifier::classifyFrames(frames);
     for (FrameInfo frame : classifiedFrames) {
         if (frame.label == classifier::highSimLabel) highSimilarityFrames.push_back(frame);
-        else if (frame.label == classifier::avgSimLabel) averageSimilarityFrames.push_back(frame);
+        else if (frame.label == classifier::mediumSimLabel) averageSimilarityFrames.push_back(frame);
         else lowSimilarityFrames.push_back(frame);
     }
 
