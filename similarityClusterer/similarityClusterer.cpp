@@ -20,7 +20,7 @@ using namespace cv;
 // Declarations
 void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
 void clusterFrame(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
-void clusterAndEvaluate(frameInfoClusterer::strategy givenStrategy,
+void clusterAndEvaluate(clusterer::strategy givenStrategy,
                         vector<FrameInfo> frameInfos,
                         string pathToTagFiles,
                         bool verbose);
@@ -329,7 +329,7 @@ void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool ver
         frameInfos[i].averageSimilarity = summedUpSimilarities / (1 + end - start);
     }
 
-    clusterAndEvaluate(frameInfoClusterer::AVERAGE_REFINED, frameInfos, pathToTagFiles, verbose);
+    clusterAndEvaluate(clusterer::AVERAGE_REFINED, frameInfos, pathToTagFiles, verbose);
 }
 
 /**
@@ -343,7 +343,7 @@ void clusterFrame(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verb
         frameInfos[i].averageSimilarity = frameInfos[i].similarityToPrevious;
     }
 
-    clusterAndEvaluate(frameInfoClusterer::LABELS, frameInfos, pathToTagFiles, verbose);
+    clusterAndEvaluate(clusterer::LABELS, frameInfos, pathToTagFiles, verbose);
 }
 
 /**
@@ -352,12 +352,12 @@ void clusterFrame(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verb
  * @param pathToTagFiles Directory containing the tag files. Must exist.
  * @param verbose Activate verbosity to cout.
  */
-void clusterAndEvaluate(frameInfoClusterer::strategy givenStrategy,
+void clusterAndEvaluate(clusterer::strategy givenStrategy,
                         vector<FrameInfo> frameInfos,
                         string pathToTagFiles,
                         bool verbose) {
     // Cluster with the given strategy
-    ClusterInfoContainer clusters = frameInfoClusterer::cluster(givenStrategy, frameInfos);
+    ClusterInfoContainer clusters = clusterer::cluster(givenStrategy, frameInfos, verbose);
 
     // Evaluate clustering
     double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);

@@ -11,11 +11,17 @@
 
 using std::vector;
 
-class frameInfoClusterer {
+class clusterer {
 public:
     enum strategy { AVERAGE, AVERAGE_REFINED, LABELS };
 
-    static ClusterInfoContainer cluster(strategy givenStrategy, vector<FrameInfo> frameInfos);
+    static ClusterInfoContainer cluster(strategy givenStrategy, vector<FrameInfo> frameInfos, bool verbose);
+
+private:
+    static vector<ClusterInfo> clusterAverageVector(vector<FrameInfo> frameInfos, bool verbose);
+    static ClusterInfoContainer clusterAverage(vector<FrameInfo> frameInfos, bool verbose);
+    static ClusterInfoContainer clusterAverageRefined(vector<FrameInfo> frameInfos, bool verbose);
+    static ClusterInfoContainer clusterLabels(vector<FrameInfo> frameInfos, bool verbose);
 };
 
 #endif //DOGIMAGESTABILIZATION_FRAMEINFOCLUSTERER_H
