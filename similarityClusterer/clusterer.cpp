@@ -12,16 +12,15 @@ using std::to_string;
  * Cluster the given frameInfos with the givenStrategy as one clustering.
  * @param givenStrategy A strategy to follow. No internal sanity check!
  * @param frameInfos Frames to cluster.
- * @param verbose Activate verbosity to cout.
  */
 ClusterInfoContainer clusterer::cluster(strategy givenStrategy, vector<FrameInfo> frameInfos, bool verbose) {
     switch (givenStrategy) {
         case clusterer::AVERAGE:
-            return clusterAverage(frameInfos, false);
+            return clusterAverage(frameInfos);
         case clusterer::AVERAGE_REFINED:
-            return clusterAverageRefined(frameInfos, false);
+            return clusterAverageRefined(frameInfos, verbose);
         case clusterer::LABELS:
-            return clusterLabels(frameInfos, false);
+            return clusterLabels(frameInfos);
         default:
             throw("Clustering strategy not implemented yet!");
     }
@@ -32,7 +31,7 @@ ClusterInfoContainer clusterer::cluster(strategy givenStrategy, vector<FrameInfo
  * @param frameInfos Frames to cluster.
  * @param verbose Activate verbosity to cout.
  */
-vector<ClusterInfoContainer> clusterer::group(ClusterInfoContainer clustering, bool verbose) {
+vector<ClusterInfoContainer> clusterer::group(ClusterInfoContainer clustering) {
     vector<ClusterInfoContainer> groupedClusterings;
 
     for (int i = 1; i < clustering.clusterInfos.size(); i++) {
@@ -60,7 +59,7 @@ vector<ClusterInfoContainer> clusterer::group(ClusterInfoContainer clustering, b
  * @param frameInfos Frames to cluster.
  * @param verbose Activate verbosity to cout.
  */
-vector<ClusterInfo> clusterer::clusterAverageVector(vector<FrameInfo> frameInfos, bool verbose) {
+vector<ClusterInfo> clusterer::clusterAverageVector(vector<FrameInfo> frameInfos) {
     int currentCluster = 0;
     vector<ClusterInfo> clusters;
 
@@ -85,8 +84,8 @@ vector<ClusterInfo> clusterer::clusterAverageVector(vector<FrameInfo> frameInfos
  * @param frameInfos Frames to cluster.
  * @param verbose Activate verbosity to cout.
  */
-ClusterInfoContainer clusterer::clusterAverage(vector<FrameInfo> frameInfos, bool verbose) {
-    vector<ClusterInfo> clusters = clusterAverageVector(frameInfos, verbose);
+ClusterInfoContainer clusterer::clusterAverage(vector<FrameInfo> frameInfos) {
+    vector<ClusterInfo> clusters = clusterAverageVector(frameInfos);
     ClusterInfoContainer clustering = ClusterInfoContainer("Determined clusters (average clustering)", clusters);
     return clustering;
 }
@@ -101,7 +100,7 @@ ClusterInfoContainer clusterer::clusterAverageRefined(vector<FrameInfo> frameInf
     int iteration = 0;
     for (; iteration < 500; iteration++) {
         // Cluster
-        vector<ClusterInfo> newClusters = clusterAverageVector(frameInfos, verbose);
+        vector<ClusterInfo> newClusters = clusterAverageVector(frameInfos);
 
         // Update average similarity
         for (int i = 0; i < newClusters.size(); i++) {
@@ -142,7 +141,7 @@ ClusterInfoContainer clusterer::clusterAverageRefined(vector<FrameInfo> frameInf
  * @param frameInfos Frames to cluster.
  * @param verbose Activate verbosity to cout.
  */
-ClusterInfoContainer clusterer::clusterLabels(vector<FrameInfo> frameInfos, bool verbose) {
+ClusterInfoContainer clusterer::clusterLabels(vector<FrameInfo> frameInfos) {
     int currentCluster = 0;
     vector<ClusterInfo> clusters;
 

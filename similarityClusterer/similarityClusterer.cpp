@@ -350,7 +350,7 @@ void clusterLabels(vector<FrameInfo> frames, string pathToTagFiles, bool verbose
 
 void groupAndEvaluate(ClusterInfoContainer clusters, string pathToTagFiles, bool verbose) {
     // Group clustering
-    vector<ClusterInfoContainer> groupedClusters = clusterer::group(clusters, verbose);
+    vector<ClusterInfoContainer> groupedClusters = clusterer::group(clusters);
 
     // Evaluate groups
     vector<tuple<double, string>> results;
