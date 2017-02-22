@@ -294,10 +294,12 @@ double qualityMeasurer::getClusterOverlapMsec(ClusterInfoContainer groundTruthCl
            && groundTruthClustersIterator != groundTruthClusters.clusterInfos.end()) {
         if ((*evaluatedClustersIterator).beginMsec >= (*groundTruthClustersIterator).endMsec) {
             groundTruthClustersIterator++;
+            continue;
         }
 
         if ((*evaluatedClustersIterator).endMsec <= (*groundTruthClustersIterator).beginMsec) {
             evaluatedClustersIterator++;
+            continue;
         }
 
         if ((*evaluatedClustersIterator).beginMsec >= (*groundTruthClustersIterator).endMsec
