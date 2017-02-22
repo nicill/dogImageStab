@@ -15,16 +15,16 @@ featureComparer::featureComparer(type givenType) {
     this->processedComparisons = 0;
 
     switch (givenType) {
-        case featureComparer::SIFT_BFL2:
-            this->detectorType = featureComparer::SIFT;
+        case SIFT_BFL2:
+            this->detectorType = SIFT;
             this->featureDetector = xfeatures2d::SIFT::create();
             break;
-        case featureComparer::SURF_BFL2:
-            this->detectorType = featureComparer::SURF;
+        case SURF_BFL2:
+            this->detectorType = SURF;
             this->featureDetector = xfeatures2d::SURF::create();
             break;
-        case featureComparer::ORB_BFHAMMING:
-            this->detectorType = featureComparer::ORB;
+        case ORB_BFHAMMING:
+            this->detectorType = ORB;
             this->featureDetector = cv::ORB::create();
             break;
         default:
@@ -32,13 +32,13 @@ featureComparer::featureComparer(type givenType) {
     }
 
     switch (givenType) {
-        case featureComparer::SIFT_BFL2:
-        case featureComparer::SURF_BFL2:
-            this->matcherType = featureComparer::BF_L2;
+        case SIFT_BFL2:
+        case SURF_BFL2:
+            this->matcherType = BF_L2;
             this->descriptorMatcher = BFMatcher::create();
             break;
-        case featureComparer::ORB_BFHAMMING:
-            this->matcherType = featureComparer::BF_HAMMING;
+        case ORB_BFHAMMING:
+            this->matcherType = BF_HAMMING;
             this->descriptorMatcher = BFMatcher::create(BFMatcher::BRUTEFORCE_HAMMING);
             break;
     }
