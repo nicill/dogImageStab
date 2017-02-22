@@ -9,7 +9,7 @@ using std::endl;
 using std::to_string;
 
 /**
- * Cluster the given frameInfos with the givenStrategy.
+ * Cluster the given frameInfos with the givenStrategy as one clustering.
  * @param givenStrategy A strategy to follow. No internal sanity check!
  * @param frameInfos Frames to cluster.
  * @param verbose Activate verbosity to cout.
@@ -25,6 +25,20 @@ ClusterInfoContainer clusterer::cluster(strategy givenStrategy, vector<FrameInfo
         default:
             throw("Clustering strategy not implemented yet!");
     }
+}
+
+/**
+ * Cluster the given frameInfos with the givenStrategy as multiple clusterings.
+ * @param givenStrategy A strategy to follow. No internal sanity check! Currently only works with label-based clustering.
+ * @param frameInfos Frames to cluster.
+ * @param verbose Activate verbosity to cout.
+ */
+vector<ClusterInfoContainer> clusterer::cluster(vector<FrameInfo> frameInfos, bool verbose) {
+    ClusterInfoContainer clustering = clusterLabels(frameInfos, false);
+    vector<ClusterInfoContainer> allClusterings;
+    //allClusterings.push_back(ClusterInfo(clustering.clusterInfos[0].name, clustering.clusterInfos[0]));
+
+    throw("NOT IMPLEMENTED");
 }
 
 /**
