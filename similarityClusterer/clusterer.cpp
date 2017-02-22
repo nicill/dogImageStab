@@ -37,13 +37,13 @@ vector<ClusterInfo> clusterer::clusterAverageVector(vector<FrameInfo> frameInfos
     vector<ClusterInfo> clusters;
 
     // Always add first frame of first cluster to allow for comparison.
-    clusters.push_back(ClusterInfo("0", { frameInfos.front() }));
+    clusters.push_back(ClusterInfo("0", frameInfos.front()));
 
     for (int i = 1; i < frameInfos.size(); i++) {
         // If the difference is too big, we create a new cluster, otherwise we add to the current one.
         if (0.1 < fabs(clusters[currentCluster].averageSimilarity - frameInfos[i].averageSimilarity)) {
             currentCluster++;
-            clusters.push_back(ClusterInfo(to_string(currentCluster), { frameInfos[i] }));
+            clusters.push_back(ClusterInfo(to_string(currentCluster), frameInfos[i]));
         } else {
             clusters[currentCluster].addFrameAtBack(frameInfos[i]);
         }
@@ -117,12 +117,12 @@ ClusterInfoContainer clusterer::clusterLabels(vector<FrameInfo> frameInfos, bool
     vector<ClusterInfo> clusters;
 
     // Always add first frame of first cluster to allow for comparison.
-    clusters.push_back(ClusterInfo(frameInfos.front().label, { frameInfos.front() }));
+    clusters.push_back(ClusterInfo(frameInfos.front().label, frameInfos.front()));
 
     for (int i = 1; i < frameInfos.size(); i++) {
         if (clusters[currentCluster].name != frameInfos[i].label) {
             currentCluster++;
-            clusters.push_back(ClusterInfo(frameInfos[i].label, { frameInfos[i] }));
+            clusters.push_back(ClusterInfo(frameInfos[i].label, frameInfos[i]));
         } else {
             clusters[currentCluster].addFrameAtBack(frameInfos[i]);
         }
