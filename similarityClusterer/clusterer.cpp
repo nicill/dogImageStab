@@ -33,12 +33,29 @@ ClusterInfoContainer clusterer::cluster(strategy givenStrategy, vector<FrameInfo
  * @param frameInfos Frames to cluster.
  * @param verbose Activate verbosity to cout.
  */
-vector<ClusterInfoContainer> clusterer::cluster(vector<FrameInfo> frameInfos, bool verbose) {
+vector<ClusterInfoContainer> clusterer::clusterAndGroup(vector<FrameInfo> frameInfos, bool verbose) {
     ClusterInfoContainer clustering = clusterLabels(frameInfos, false);
     vector<ClusterInfoContainer> allClusterings;
-    //allClusterings.push_back(ClusterInfo(clustering.clusterInfos[0].name, clustering.clusterInfos[0]));
 
-    throw("NOT IMPLEMENTED");
+    // Always add the first element.
+    allClusterings.push_back(ClusterInfoContainer(clustering.clusterInfos[0].name, clustering.clusterInfos[0]));
+
+    for (int i = 1; i < clustering.clusterInfos.size(); i++) {
+        string name = clustering.clusterInfos[i].name;
+
+        for (int j = 0; j < allClusterings.size(); j++) {
+            // Container with name exists.
+            if (name == allClusterings[j].name) {
+                allClusterings[j].clusterInfos.push_back(clustering.clusterInfos[i]);
+                continue;
+            }
+
+            // Name hasn't been seen before.
+            allClusterings.push_back(ClusterInfoContainer(name, clustering.clusterInfos[i]));
+        }
+    }
+
+    return allClusterings;
 }
 
 /**

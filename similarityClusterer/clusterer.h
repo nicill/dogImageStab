@@ -16,7 +16,7 @@ public:
     enum strategy { AVERAGE, AVERAGE_REFINED, LABELS };
 
     static ClusterInfoContainer cluster(strategy givenStrategy, vector<FrameInfo> frameInfos, bool verbose);
-    static vector<ClusterInfoContainer> cluster(vector<FrameInfo> frameInfos, bool verbose);
+    static vector<ClusterInfoContainer> clusterAndGroup(vector<FrameInfo> frameInfos, bool verbose);
 
 private:
     static vector<ClusterInfo> clusterAverageVector(vector<FrameInfo> frameInfos, bool verbose);
