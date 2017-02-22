@@ -362,9 +362,17 @@ void clusterAndEvaluate(clusterer::strategy givenStrategy,
     vector<ClusterInfoContainer> allClusters = clusterer::cluster(givenStrategy, frameInfos, verbose);
 
     // Evaluate clustering
+    vector<tuple<double, string>> results;
     for (ClusterInfoContainer clusters : allClusters) {
+        cout << " -- Scoring clustering \"" << clusters.name << "\"... -- " << endl;
         double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
-        cout << "Achieved a quality score of " << score << " for clustering " << clusters.name << "!" << endl;
+        results.push_back(tuple<double, string>(score, clusters.name));
+    }
+
+    cout << endl;
+    for (tuple<double, string> result : results) {
+        cout << "Achieved a quality score of " << get<0>(result)
+             << " for clustering \"" << get<1>(result) << "\"!" << endl;
     }
 }
 
