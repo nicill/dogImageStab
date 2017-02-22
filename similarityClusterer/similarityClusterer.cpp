@@ -19,17 +19,13 @@ using namespace std;
 using namespace cv;
 
 // Declarations
-void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
+void clusterRegion(vector<FrameInfo> frames, string pathToTagFiles, bool verbose);
 void clusterLabels(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
-void clusterAndEvaluate(clusterer::strategy givenStrategy,
-                        vector<FrameInfo> frameInfos,
-                        string pathToTagFiles,
-                        bool verbose);
+void groupAndEvaluate(ClusterInfoContainer clusters, string pathToTagFiles, bool verbose);
 void classify(vector<FrameInfo> classifiedFrames, string pathToTagFiles, bool verbose);
 bool canOpenDir(string path);
 vector<FrameInfo> readFrameInfosFromCsv(string filePath);
 void appendToCsv(string filePath, double frameNo, double msec, double similarity);
-double getAverageSimilarity(vector<FrameInfo> cluster);
 void announceMode(string mode);
 
 /**
@@ -305,13 +301,13 @@ int main(int argc, char **argv) {
 
 /**
  * Clusters the frames based on a region average score and evaluates the result with the tag files given.
- * @param frameInfos Frames to cluster.
+ * @param frames Frames to cluster.
  * @param pathToTagFiles Directory containing the tag files. Must exist.
  * @param verbose Activate verbosity to cout.
  */
-void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) {
-    // Get average similarity for region
-    int maxIndex = (int) frameInfos.size() - 1;
+void clusterRegion(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
+    // Get average similarity for region and fill field in FrameInfo
+    int maxIndex = (int) frames.size() - 1;
     for (int i = 0; i < maxIndex; i++) {
         // calculate the average for each frame (5 back, 5 front)
         int start = 0;
@@ -322,14 +318,19 @@ void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool ver
 
         double summedUpSimilarities = 0;
         for (int j = start; j <= end; j++) {
-            if (frameInfos[j].similarityToPrevious != -1) {
-                summedUpSimilarities += frameInfos[j].similarityToPrevious;
+            if (frames[j].similarityToPrevious != -1) {
+                summedUpSimilarities += frames[j].similarityToPrevious;
             }
         }
-        frameInfos[i].averageSimilarity = summedUpSimilarities / (1 + end - start);
+        frames[i].averageSimilarity = summedUpSimilarities / (1 + end - start);
     }
 
-    clusterAndEvaluate(clusterer::AVERAGE_REFINED, frameInfos, pathToTagFiles, verbose);
+    // 1) Cluster based on region average (refined)
+    ClusterInfoContainer clusters = clusterer::cluster(clusterer::AVERAGE_REFINED, frames, verbose);
+    // 2) Classify clusters
+    clusters = classifier::classifyClusters(clusters);
+    // 3) Group and evaluate
+    groupAndEvaluate(clusters, pathToTagFiles, verbose);
 }
 
 /**
@@ -339,29 +340,24 @@ void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool ver
  * @param verbose Activate verbosity to cout.
  */
 void clusterLabels(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
+    // 1) Classify frames
     vector<FrameInfo> classifiedFrames = classifier::classifyFramesSingle(frames);
-    clusterAndEvaluate(clusterer::LABELS, classifiedFrames, pathToTagFiles, verbose);
+    // 2) Cluster based on classification
+    ClusterInfoContainer clusters = clusterer::cluster(clusterer::LABELS, frames, verbose);
+    // 3) Group and evaluate
+    groupAndEvaluate(clusters, pathToTagFiles, verbose);
 }
 
-/**
- * Clusters frames based on average similarity and evaluates the result with the tag files given.
- * @param frameInfos Frames to cluster.
- * @param pathToTagFiles Directory containing the tag files. Must exist.
- * @param verbose Activate verbosity to cout.
- */
-void clusterAndEvaluate(clusterer::strategy givenStrategy,
-                        vector<FrameInfo> frameInfos,
-                        string pathToTagFiles,
-                        bool verbose) {
-    // Cluster with the given strategy
-    vector<ClusterInfoContainer> allClusters = clusterer::cluster(givenStrategy, frameInfos, verbose);
+void groupAndEvaluate(ClusterInfoContainer clusters, string pathToTagFiles, bool verbose) {
+    // Group clustering
+    vector<ClusterInfoContainer> groupedClusters = clusterer::group(clusters, verbose);
 
-    // Evaluate clustering
+    // Evaluate groups
     vector<tuple<double, string>> results;
-    for (ClusterInfoContainer clusters : allClusters) {
-        cout << " -- Scoring clustering \"" << clusters.name << "\"... -- " << endl;
-        double score = qualityMeasurer::scoreQuality(pathToTagFiles, clusters, verbose);
-        results.push_back(tuple<double, string>(score, clusters.name));
+    for (ClusterInfoContainer group : groupedClusters) {
+        cout << " -- Scoring clustering \"" << group.name << "\"... -- " << endl;
+        double score = qualityMeasurer::scoreQuality(pathToTagFiles, group, verbose);
+        results.push_back(tuple<double, string>(score, group.name));
     }
 
     cout << endl;

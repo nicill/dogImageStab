@@ -14,6 +14,7 @@ vector<FrameInfo> classifier::classifyFramesSingle(vector<FrameInfo> frames) {
 
 vector<FrameInfo> classifier::classifyFramesAverage(vector<FrameInfo> frames) {
     for (int i = 0; i < frames.size(); i++) {
+        assert(frames[i].averageSimilarity != -1);
         frames[i].label = classifySimilarity(frames[i].averageSimilarity);
     }
 

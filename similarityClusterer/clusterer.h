@@ -15,7 +15,8 @@ class clusterer {
 public:
     enum strategy { AVERAGE, AVERAGE_REFINED, LABELS };
 
-    static vector<ClusterInfoContainer> cluster(strategy givenStrategy, vector<FrameInfo> frameInfos, bool verbose);
+    static ClusterInfoContainer cluster(strategy givenStrategy, vector<FrameInfo> frameInfos, bool verbose);
+    static vector<ClusterInfoContainer> group(ClusterInfoContainer clustering, bool verbose);
     static vector<ClusterInfoContainer> clusterLabelsAndGroup(vector<FrameInfo> frameInfos, bool verbose);
 
 private:

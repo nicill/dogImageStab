@@ -14,17 +14,45 @@ using std::to_string;
  * @param frameInfos Frames to cluster.
  * @param verbose Activate verbosity to cout.
  */
-vector<ClusterInfoContainer> clusterer::cluster(strategy givenStrategy, vector<FrameInfo> frameInfos, bool verbose) {
+ClusterInfoContainer clusterer::cluster(strategy givenStrategy, vector<FrameInfo> frameInfos, bool verbose) {
     switch (givenStrategy) {
         case clusterer::AVERAGE:
-            return { clusterAverage(frameInfos, false) };
+            return clusterAverage(frameInfos, false);
         case clusterer::AVERAGE_REFINED:
-            return { clusterAverageRefined(frameInfos, false) };
+            return clusterAverageRefined(frameInfos, false);
         case clusterer::LABELS:
-            return clusterLabelsAndGroup(frameInfos, false);
+            return clusterLabels(frameInfos, false);
         default:
             throw("Clustering strategy not implemented yet!");
     }
+}
+
+/**
+ * Cluster the given frameInfos with a label-based clustering and group based on label.
+ * @param frameInfos Frames to cluster.
+ * @param verbose Activate verbosity to cout.
+ */
+vector<ClusterInfoContainer> clusterer::group(ClusterInfoContainer clustering, bool verbose) {
+    vector<ClusterInfoContainer> groupedClusterings;
+
+    for (int i = 1; i < clustering.clusterInfos.size(); i++) {
+        string name = clustering.clusterInfos[i].label;
+        bool found = false;
+
+        for (int j = 0; j < groupedClusterings.size(); j++) {
+            // Container with name exists.
+            if (name == groupedClusterings[j].name) {
+                groupedClusterings[j].clusterInfos.push_back(clustering.clusterInfos[i]);
+                found = true;
+                break;
+            }
+        }
+
+        // Name hasn't been seen before.
+        if (!found) groupedClusterings.push_back(ClusterInfoContainer(name, clustering.clusterInfos[i]));
+    }
+
+    return groupedClusterings;
 }
 
 /**
@@ -72,8 +100,10 @@ ClusterInfoContainer clusterer::clusterAverageRefined(vector<FrameInfo> frameInf
     vector<ClusterInfo> clusters = { ClusterInfo("All frames", frameInfos) };
     int iteration = 0;
     for (; iteration < 500; iteration++) {
+        // Cluster
         vector<ClusterInfo> newClusters = clusterAverageVector(frameInfos, verbose);
 
+        // Update average similarity
         for (int i = 0; i < newClusters.size(); i++) {
             assert(newClusters[i].hasFrames);
             for (int j = 0; j < newClusters[i].frames.size(); j++) {
@@ -81,6 +111,7 @@ ClusterInfoContainer clusterer::clusterAverageRefined(vector<FrameInfo> frameInf
             }
         }
 
+        // Check if stable clustering was reached
         bool equal = true;
         vector<ClusterInfo>::iterator clustersIterator = clusters.begin();
         vector<ClusterInfo>::iterator newClustersIterator = newClusters.begin();
@@ -97,7 +128,6 @@ ClusterInfoContainer clusterer::clusterAverageRefined(vector<FrameInfo> frameInf
         clusters = newClusters;
 
         if (equal) break;
-        if (verbose) cout << "No stable clustering reached, recalculating...";
     }
 
     if (verbose) cout << "Reached stable clustering in " << iteration << " iterations";
@@ -131,33 +161,4 @@ ClusterInfoContainer clusterer::clusterLabels(vector<FrameInfo> frameInfos, bool
     ClusterInfoContainer clustering =
             ClusterInfoContainer("Determined clusters (label-based clustering)", clusters);
     return clustering;
-}
-
-/**
- * Cluster the given frameInfos with a label-based clustering and group based on label.
- * @param frameInfos Frames to cluster.
- * @param verbose Activate verbosity to cout.
- */
-vector<ClusterInfoContainer> clusterer::clusterLabelsAndGroup(vector<FrameInfo> frameInfos, bool verbose) {
-    ClusterInfoContainer clustering = clusterLabels(frameInfos, false);
-    vector<ClusterInfoContainer> allClusterings;
-
-    for (int i = 1; i < clustering.clusterInfos.size(); i++) {
-        string name = clustering.clusterInfos[i].label;
-        bool found = false;
-
-        for (int j = 0; j < allClusterings.size(); j++) {
-            // Container with name exists.
-            if (name == allClusterings[j].name) {
-                allClusterings[j].clusterInfos.push_back(clustering.clusterInfos[i]);
-                found = true;
-                break;
-            }
-        }
-
-        // Name hasn't been seen before.
-        if (!found) allClusterings.push_back(ClusterInfoContainer(name, clustering.clusterInfos[i]));
-    }
-
-    return allClusterings;
 }
