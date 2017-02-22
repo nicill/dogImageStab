@@ -17,6 +17,11 @@
 using namespace std;
 using namespace cv;
 
+// Constants
+const string highSimLabel = "High similarity";
+const string avgSimLabel = "Average similarity";
+const string lowSimLabel = "Low similarity";
+
 // Declarations
 void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
 void clusterLabels(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
@@ -24,7 +29,8 @@ void clusterAndEvaluate(clusterer::strategy givenStrategy,
                         vector<FrameInfo> frameInfos,
                         string pathToTagFiles,
                         bool verbose);
-void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose);
+void classify(vector<FrameInfo> classifiedFrames, string pathToTagFiles, bool verbose);
+vector<FrameInfo> classifyFrames(vector<FrameInfo> frames);
 bool canOpenDir(string path);
 vector<FrameInfo> readFrameInfosFromCsv(string filePath);
 void appendToCsv(string filePath, double frameNo, double msec, double similarity);
@@ -334,16 +340,13 @@ void clusterRegion(vector<FrameInfo> frameInfos, string pathToTagFiles, bool ver
 
 /**
  * Clusters the frames based on single frame classification and evaluates the result with the tag files given.
- * @param frameInfos Frames to cluster.
+ * @param frames Frames to cluster.
  * @param pathToTagFiles Directory containing the tag files. Must exist.
  * @param verbose Activate verbosity to cout.
  */
-void clusterLabels(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose) {
-    for (int i = 0; i < frameInfos.size(); i++) {
-        frameInfos[i].averageSimilarity = frameInfos[i].similarityToPrevious;
-    }
-
-    clusterAndEvaluate(clusterer::LABELS, frameInfos, pathToTagFiles, verbose);
+void clusterLabels(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
+    vector<FrameInfo> classifiedFrames = classifyFrames(frames);
+    clusterAndEvaluate(clusterer::LABELS, classifiedFrames, pathToTagFiles, verbose);
 }
 
 /**
@@ -375,16 +378,17 @@ void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
     vector<FrameInfo> averageSimilarityFrames;
     vector<FrameInfo> lowSimilarityFrames;
 
-    for (FrameInfo frame : frames) {
-        if (frame.similarityToPrevious > 0.6) highSimilarityFrames.push_back(frame);
-        else if (frame.similarityToPrevious > 0.3) averageSimilarityFrames.push_back(frame);
+    vector<FrameInfo> classifiedFrames = classifyFrames(frames);
+    for (FrameInfo frame : classifiedFrames) {
+        if (frame.label == highSimLabel) highSimilarityFrames.push_back(frame);
+        else if (frame.label == avgSimLabel) averageSimilarityFrames.push_back(frame);
         else lowSimilarityFrames.push_back(frame);
     }
 
-    double framesSize = frames.size();
-    cout << "High similarity:    " << highSimilarityFrames.size() << " of " << framesSize << " total frames" << endl
-         << "Average similarity: " << averageSimilarityFrames.size() << " of " << framesSize << " total frames" << endl
-         << "Low similarity:     " << lowSimilarityFrames.size() << " of " << framesSize << " total frames" << endl
+    double totalFrames = classifiedFrames.size();
+    cout << "High similarity:    " << highSimilarityFrames.size() << " of " << totalFrames << " total frames" << endl
+         << "Average similarity: " << averageSimilarityFrames.size() << " of " << totalFrames << " total frames" << endl
+         << "Low similarity:     " << lowSimilarityFrames.size() << " of " << totalFrames << " total frames" << endl
          << endl;
 
     cout << "Matching high similarity frames..." << endl;
@@ -395,6 +399,16 @@ void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
 
     cout << "Matching low similarity frames..." << endl;
     qualityMeasurer::calculateOverlap(pathToTagFiles, lowSimilarityFrames, verbose);
+}
+
+vector<FrameInfo> classifyFrames(vector<FrameInfo> frames) {
+    for (int i = 0; i < frames.size(); i++) {
+        if (frames[i].similarityToPrevious > 0.6) frames[i].label = highSimLabel;
+        else if (frames[i].similarityToPrevious > 0.3) frames[i].label = avgSimLabel;
+        else frames[i].label = lowSimLabel;
+    }
+
+    return frames;
 }
 
 /**
