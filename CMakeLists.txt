@@ -45,6 +45,10 @@ add_executable(similarityClusterer
         similarityClusterer/utils.cpp)
 target_link_libraries( similarityClusterer ${OpenCV_LIBS} )
 
+add_executable(ioUtility
+        ioUtility/ioUtility.cpp)
+target_link_libraries( ioUtility ${OpenCV_LIBS} )
+
 add_executable(similarityTEST similarityTEST.cpp similarityTEST.h)
 target_link_libraries( similarityTEST ${OpenCV_LIBS} )
 
