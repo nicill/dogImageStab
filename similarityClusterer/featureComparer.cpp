@@ -27,6 +27,10 @@ featureComparer::featureComparer(type givenType) {
             this->detectorType = featureComparer::ORB;
             this->featureDetector = cv::ORB::create();
             break;
+        case featureComparer::BRISK_BFHAMMING:
+            this->detectorType = featureComparer::BRISK;
+            this->featureDetector = cv::BRISK::create();
+            break;
         default:
             throw("This type hasn't been implemented yet.");
     }
@@ -37,6 +41,7 @@ featureComparer::featureComparer(type givenType) {
             this->matcherType = featureComparer::BF_L2;
             this->descriptorMatcher = BFMatcher::create();
             break;
+        case featureComparer::BRISK_BFHAMMING:
         case featureComparer::ORB_BFHAMMING:
             this->matcherType = featureComparer::BF_HAMMING;
             this->descriptorMatcher = BFMatcher::create(BFMatcher::BRUTEFORCE_HAMMING);

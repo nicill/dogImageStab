@@ -2,11 +2,7 @@
 // Created by yago on 17/02/16.
 //
 
-
-// NOT MUCH WORKING YET!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 // based on http://docs.opencv.org/2.4/doc/tutorials/features2d/feature_homography/feature_homography.html
-
 
 #include <stdio.h>
 #include <iostream>
@@ -106,16 +102,17 @@ int main( int argc, char** argv ) {
             scene.push_back( keypoints_2[ goodMatches[i].trainIdx ].pt );
         }
 
-       //cout<<"feature stabilizer, matches with good keypoint sizes "<<obj.size()<<" "<<scene.size()<< " frame "<<frameCounter<<"/"<<totalFrames<<endl;
+       //if(frameCounter%100==0) cout<<"feature stabilizer, matches with good keypoint sizes "<<obj.size()<<" "<<scene.size()<< " frame "<<frameCounter<<"/"<<totalFrames<<endl;
 
         // Step 5, compute deformation from point couples
         try {
             H  = findHomography( obj, scene, CV_RANSAC );
+            //H = estimateRigidTransform(obj, scene, false);
             previousH=H;
         }
         catch (Exception e)
         {
-            cout<<"FUCKED KEYPOINT SELECTION, doing nothing "<<obj.size()<<" "<<scene.size()<< "frame "<<frameCounter<<"/"<<totalFrames<<endl;
+            cout<<"****************************************************************** FUCKED KEYPOINT SELECTION "<<e.what()<< ", doing nothing "<<obj.size()<<" "<<scene.size()<<" frame "<<frameCounter<<"/"<<totalFrames<<endl;
 
             // If it is not possible to find any match, just take previous matrix
             H=previousH;
@@ -125,7 +122,16 @@ int main( int argc, char** argv ) {
 
         // Step 6 warp video
         Mat cur2;
-        warpPerspective(current, cur2, H, current.size());
+        try{
+            warpPerspective(current, cur2, H, current.size());
+        }
+        catch(Exception e)
+        {
+            cout<<"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FUCKED warping "<<e.what()<<" , doing nothing "<<obj.size()<<" "<<scene.size()<<" frame "<<frameCounter<<"/"<<totalFrames<<endl;
+            current.copyTo(cur2);
+        }
+        //warpAffine(current, cur2, H, current.size());
+
         //cur2 = cur2(Range(vert_border, cur2.rows-vert_border), Range(HORIZONTAL_BORDER_CROP, cur2.cols-HORIZONTAL_BORDER_CROP));
         // save the output video
         outputVideo << cur2;

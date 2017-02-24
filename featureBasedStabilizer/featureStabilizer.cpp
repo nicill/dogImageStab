@@ -31,7 +31,6 @@ featureStabilizer::featureStabilizer(type givenType) {
             this->detectorType = featureStabilizer::BRISK;
             this->featureDetector = cv::BRISK::create();
             break;
-
         default:
             throw("This descriptor hasn't been implemented yet.");
     }

@@ -1,12 +1,17 @@
 cmake_minimum_required(VERSION 3.3)
+SET(ITK_DIR /home/yago/soft/InsightToolkit-4.11.0/BINARY)
 project(dogImageStabilization)
 find_package( OpenCV REQUIRED )
+find_package( ITK REQUIRED )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g ")
 
+include(${ITK_USE_FILE})
+
+
 #set(SOURCE_FILES main.cpp videostabExample.cpp)
-add_executable(computeMeasures computeMeasures.cpp videoStabilizationQualityMeasures.h videoStabilizationQualityMeasures.cpp similarityClusterer/framewiseSimilarityMetric.h similarityClusterer/opencvHistComparer.cpp similarityClusterer/opencvHistComparer.h similarityClusterer/featureComparer.cpp similarityClusterer/featureComparer.h )
-target_link_libraries( computeMeasures ${OpenCV_LIBS} )
+add_executable(computeMeasures computeMeasures.cpp videoStabilizationQualityMeasures.h videoStabilizationQualityMeasures.cpp similarityClusterer/opencvITKmetric.cpp similarityClusterer/opencvITKmetric.h similarityClusterer/framewiseSimilarityMetric.h similarityClusterer/opencvHistComparer.cpp similarityClusterer/opencvHistComparer.h similarityClusterer/featureComparer.cpp similarityClusterer/featureComparer.h )
+target_link_libraries( computeMeasures ${OpenCV_LIBS} ${ITK_LIBRARIES} )
 
 add_executable(dogImageStabilization simpleExample.cpp )
 target_link_libraries( dogImageStabilization ${OpenCV_LIBS} )
@@ -29,8 +34,8 @@ target_link_libraries( showTwoTogether ${OpenCV_LIBS} )
 add_executable(brno brno.cpp Stabilizer.h StabilizerGCBPM.cpp StabilizerGCBPM.h Exceptions.h Parameters.cpp Parameters.h xgetopt.cpp xgetopt.h StabilizerSVD.cpp StabilizerSVD.h)
 target_link_libraries( brno ${OpenCV_LIBS} )
 
-add_executable(similarityClusterer similarityClusterer/similarityClusterer.cpp similarityClusterer/framewiseSimilarityMetric.h similarityClusterer/opencvHistComparer.cpp similarityClusterer/opencvHistComparer.h similarityClusterer/opencvImageMetric.cpp similarityClusterer/opencvImageMetric.h similarityClusterer/featureComparer.cpp similarityClusterer/featureComparer.h  similarityClusterer/qualityMeasurer.cpp similarityClusterer/qualityMeasurer.h similarityClusterer/FrameInfo.cpp similarityClusterer/ClusterInfo.cpp similarityClusterer/ClusterInfoContainer.cpp similarityClusterer/defaults.h similarityClusterer/defaults.h)
-target_link_libraries( similarityClusterer ${OpenCV_LIBS} )
+add_executable(similarityClusterer similarityClusterer/similarityClusterer.cpp similarityClusterer/framewiseSimilarityMetric.h similarityClusterer/opencvHistComparer.cpp similarityClusterer/opencvHistComparer.h similarityClusterer/opencvImageMetric.cpp similarityClusterer/opencvImageMetric.h similarityClusterer/featureComparer.cpp similarityClusterer/featureComparer.h  similarityClusterer/qualityMeasurer.cpp similarityClusterer/qualityMeasurer.h similarityClusterer/FrameInfo.cpp similarityClusterer/ClusterInfo.cpp similarityClusterer/ClusterInfoContainer.cpp similarityClusterer/defaults.h similarityClusterer/defaults.h similarityClusterer/opencvITKmetric.cpp similarityClusterer/opencvITKmetric.h)
+target_link_libraries( similarityClusterer ${OpenCV_LIBS} ${ITK_LIBRARIES} )
 
 add_executable(similarityTEST similarityTEST.cpp similarityTEST.h)
 target_link_libraries( similarityTEST ${OpenCV_LIBS} )

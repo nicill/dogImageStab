@@ -6,6 +6,7 @@
 #include "similarityClusterer/framewiseSimilarityMetric.h"
 #include "similarityClusterer/opencvHistComparer.h"
 #include "similarityClusterer/featureComparer.h"
+#include "similarityClusterer/opencvITKmetric.h"
 
 
 using namespace std;
@@ -42,8 +43,10 @@ double computeOtherMetrics(String video, framewiseSimilarityMetric* comparer)
         frameCounter++;
 
         double currentSimilarity = comparer->computeSimilarity(&previous, &current);
+
         // accumulate
         average=average+currentSimilarity;
+        //cout<<"Frame "<<frameCounter<<"/"<<totalFrames<<" returned similarity "<<current<<" current average "<<average<<endl;
 
         current.copyTo(previous);
     }
@@ -58,6 +61,7 @@ int main(int argc, char **argv)
         cout << "code: 0=framewise entropy,  1=ITF" << endl;
         return 0;
     }
+
 
 videoStabilizationQualityMeasures vidStabMeasurer;
 framewiseSimilarityMetric* metric;
@@ -77,7 +81,7 @@ framewiseSimilarityMetric* metric;
             break;
         case 3 :
             //cout << "Computing SSIM for "<<argv[1]<< endl;
-            //http://docs.opencv.org/2.4/doc/tutorials/highgui/video-input-psnr-ssim/video-input-psnr-ssim.html
+                //http://docs.opencv.org/2.4/doc/tutorials/highgui/video-input-psnr-ssim/video-input-psnr-ssim.html
             //“Z. Wang, A. C. Bovik, H. R. Sheikh and E. P. Simoncelli, “Image quality assessment: From error visibility to structural similarity,” IEEE Transactions on Image Processing, vol. 13, no. 4, pp. 600-612, Apr. 2004.”
             cout<<vidStabMeasurer.SSIM(argv[1]);
             break;
@@ -97,16 +101,24 @@ framewiseSimilarityMetric* metric;
             metric=new opencvHistComparer(3);
             cout<<computeOtherMetrics(argv[1],metric);
             break;
-        case 8: //feature 0
+        case 8: //feature 0 SIFT
             metric=new featureComparer((featureComparer::type)0);
             cout<<computeOtherMetrics(argv[1],metric);
             break;
-        case 9: //feature 1
+        case 9: //feature 1 SURF
             metric=new featureComparer((featureComparer::type)1);
             cout<<computeOtherMetrics(argv[1],metric);
             break;
-        case 10: //feature 2
+        case 10: //feature 2 ORB
             metric=new featureComparer((featureComparer::type)2);
+            cout<<computeOtherMetrics(argv[1],metric);
+            break;
+        case 11: //feature 3 BRISK
+            metric=new featureComparer((featureComparer::type)3);
+            cout<<computeOtherMetrics(argv[1],metric);
+            break;
+        case 12: //ITK 1 MS
+            metric=new opencvITKmetric();
             cout<<computeOtherMetrics(argv[1],metric);
             break;
         default :
