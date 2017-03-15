@@ -105,8 +105,21 @@ int mainCsvMode() {
          << " Reading tag files from directory \"" << pathToTagFiles << "\")" << endl;
 
     // 1) Read tag files and create ClusterInfos
-    vector<ClusterInfoContainer> clustersFromAllFiles =
+    vector<ClusterInfoContainer> allTagFileClusters =
             similarityFileUtils::readTagFiles(pathToTagFiles, false);
+    //    Make sure we have tag files for stop and bark.
+    int hasBoth = 0;
+    for (ClusterInfoContainer tagFile : allTagFileClusters) {
+        if (utils::stringContainsAny(tagFile.name, { "bark", "Bark" })) {
+            hasBoth |= 1;
+        } else if (utils::stringContainsAny(tagFile.name, { "stop", "Stop" })) {
+            hasBoth |= 2;
+        }
+    }
+    if ((hasBoth & 3) != 3) {
+        cerr << "Couldn't find tag files for stop and/or bark. Please make sure both exist and are named correctly." << endl;
+        return 1;
+    }
 
     // 2) Read similarity from video file, build clusters and label
     vector<FrameInfo> frameInfos = similarityFileUtils::readFrameInfosFromCsv(ioFilePath, totalFrames);
