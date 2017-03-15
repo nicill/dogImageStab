@@ -25,6 +25,7 @@ int  mainTagMode();
 string workingDirectory = "$HOME";
 string ioFileName;
 string ioFilePath;
+string pathToTagFiles;
 double totalFrames;
 
 /**
@@ -62,7 +63,7 @@ int main(int argc, char **argv) {
     int subSpecifier = atoi(argv[3]);
 
     // Check validity of working directory and tag file directory
-    if (!utils::canOpenDir(defaults::workingDirectory) || !utils::canOpenDir(defaults::pathToTagFiles)) {
+    if (!utils::canOpenDir(defaults::workingDirectory) || !utils::canOpenDir(defaults::tagFileDirectory)) {
         cerr << "Could not open default directory, please check defaults file." << endl;
         return 1;
     }
@@ -75,6 +76,8 @@ int main(int argc, char **argv) {
     }
     totalFrames = capture.get(cv::CAP_PROP_FRAME_COUNT);
     capture.release();
+    string videoName = basename(argv[1]);
+    pathToTagFiles = utils::combine({ defaults::tagFileDirectory, "/", videoName });
 
     ioFileName = utils::getCsvFileName(basename(argv[1]), metricIndex, subSpecifier);
     ioFilePath = utils::combine({ defaults::workingDirectory, "/", ioFileName });
@@ -95,11 +98,11 @@ int mainCsvMode() {
     cout << "CSV mode activated" << endl
          << "(Using working directory \"" << workingDirectory << "\"" << endl
          << " Reading similarity values from directory \"" << defaults::workingDirectory << "\")" << endl
-         << " Reading tag files from directory \"" << defaults::pathToTagFiles << "\")" << endl;
+         << " Reading tag files from directory \"" << pathToTagFiles << "\")" << endl;
 
     // 1) Read tag files and create ClusterInfos
     vector<ClusterInfoContainer> clustersFromAllFiles =
-            similarityFileUtils::readTagFiles(defaults::pathToTagFiles, false);
+            similarityFileUtils::readTagFiles(pathToTagFiles, false);
 
     // 2) Read similarity from video file, build clusters and label
     vector<FrameInfo> frameInfos = similarityFileUtils::readFrameInfosFromCsv(ioFilePath, totalFrames);

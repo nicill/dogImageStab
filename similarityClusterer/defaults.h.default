@@ -12,7 +12,7 @@ using std::string;
 class defaults {
 public:
     static constexpr const char* workingDirectory = "/home/similarityClusterer";
-    static constexpr const char* pathToTagFiles = "/home/similarityClusterer/tagFiles";
+    static constexpr const char* tagFileDirectory = "/home/similarityClusterer/tagFiles";
 };
 
 #endif //DOGIMAGESTABILIZATION_DEFAULTS_H
