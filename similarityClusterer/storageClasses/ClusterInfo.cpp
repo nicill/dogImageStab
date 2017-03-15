@@ -94,6 +94,16 @@ struct ClusterInfo {
     }
 
     /**
+     * Checks if the given frame is within the cluster boundaries.
+     */
+    bool containsFrame(FrameInfo frame) {
+        return frame.msec >= this->beginMsec
+               && frame.msec <= this->endMsec
+               && (!this->hasFrames || (frame.frameNo >= this->beginMsec
+                                        && frame.frameNo <= this->endFrameNo));
+    }
+
+    /**
      * Equals method which compares begin and end time as well as begin and end frame number.
      * @param compare The ClusterInfo to compare this to.
      */
@@ -110,6 +120,7 @@ struct ClusterInfo {
         return equal;
     }
 
+private:
     /**
      * Updates length and average similarity fields of this object.
      */
@@ -122,7 +133,6 @@ struct ClusterInfo {
         }
         this->averageSimilarity = summedUpAverages / this->frames.size();
     }
-
     /**
      * Creates a default name for the given cluster.
      */
