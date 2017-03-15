@@ -305,7 +305,7 @@ void clusterRegion(vector<FrameInfo> frames, string pathToTagFiles, bool verbose
     clusterer::calculateRegionAverage(&frames);
     ClusterInfoContainer clusters = clusterer::cluster(clusterer::AVERAGE_REFINED, frames, verbose);
     // 2) Classify clusters
-    clusters = classifier::classifyClusters(clusters);
+    classifier::classifyClusters(&clusters);
     // 3) Group and evaluate
     groupAndEvaluate(clusters, pathToTagFiles, verbose);
 }
@@ -318,7 +318,7 @@ void clusterRegion(vector<FrameInfo> frames, string pathToTagFiles, bool verbose
  */
 void clusterLabels(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
     // 1) Classify frames
-    vector<FrameInfo> classifiedFrames = classifier::classifyFramesSingle(frames);
+    classifier::classifyFramesSingle(&frames);
     // 2) Cluster based on classification
     ClusterInfoContainer clusters = clusterer::cluster(clusterer::LABELS, frames, verbose);
     // 3) Group and evaluate
@@ -355,14 +355,14 @@ void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
     vector<FrameInfo> averageSimilarityFrames;
     vector<FrameInfo> lowSimilarityFrames;
 
-    vector<FrameInfo> classifiedFrames = classifier::classifyFramesSingle(frames);
-    for (FrameInfo frame : classifiedFrames) {
+    classifier::classifyFramesSingle(&frames);
+    for (FrameInfo frame : frames) {
         if (frame.label == classifier::highSimLabel) highSimilarityFrames.push_back(frame);
         else if (frame.label == classifier::mediumSimLabel) averageSimilarityFrames.push_back(frame);
         else lowSimilarityFrames.push_back(frame);
     }
 
-    double totalFrames = classifiedFrames.size();
+    double totalFrames = frames.size();
     cout << "High similarity:    " << highSimilarityFrames.size() << " of " << totalFrames << " total frames" << endl
          << "Average similarity: " << averageSimilarityFrames.size() << " of " << totalFrames << " total frames" << endl
          << "Low similarity:     " << lowSimilarityFrames.size() << " of " << totalFrames << " total frames" << endl
