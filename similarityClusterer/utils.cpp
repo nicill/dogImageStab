@@ -24,6 +24,17 @@ struct utils {
     }
 
     /**
+     * Combines all given strings into one.
+     */
+    static string combine(vector<string> strings) {
+        string result = "";
+        for (string s : strings) {
+            result += s;
+        }
+        return result;
+    }
+
+    /**
      * Checks if a given directory can be opened.
      */
     static bool canOpenDir(string path) {

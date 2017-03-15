@@ -77,8 +77,7 @@ int main(int argc, char **argv) {
     capture.release();
 
     ioFileName = utils::getCsvFileName(basename(argv[1]), metricIndex, subSpecifier);
-    ioFilePath = defaults::workingDirectory;
-    ioFilePath += "/" + ioFileName; // Separate operation as the '+' operator can't be used with a const.
+    ioFilePath = utils::combine({ defaults::workingDirectory, "/", ioFileName });
     if (!utils::fileExists(ioFilePath)) {
         cout << "No IO file \"" << ioFilePath << "\" found. Please calculate similarity and save to the given file "
              << "before running this program." << endl;
