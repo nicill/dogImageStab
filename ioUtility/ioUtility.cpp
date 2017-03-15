@@ -109,11 +109,15 @@ int mainCsvMode() {
             similarityFileUtils::readTagFiles(pathToTagFiles, false);
     //    Make sure we have tag files for stop and bark.
     int hasBoth = 0;
+    ClusterInfoContainer barkFileClusters;
+    ClusterInfoContainer stopFileClusters;
     for (ClusterInfoContainer tagFile : allTagFileClusters) {
         if (utils::stringContainsAny(tagFile.name, { "bark", "Bark" })) {
             hasBoth |= 1;
+            barkFileClusters = tagFile;
         } else if (utils::stringContainsAny(tagFile.name, { "stop", "Stop" })) {
             hasBoth |= 2;
+            stopFileClusters = tagFile;
         }
     }
     if ((hasBoth & 3) != 3) {
@@ -122,16 +126,16 @@ int mainCsvMode() {
     }
 
     // 2) Read similarity from video file, build clusters and label
-    vector<FrameInfo> frameInfos = similarityFileUtils::readFrameInfosFromCsv(ioFilePath, totalFrames);
+    vector<FrameInfo> frames = similarityFileUtils::readFrameInfosFromCsv(ioFilePath, totalFrames);
     //    Steps: Calculate region average, cluster, classify clusters
-    clusterer::calculateRegionAverage(&frameInfos);
-    ClusterInfoContainer clusters = clusterer::cluster(clusterer::AVERAGE_REFINED, frameInfos, false);
+    clusterer::calculateRegionAverage(&frames);
+    ClusterInfoContainer clusters = clusterer::cluster(clusterer::AVERAGE_REFINED, frames, false);
     classifier::classifyClusters(&clusters);
 
     // 3) Write result to CSV file
-    //    Frame, Msec, Similarity, Classification, Stop, Bark
-    //    1,     0,    0.321,      1,              1,    1
-    //    2,     200,  0.9833,     3,              0,    1
+    //    Frame, Msec, Similarity, Avg. similarity, Classification, Stop, Bark
+    //    1,     0,    0.321,      0.6663333211     1,              1,    1
+    //    2,     200,  0.9833,     0.8877472988     3,              0,    1
     //    ...
     ofstream fileStream;
     string filePath = workingDirectory + "/" + ioFileName;
@@ -140,14 +144,31 @@ int mainCsvMode() {
         return 1;
     }
 
-    fileStream.open(workingDirectory + "/" + ioFileName);
-    fileStream << "Frame,Msec,Similarity,Classification,Stop,Bark" << endl;
-
-
+    fileStream.open(filePath);
+    fileStream << "Frame,Msec,Similarity,Avg. similarity,Classification,Stop,Bark" << endl;
     fileStream.close();
 
-    // TODO implement
-    throw("NOT IMPLEMENTED");
+    // Iterate through all FrameInfo objects and save info plus stop and bark field
+    vector<ClusterInfo>::iterator barkFileClustersIterator = barkFileClusters.clusterInfos.begin();
+    vector<ClusterInfo>::iterator stopFileClustersIterator = stopFileClusters.clusterInfos.begin();
+    for (FrameInfo frame : frames) {
+        while (frame.msec > (*barkFileClustersIterator).endMsec
+               && barkFileClustersIterator != barkFileClusters.clusterInfos.end()) {
+            barkFileClustersIterator++;
+        }
+        while (frame.msec > (*stopFileClustersIterator).endMsec
+               && stopFileClustersIterator != stopFileClusters.clusterInfos.end()) {
+            stopFileClustersIterator++;
+        }
+
+        bool stop = (*stopFileClustersIterator).containsFrame(frame);
+        bool bark = (*barkFileClustersIterator).containsFrame(frame);
+
+        similarityFileUtils::appendToCsv(filePath, frame.frameNo, frame.msec, frame.similarityToPrevious,
+                                         frame.averageSimilarity, stop, bark);
+    }
+
+    return 0;
 }
 
 int mainTagMode() {

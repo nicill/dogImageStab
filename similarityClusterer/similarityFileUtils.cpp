@@ -163,8 +163,9 @@ struct similarityFileUtils {
      * Appends the given values to the given csv file (must be writable) with highest precision.
      * @param filePath File path of the csv file.
      */
-    static void appendToCsv(string filePath, double frameNo, double msec, double similarity, bool stop, bool bark) {
-        vector<double> elements = { frameNo, msec, similarity, (double)stop, (double)bark };
+    static void appendToCsv(string filePath, double frameNo, double msec, double similarity, double averageSimilarity,
+                            bool stop, bool bark) {
+        vector<double> elements = { frameNo, msec, similarity, averageSimilarity, (double)stop, (double)bark };
         appendToCsv(filePath, elements);
     }
 
