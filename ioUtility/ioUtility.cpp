@@ -4,10 +4,10 @@
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
-#include <sys/stat.h>
 #include "../similarityClusterer/defaults.h"
+#include "../similarityClusterer/clusterer.h"
+#include "../similarityClusterer/classifier.h"
 #include "../similarityClusterer/similarityFileUtils.cpp"
-#include "../similarityClusterer/storageClasses/ClusterInfoContainer.cpp"
 
 using std::string;
 using std::to_string;
@@ -15,7 +15,6 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::ofstream;
-using cv::VideoCapture;
 
 // Declarations
 void help();
@@ -24,6 +23,9 @@ void mainCsvMode();
 void mainTagMode();
 
 string workingDirectory = "$HOME";
+string ioFileName;
+string ioFilePath;
+double totalFrames;
 
 /**
  * Output help.
@@ -66,18 +68,19 @@ int main(int argc, char **argv) {
     }
 
     // Is the video path given valid?
-    VideoCapture capture(argv[1]);
+    cv::VideoCapture capture(argv[1]);
     if (!capture.isOpened()) {
         cerr << "Could not open the video supplied: " << argv[1] << endl;
         return 1;
     }
+    totalFrames = capture.get(cv::CAP_PROP_FRAME_COUNT);
     capture.release();
 
-    string ioFileName = utils::getCsvFileName(basename(argv[1]), metricIndex, subSpecifier);
-    string ioFilePath = workingDirectory + "/" + ioFileName;
+    ioFileName = utils::getCsvFileName(basename(argv[1]), metricIndex, subSpecifier);
+    ioFilePath = workingDirectory + "/" + ioFileName;
     if (!utils::fileExists(ioFilePath)) {
         cout << "No IO file \"" << ioFilePath << "\" found. Please calculate similarity and save to the given file "
-             << "before running this program" << endl;
+             << "before running this program." << endl;
         return 1;
     }
 
@@ -97,8 +100,15 @@ void mainCsvMode() {
          << " Reading tag files from directory \"" << defaults::pathToTagFiles << "\")" << endl;
 
     // 1) Read tag files and create ClusterInfos
-    vector<ClusterInfoContainer> clustersFromAllFiles = similarityFileUtils::readTagFiles(defaults::pathToTagFiles, false);
+    vector<ClusterInfoContainer> clustersFromAllFiles =
+            similarityFileUtils::readTagFiles(defaults::pathToTagFiles, false);
+
     // 2) Read similarity from video file, build clusters and label
+    vector<FrameInfo> frameInfos = similarityFileUtils::readFrameInfosFromCsv(ioFilePath, totalFrames);
+    //    Steps: Calculate region average, cluster, classify clusters
+    clusterer::calculateRegionAverage(&frameInfos);
+    ClusterInfoContainer clusters = clusterer::cluster(clusterer::AVERAGE_REFINED, frameInfos, false);
+    classifier::classifyClusters(&clusters);
 
     // 3) Write result to CSV file
     //    Frame, Msec, Similarity, Classification, Stop, Bark
