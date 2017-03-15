@@ -67,7 +67,8 @@ struct tagFileUtils {
         tagFile.open(pathToTagFile);
         if (!tagFile.is_open()) return ClusterInfoContainer();
 
-        ClusterInfoContainer clustersFromFile = ClusterInfoContainer(basename(pathToTagFile.c_str()));
+        ClusterInfoContainer clustersFromFile =
+                ClusterInfoContainer(basename(const_cast<char*>(pathToTagFile.c_str())));
         string line;
         while (getline(tagFile, line)) {
             // Check correctness with RegEx?

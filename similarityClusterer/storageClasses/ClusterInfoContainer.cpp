@@ -12,8 +12,8 @@ using std::string;
 using std::vector;
 
 struct ClusterInfoContainer {
-    std::string name = "INVALID";
-    std::vector<ClusterInfo> clusterInfos;
+    string name = "INVALID";
+    vector<ClusterInfo> clusterInfos;
 
     /**
      * Empty constructor.

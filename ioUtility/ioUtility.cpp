@@ -4,13 +4,16 @@
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <sys/stat.h>
 #include "../similarityClusterer/defaults.h"
 #include "../similarityClusterer/utils.cpp"
+#include "../similarityClusterer/storageClasses/ClusterInfoContainer.cpp"
 
 using std::cout;
 using std::cerr;
 using std::endl;
 using std::string;
+using std::to_string;
 using cv::VideoCapture;
 
 // Declarations
@@ -19,11 +22,13 @@ int  main(int argc, char **argv);
 void mainCsvMode();
 void mainTagMode();
 
+string workingDirectory = "$HOME/";
+
 /**
  * Output help.
  */
 void help() {
-    cout << "Usage: ./name video.mp4 -flag" << endl
+    cout << "Usage: ./name video.mp4 metricIndex subSpecifier -flag" << endl
          << endl
          << "Flags (always supply exactly one)" << endl
          << "-c: Create csv file from data" << endl
@@ -45,12 +50,15 @@ int main(int argc, char **argv) {
     bool hasFlag = last_arg.find("-") == 0;
 
     // Check validity of arguments
-    if (!hasFlag || argc != 3) {
+    if (!hasFlag || argc != 5) {
         help();
         return 1;
     }
 
-    // TODO Is the VideoCapture necessary?
+    int metricIndex = atoi(argv[2]);
+    int subSpecifier = atoi(argv[3]);
+
+    // TODO Check only for existing file
     VideoCapture capture(argv[1]);
     if (!capture.isOpened()) {
         cerr << "Could not open the video supplied: " << argv[1] << endl;
@@ -73,7 +81,6 @@ int main(int argc, char **argv) {
 }
 
 void mainCsvMode() {
-    string workingDirectory = "$HOME/";
     cout << "CSV mode activated" << endl
          << "(Using working directory \"" << workingDirectory << "\"" << endl
          << " Reading similarity values from directory \"" << defaults::workingDirectory << "\")" << endl
