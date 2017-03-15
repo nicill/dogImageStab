@@ -155,12 +155,36 @@ struct similarityFileUtils {
      * @param filePath File path of the csv file.
      */
     static void appendToCsv(string filePath, double frameNo, double msec, double similarity) {
+        vector<double> elements = { frameNo, msec, similarity };
+        appendToCsv(filePath, elements);
+    }
+
+    /**
+     * Appends the given values to the given csv file (must be writable) with highest precision.
+     * @param filePath File path of the csv file.
+     */
+    static void appendToCsv(string filePath, double frameNo, double msec, double similarity, bool stop, bool bark) {
+        vector<double> elements = { frameNo, msec, similarity, (double)stop, (double)bark };
+        appendToCsv(filePath, elements);
+    }
+
+private:
+    static void appendToCsv(string filePath, vector<double> elements) {
         char sep = ',';
         ofstream ioFileStream;
         // Setting the precision is not strictly necessary, but useful to preserve exact similarity values.
         ioFileStream << setprecision(100);
         ioFileStream.open(filePath, ios::app); // append
-        ioFileStream << frameNo << sep << msec << sep << similarity << endl;
+
+
+        for (int i = 0; i < elements.size(); i++) {
+            ioFileStream << elements[i];
+
+            if (i != elements.size() - 1) {
+                ioFileStream << sep;
+            }
+        }
+
         ioFileStream.close();
     }
 };
