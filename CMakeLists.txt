@@ -48,6 +48,12 @@ target_link_libraries( similarityClusterer ${OpenCV_LIBS} )
 
 add_executable(ioUtility
         ioUtility/ioUtility.cpp
+        similarityClusterer/clusterer.cpp similarityClusterer/clusterer.h
+        similarityClusterer/classifier.cpp similarityClusterer/classifier.h
+        similarityClusterer/storageClasses/FrameInfo.cpp
+        similarityClusterer/storageClasses/ClusterInfo.cpp
+        similarityClusterer/storageClasses/ClusterInfoContainer.cpp
+        similarityClusterer/defaults.h
         similarityClusterer/similarityFileUtils.cpp)
 target_link_libraries( ioUtility ${OpenCV_LIBS} )
 

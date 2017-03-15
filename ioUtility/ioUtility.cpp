@@ -63,8 +63,10 @@ int main(int argc, char **argv) {
     int subSpecifier = atoi(argv[3]);
 
     // Check validity of working directory and tag file directory
-    if (!utils::canOpenDir(defaults::workingDirectory) || !utils::canOpenDir(defaults::tagFileDirectory)) {
-        cerr << "Could not open default directory, please check defaults file." << endl;
+    if (!utils::canOpenDir(defaults::workingDirectory) || !utils::canOpenDir(pathToTagFiles)) {
+        cerr << "Could not open directory, please check these directories:" << endl
+             << defaults::workingDirectory << endl
+             << pathToTagFiles << endl;
         return 1;
     }
 
