@@ -164,8 +164,9 @@ struct similarityFileUtils {
      * @param filePath File path of the csv file.
      */
     static void appendToCsv(string filePath, double frameNo, double msec, double similarity, double averageSimilarity,
-                            bool stop, bool bark) {
-        vector<double> elements = { frameNo, msec, similarity, averageSimilarity, (double)stop, (double)bark };
+                            string classification, bool stop, bool bark) {
+        vector<double> elements = { frameNo, msec, similarity, averageSimilarity,
+                                    stod(classification), (double)stop, (double)bark };
         appendToCsv(filePath, elements);
     }
 

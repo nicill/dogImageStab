@@ -132,13 +132,32 @@ int mainCsvMode() {
     ClusterInfoContainer clusters = clusterer::cluster(clusterer::AVERAGE_REFINED, frames, false);
     classifier::classifyClusters(&clusters);
 
+    vector<FrameInfo>::iterator framesIterator = frames.begin();
+    for (const auto &cluster : clusters.clusterInfos) {
+        for (const auto &frame : cluster.frames) {
+            assert((*framesIterator).frameNo == frame.frameNo);
+
+            if (cluster.label == classifier::lowSimLabel) {
+                (*framesIterator).label = "1";
+            } else if (cluster.label == classifier::mediumSimLabel) {
+                (*framesIterator).label = "2";
+            } else if (cluster.label == classifier::highSimLabel) {
+                (*framesIterator).label = "3";
+            } else {
+                throw ("Label is unknown");
+            }
+
+            framesIterator++;
+        }
+    }
+
     // 3) Write result to CSV file
     //    Frame, Msec, Similarity, Avg. similarity, Classification, Stop, Bark
     //    1,     0,    0.321,      0.6663333211     1,              1,    1
     //    2,     200,  0.9833,     0.8877472988     3,              0,    1
     //    ...
     ofstream fileStream;
-    string filePath = workingDirectory + "/" + ioFileName;
+    string filePath = workingDirectory + "/" + ioFileName + "_extended.csv";
     if(utils::fileExists(filePath)) {
         cerr << "Please make sure the file \"" << filePath << "\" that's supposed to be written to doesn't exist" << endl;
         return 1;
@@ -165,7 +184,7 @@ int mainCsvMode() {
         bool bark = (*barkFileClustersIterator).containsFrame(frame);
 
         similarityFileUtils::appendToCsv(filePath, frame.frameNo, frame.msec, frame.similarityToPrevious,
-                                         frame.averageSimilarity, stop, bark);
+                                         frame.averageSimilarity, frame.label, stop, bark);
     }
 
     cout << "File \"" << filePath << "\" has been written successfully." << endl;
