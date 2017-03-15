@@ -62,7 +62,7 @@ vector<ClusterInfoContainer> clusterer::group(ClusterInfoContainer clustering) {
 void clusterer::calculateRegionAverage(vector<FrameInfo>* frameInfos) {
     // Get average similarity for region and fill field in FrameInfo
     int maxIndex = (int) (*frameInfos).size() - 1;
-    for (int i = 0; i < maxIndex; i++) {
+    for (int i = 0; i < (*frameInfos).size(); i++) {
         // calculate the average for each frame (5 back, 5 front)
         int start = 0;
         int end = maxIndex;
