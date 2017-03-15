@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
     bool fileExists = false;
     if (fileIO) {
         string videoName = basename(argv[1]);
-        string ioFileName = videoName + "_" + to_string(metricIndex) + "_" + to_string(subSpecifier) + ".csv";
+        string ioFileName = utils::getCsvFileName(videoName, metricIndex, subSpecifier);
         ioFilePath = workingDirectory + "/" + ioFileName;
 
         if (!utils::canOpenDir(workingDirectory)) {
@@ -207,9 +207,8 @@ int main(int argc, char **argv) {
 
             if (userInput != "d") ioFilePath = workingDirectory + "/" + userInput;
         }
-        struct stat result;
-        int fileNotFound = stat(ioFilePath.c_str(), &result);
-        if (fileNotFound) {
+
+        if (!utils::fileExists(ioFilePath)) {
             if (verbose) cout << "No IO file \"" << ioFilePath << "\" found. Will recalculate "
                               << "similarity and save to file." << endl;
             ofstream ioFileStream;

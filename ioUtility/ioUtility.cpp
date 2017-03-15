@@ -6,14 +6,15 @@
 #include <opencv2/opencv.hpp>
 #include <sys/stat.h>
 #include "../similarityClusterer/defaults.h"
-#include "../similarityClusterer/utils.cpp"
+#include "../similarityClusterer/tagFileUtils.cpp"
 #include "../similarityClusterer/storageClasses/ClusterInfoContainer.cpp"
 
+using std::string;
+using std::to_string;
 using std::cout;
 using std::cerr;
 using std::endl;
-using std::string;
-using std::to_string;
+using std::ofstream;
 using cv::VideoCapture;
 
 // Declarations
@@ -22,7 +23,7 @@ int  main(int argc, char **argv);
 void mainCsvMode();
 void mainTagMode();
 
-string workingDirectory = "$HOME/";
+string workingDirectory = "$HOME";
 
 /**
  * Output help.
@@ -58,16 +59,25 @@ int main(int argc, char **argv) {
     int metricIndex = atoi(argv[2]);
     int subSpecifier = atoi(argv[3]);
 
-    // TODO Check only for existing file
+    // Check validity of working directory and tag file directory
+    if (!utils::canOpenDir(defaults::workingDirectory) || !utils::canOpenDir(defaults::pathToTagFiles)) {
+        cerr << "Could not open default directory, please check defaults file." << endl;
+        return 1;
+    }
+
+    // Is the video path given valid?
     VideoCapture capture(argv[1]);
     if (!capture.isOpened()) {
         cerr << "Could not open the video supplied: " << argv[1] << endl;
         return 1;
     }
+    capture.release();
 
-    // Check validity of working directory and tag file directory
-    if (!utils::canOpenDir(defaults::workingDirectory) || !utils::canOpenDir(defaults::pathToTagFiles)) {
-        cerr << "Could not open default directory, please check defaults file." << endl;
+    string ioFileName = utils::getCsvFileName(basename(argv[1]), metricIndex, subSpecifier);
+    string ioFilePath = workingDirectory + "/" + ioFileName;
+    if (!utils::fileExists(ioFilePath)) {
+        cout << "No IO file \"" << ioFilePath << "\" found. Please calculate similarity and save to the given file "
+             << "before running this program" << endl;
         return 1;
     }
 
@@ -87,6 +97,7 @@ void mainCsvMode() {
          << " Reading tag files from directory \"" << defaults::pathToTagFiles << "\")" << endl;
 
     // 1) Read tag files and create ClusterInfos
+    vector<ClusterInfoContainer> clustersFromAllFiles = tagFileUtils::readTagFiles(defaults::pathToTagFiles, false);
     // 2) Read similarity from video (file), build clusters and label
     // 3) Write result to CSV file
     //    Frame, Msec, Similarity, Classification, Stop, Bark
