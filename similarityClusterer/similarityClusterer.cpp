@@ -20,7 +20,7 @@ using namespace cv;
 
 // Declarations
 void clusterRegion(vector<FrameInfo> frames, string pathToTagFiles, bool verbose);
-void clusterLabels(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
+void clusterLabels(vector<FrameInfo> frames, string pathToTagFiles, bool verbose);
 void groupAndEvaluate(ClusterInfoContainer clusters, string pathToTagFiles, bool verbose);
 void classify(vector<FrameInfo> classifiedFrames, string pathToTagFiles, bool verbose);
 void announceMode(string mode);
@@ -224,7 +224,7 @@ int main(int argc, char **argv) {
     time_t startTime = time(nullptr);
 
     // Don't calculate similarity if file I/O is not active or if the file doesn't exist yet.
-    vector<FrameInfo> frameInfos;
+    vector<FrameInfo> frames;
     double totalFrames = capture.get(CAP_PROP_FRAME_COUNT);
     if (!fileIO || !fileExists) {
 
@@ -233,7 +233,7 @@ int main(int argc, char **argv) {
 
         // Load first frame
         capture >> previous;
-        frameInfos.push_back(FrameInfo(previous, 1, 0));
+        frames.push_back(FrameInfo(previous, 1, 0));
         if (fileIO) {
             similarityFileUtils::appendToCsv(ioFilePath, 1, 0, -1);
         }
@@ -246,7 +246,7 @@ int main(int argc, char **argv) {
             }
 
             double currentSimilarity = comparer->computeSimilarity(&previous, &current);
-            frameInfos.push_back(FrameInfo(current, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity));
+            frames.push_back(FrameInfo(current, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity));
             if (fileIO) {
                 similarityFileUtils::appendToCsv(ioFilePath, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity);
             }
@@ -262,22 +262,22 @@ int main(int argc, char **argv) {
         }
     } else {
         // Read in data from file.
-        frameInfos = similarityFileUtils::readFrameInfosFromCsv(ioFilePath, totalFrames);
+        frames = similarityFileUtils::readFrameInfosFromCsv(ioFilePath, totalFrames);
     }
 
     time_t similarityFinishedTime = time(nullptr);
 
     if (regionClusterMode) {
         announceMode("Region-average-based clustering");
-        clusterRegion(frameInfos, pathToTagFiles, verbose);
+        clusterRegion(frames, pathToTagFiles, verbose);
     }
     if (classificationClusterMode) {
         announceMode("Frame-based clustering");
-        clusterLabels(frameInfos, pathToTagFiles, verbose);
+        clusterLabels(frames, pathToTagFiles, verbose);
     }
     if (frameClassifyMode) {
         announceMode("Frame classification");
-        classify(frameInfos, pathToTagFiles, verbose);
+        classify(frames, pathToTagFiles, verbose);
     }
 
     time_t qualityFinishedTime = time(nullptr);
