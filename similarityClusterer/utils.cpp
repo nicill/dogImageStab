@@ -31,7 +31,28 @@ struct utils {
         for (string s : strings) {
             result += s;
         }
+
         return result;
+    }
+
+    /**
+     * Checks if the first string contains the second.
+     */
+    static bool stringContains(string s, string c) {
+        return s.find(c) != string::npos;
+    }
+
+    /**
+     * Checks if the first string contains any string in the string vector.
+     */
+    static bool stringContainsAny(string s, vector<string> c_s) {
+        for (string c : c_s) {
+            if (stringContains(s, c)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
