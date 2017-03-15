@@ -17,6 +17,7 @@ public:
 
     static ClusterInfoContainer cluster(strategy givenStrategy, vector<FrameInfo> frameInfos, bool verbose);
     static vector<ClusterInfoContainer> group(ClusterInfoContainer clustering);
+    static void calculateRegionAverage(vector<FrameInfo>* frameInfos);
 
 private:
     static vector<ClusterInfo> clusterAverageVector(vector<FrameInfo> frameInfos);

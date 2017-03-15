@@ -301,26 +301,8 @@ int main(int argc, char **argv) {
  * @param verbose Activate verbosity to cout.
  */
 void clusterRegion(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
-    // Get average similarity for region and fill field in FrameInfo
-    int maxIndex = (int) frames.size() - 1;
-    for (int i = 0; i < maxIndex; i++) {
-        // calculate the average for each frame (5 back, 5 front)
-        int start = 0;
-        int end = maxIndex;
-
-        if (i >= 5) start = i - 5;
-        if (i <= maxIndex - 5) end = i + 5;
-
-        double summedUpSimilarities = 0;
-        for (int j = start; j <= end; j++) {
-            if (frames[j].similarityToPrevious != -1) {
-                summedUpSimilarities += frames[j].similarityToPrevious;
-            }
-        }
-        frames[i].averageSimilarity = summedUpSimilarities / (1 + end - start);
-    }
-
     // 1) Cluster based on region average (refined)
+    clusterer::calculateRegionAverage(&frames);
     ClusterInfoContainer clusters = clusterer::cluster(clusterer::AVERAGE_REFINED, frames, verbose);
     // 2) Classify clusters
     clusters = classifier::classifyClusters(clusters);

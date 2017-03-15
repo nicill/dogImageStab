@@ -55,6 +55,32 @@ vector<ClusterInfoContainer> clusterer::group(ClusterInfoContainer clustering) {
 }
 
 /**
+ * Fills the averageSimilarity field of the given FrameInfo objects with a region average
+ * (including the 5 before and the 5 after it).
+ * @param frameInfos Pointer to the FrameInfo vector to be modified.
+ */
+void clusterer::calculateRegionAverage(vector<FrameInfo>* frameInfos) {
+    // Get average similarity for region and fill field in FrameInfo
+    int maxIndex = (int) (*frameInfos).size() - 1;
+    for (int i = 0; i < maxIndex; i++) {
+        // calculate the average for each frame (5 back, 5 front)
+        int start = 0;
+        int end = maxIndex;
+
+        if (i >= 5) start = i - 5;
+        if (i <= maxIndex - 5) end = i + 5;
+
+        double summedUpSimilarities = 0;
+        for (int j = start; j <= end; j++) {
+            if ((*frameInfos)[j].similarityToPrevious != -1) {
+                summedUpSimilarities += (*frameInfos)[j].similarityToPrevious;
+            }
+        }
+        (*frameInfos)[i].averageSimilarity = summedUpSimilarities / (1 + end - start);
+    }
+}
+
+/**
  * Cluster the given frameInfos with an average similarity clustering.
  * @param frameInfos Frames to cluster.
  * @param verbose Activate verbosity to cout.
