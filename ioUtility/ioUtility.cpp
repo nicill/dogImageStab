@@ -22,7 +22,7 @@ int  main(int argc, char **argv);
 int  mainCsvMode();
 int  mainTagMode();
 
-string workingDirectory = "$HOME";
+string workingDirectory = getenv("HOME");
 string ioFileName;
 string ioFilePath;
 string pathToTagFiles;
@@ -139,7 +139,7 @@ int mainCsvMode() {
     //    ...
     ofstream fileStream;
     string filePath = workingDirectory + "/" + ioFileName;
-    if(utils::fileExists(ioFilePath)) {
+    if(utils::fileExists(filePath)) {
         cerr << "Please make sure the file \"" << filePath << "\" that's supposed to be written to doesn't exist" << endl;
         return 1;
     }
@@ -168,6 +168,7 @@ int mainCsvMode() {
                                          frame.averageSimilarity, stop, bark);
     }
 
+    cout << "File \"" << filePath << "\" has been written successfully." << endl;
     return 0;
 }
 

@@ -186,6 +186,7 @@ private:
             }
         }
 
+        ioFileStream << endl;
         ioFileStream.close();
     }
 };
