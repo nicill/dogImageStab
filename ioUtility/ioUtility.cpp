@@ -63,7 +63,6 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // TODO
     if (last_arg.find('c') != string::npos) {
         mainCsvMode();
     } else if (last_arg.find('t') != string::npos) {

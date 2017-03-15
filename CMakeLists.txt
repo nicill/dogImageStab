@@ -42,11 +42,13 @@ add_executable(similarityClusterer
         similarityClusterer/storageClasses/ClusterInfo.cpp
         similarityClusterer/storageClasses/ClusterInfoContainer.cpp
         similarityClusterer/defaults.h
+        similarityClusterer/tagFileUtils.cpp
         similarityClusterer/utils.cpp)
 target_link_libraries( similarityClusterer ${OpenCV_LIBS} )
 
 add_executable(ioUtility
-        ioUtility/ioUtility.cpp)
+        ioUtility/ioUtility.cpp
+        similarityClusterer/tagFileUtils.cpp)
 target_link_libraries( ioUtility ${OpenCV_LIBS} )
 
 add_executable(similarityTEST similarityTEST.cpp similarityTEST.h)
