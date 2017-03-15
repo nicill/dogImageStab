@@ -76,12 +76,13 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // Try opening the video
+    // Try opening the video and set videoName.
     VideoCapture capture(argv[1]);
     if (!capture.isOpened()) {
         cerr << "Could not open the video supplied: " << argv[1] << endl;
         return 1;
     }
+    string videoName = basename(argv[1]);
 
     // Read provided flag, if given
     if (hasFlag) {
@@ -121,13 +122,15 @@ int main(int argc, char **argv) {
         }
     }
 
-    // Quality mode: Verify that the tag file directory exists.
+    // Quality mode: Verify that the tag file directory exists and that it contains a folder for the given video.
     string pathToTagFiles = "INVALID";
     if (qualityMeasurement) {
-        pathToTagFiles = defaults::pathToTagFiles;
+        pathToTagFiles = utils::combine({ defaults::pathToTagFiles, "/", videoName });
+
         if (!useDefaults) {
             string userInput = "";
-            cout << "Please input the directory which contains the tag files (\"d\" for \"" << pathToTagFiles << "\")..." << endl;
+            cout << "Please input the directory which contains tag files "
+                 << "(\"d\" for \"" << pathToTagFiles << "\")..." << endl;
             cin >> userInput;
 
             if (userInput != "d") pathToTagFiles = userInput;
@@ -183,7 +186,6 @@ int main(int argc, char **argv) {
     string ioFilePath = "INVALID";
     bool fileExists = false;
     if (fileIO) {
-        string videoName = basename(argv[1]);
         string ioFileName = utils::getCsvFileName(videoName, metricIndex, subSpecifier);
         ioFilePath = workingDirectory + "/" + ioFileName;
 
