@@ -19,8 +19,8 @@ using std::ofstream;
 // Declarations
 void help();
 int  main(int argc, char **argv);
-void mainCsvMode();
-void mainTagMode();
+int  mainCsvMode();
+int  mainTagMode();
 
 string workingDirectory = "$HOME";
 string ioFileName;
@@ -77,7 +77,8 @@ int main(int argc, char **argv) {
     capture.release();
 
     ioFileName = utils::getCsvFileName(basename(argv[1]), metricIndex, subSpecifier);
-    ioFilePath = workingDirectory + "/" + ioFileName;
+    ioFilePath = defaults::workingDirectory;
+    ioFilePath += "/" + ioFileName; // Separate operation as the '+' operator can't be used with a const.
     if (!utils::fileExists(ioFilePath)) {
         cout << "No IO file \"" << ioFilePath << "\" found. Please calculate similarity and save to the given file "
              << "before running this program." << endl;
@@ -85,15 +86,13 @@ int main(int argc, char **argv) {
     }
 
     if (last_arg.find('c') != string::npos) {
-        mainCsvMode();
+        return mainCsvMode();
     } else if (last_arg.find('t') != string::npos) {
-        mainTagMode();
+        return mainTagMode();
     }
-
-    return 0;
 }
 
-void mainCsvMode() {
+int mainCsvMode() {
     cout << "CSV mode activated" << endl
          << "(Using working directory \"" << workingDirectory << "\"" << endl
          << " Reading similarity values from directory \"" << defaults::workingDirectory << "\")" << endl
@@ -115,12 +114,24 @@ void mainCsvMode() {
     //    1,     0,    0.321,      1,              1,    1
     //    2,     200,  0.9833,     3,              0,    1
     //    ...
+    ofstream fileStream;
+    string filePath = workingDirectory + "/" + ioFileName;
+    if(utils::fileExists(ioFilePath)) {
+        cerr << "Please make sure the file \"" << filePath << "\" that's supposed to be written to doesn't exist" << endl;
+        return 1;
+    }
+
+    fileStream.open(workingDirectory + "/" + ioFileName);
+    fileStream << "Frame,Msec,Similarity,Classification,Stop,Bark" << endl;
+
+
+    fileStream.close();
 
     // TODO implement
     throw("NOT IMPLEMENTED");
 }
 
-void mainTagMode() {
+int mainTagMode() {
     cout << "Tag file mode activated" << endl;
     // TODO implement
     throw("NOT IMPLEMENTED");
