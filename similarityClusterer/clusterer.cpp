@@ -93,6 +93,9 @@ vector<ClusterInfo> clusterer::clusterAverageVector(vector<FrameInfo> frameInfos
     clusters.push_back(ClusterInfo("0", frameInfos.front()));
 
     for (int i = 1; i < frameInfos.size(); i++) {
+        // Make sure the average similarity has been set
+        assert(clusters[currentCluster].averageSimilarity != -1 && frameInfos[i].averageSimilarity != -1);
+
         // If the difference is too big, we create a new cluster, otherwise we add to the current one.
         if (0.1 < fabs(clusters[currentCluster].averageSimilarity - frameInfos[i].averageSimilarity)) {
             currentCluster++;
@@ -132,6 +135,7 @@ ClusterInfoContainer clusterer::clusterAverageRefined(vector<FrameInfo> frameInf
         for (int i = 0; i < newClusters.size(); i++) {
             assert(newClusters[i].hasFrames);
             for (int j = 0; j < newClusters[i].frames.size(); j++) {
+                assert(newClusters[i].averageSimilarity != -1);
                 newClusters[i].frames[j].averageSimilarity = newClusters[i].averageSimilarity;
             }
         }
