@@ -6,7 +6,7 @@
 #include <opencv2/opencv.hpp>
 #include <sys/stat.h>
 #include "../similarityClusterer/defaults.h"
-#include "../similarityClusterer/tagFileUtils.cpp"
+#include "../similarityClusterer/similarityFileUtils.cpp"
 #include "../similarityClusterer/storageClasses/ClusterInfoContainer.cpp"
 
 using std::string;
@@ -97,8 +97,9 @@ void mainCsvMode() {
          << " Reading tag files from directory \"" << defaults::pathToTagFiles << "\")" << endl;
 
     // 1) Read tag files and create ClusterInfos
-    vector<ClusterInfoContainer> clustersFromAllFiles = tagFileUtils::readTagFiles(defaults::pathToTagFiles, false);
-    // 2) Read similarity from video (file), build clusters and label
+    vector<ClusterInfoContainer> clustersFromAllFiles = similarityFileUtils::readTagFiles(defaults::pathToTagFiles, false);
+    // 2) Read similarity from video file, build clusters and label
+
     // 3) Write result to CSV file
     //    Frame, Msec, Similarity, Classification, Stop, Bark
     //    1,     0,    0.321,      1,              1,    1

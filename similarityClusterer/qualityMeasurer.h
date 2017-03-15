@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <regex>
-#include "tagFileUtils.cpp"
+#include "similarityFileUtils.cpp"
 #include "storageClasses/FrameInfo.cpp"
 #include "storageClasses/ClusterInfo.cpp"
 #include "storageClasses/ClusterInfoContainer.cpp"

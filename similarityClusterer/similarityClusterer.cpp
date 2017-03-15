@@ -23,8 +23,6 @@ void clusterRegion(vector<FrameInfo> frames, string pathToTagFiles, bool verbose
 void clusterLabels(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
 void groupAndEvaluate(ClusterInfoContainer clusters, string pathToTagFiles, bool verbose);
 void classify(vector<FrameInfo> classifiedFrames, string pathToTagFiles, bool verbose);
-vector<FrameInfo> readFrameInfosFromCsv(string filePath);
-void appendToCsv(string filePath, double frameNo, double msec, double similarity);
 void announceMode(string mode);
 
 /**
@@ -237,7 +235,7 @@ int main(int argc, char **argv) {
         capture >> previous;
         frameInfos.push_back(FrameInfo(previous, 1, 0));
         if (fileIO) {
-            appendToCsv(ioFilePath, 1, 0, -1);
+            similarityFileUtils::appendToCsv(ioFilePath, 1, 0, -1);
         }
         for (int frameCounter = 2; frameCounter <= totalFrames; frameCounter++) {
 
@@ -250,7 +248,7 @@ int main(int argc, char **argv) {
             double currentSimilarity = comparer->computeSimilarity(&previous, &current);
             frameInfos.push_back(FrameInfo(current, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity));
             if (fileIO) {
-                appendToCsv(ioFilePath, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity);
+                similarityFileUtils::appendToCsv(ioFilePath, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity);
             }
 
             current.copyTo(previous);
@@ -264,8 +262,7 @@ int main(int argc, char **argv) {
         }
     } else {
         // Read in data from file.
-        frameInfos = readFrameInfosFromCsv(ioFilePath);
-        assert(frameInfos.size() == totalFrames);
+        frameInfos = similarityFileUtils::readFrameInfosFromCsv(ioFilePath, totalFrames);
     }
 
     time_t similarityFinishedTime = time(nullptr);
@@ -397,49 +394,6 @@ void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
 
     cout << "Matching low similarity frames..." << endl;
     qualityMeasurer::calculateOverlap(pathToTagFiles, lowSimilarityFrames, verbose);
-}
-
-/**
- * Reads in the given csv file to retrieve the saved frame infos.
- * @param csvStream The file stream. Needs to be open.
- * @return An empty vector if unsuccessful.
- */
-vector<FrameInfo> readFrameInfosFromCsv(string filePath) {
-    ifstream csvStream;
-    csvStream.open(filePath);
-    assert(csvStream.is_open());
-
-    vector<FrameInfo> frameInfos;
-    string line;
-    // Read in header line.
-    if (!getline(csvStream, line)) return vector<FrameInfo>();
-    while (getline(csvStream, line)) {
-        vector<char> charLine(line.c_str(), line.c_str() + line.size() + 1u);
-
-        double frameNo = stod(strtok(&charLine[0], ","));
-        double msec = stod(strtok(nullptr, ","));
-        double similarity = stod(strtok(nullptr, ","));
-        assert(nullptr == strtok(nullptr, ","));
-
-        frameInfos.push_back(FrameInfo(Mat(), frameNo, msec, similarity));
-    }
-
-    csvStream.close();
-    return frameInfos;
-}
-
-/**
- * Appends the given values to the given csv file (must be writable) with highest precision.
- * @param filePath File path of the csv file.
- */
-void appendToCsv(string filePath, double frameNo, double msec, double similarity) {
-    char sep = ',';
-    ofstream ioFileStream;
-    // Setting the precision is not strictly necessary, but useful to preserve exact similarity values.
-    ioFileStream << setprecision(100);
-    ioFileStream.open(filePath, ios::app); // append
-    ioFileStream << frameNo << sep << msec << sep << similarity << endl;
-    ioFileStream.close();
 }
 
 /**

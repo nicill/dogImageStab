@@ -14,11 +14,14 @@ using std::string;
 using std::vector;
 using std::stod;
 using std::ifstream;
+using std::ofstream;
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::setprecision;
+using std::ios;
 
-struct tagFileUtils {
+struct similarityFileUtils {
     /**
      * Reads in the given tag files and creates ClusterInfoContainers to hold the info during run time.
      * @param pathToTagFileDirectory A directory containing tag files. Must be a valid directory.
@@ -113,6 +116,52 @@ struct tagFileUtils {
         }
 
         return splitString;
+    }
+
+    /**
+     * Reads in the given csv file to retrieve the saved frame infos and verifies that the number of entries corresponds
+     * to the given frame number.
+     * @param csvStream The file stream. Needs to be open.
+     * @return An empty vector if unsuccessful.
+     */
+    static vector<FrameInfo> readFrameInfosFromCsv(string filePath, double supposedNumberOfFrames) {
+        ifstream csvStream;
+        csvStream.open(filePath);
+        assert(csvStream.is_open());
+
+        vector<FrameInfo> frameInfos;
+        string line;
+        // Read in header line.
+        if (!getline(csvStream, line)) return vector<FrameInfo>();
+        while (getline(csvStream, line)) {
+            vector<char> charLine(line.c_str(), line.c_str() + line.size() + 1u);
+
+            double frameNo = stod(strtok(&charLine[0], ","));
+            double msec = stod(strtok(nullptr, ","));
+            double similarity = stod(strtok(nullptr, ","));
+            assert(nullptr == strtok(nullptr, ","));
+
+            frameInfos.push_back(FrameInfo(Mat(), frameNo, msec, similarity));
+        }
+
+        csvStream.close();
+
+        assert(frameInfos.size() == supposedNumberOfFrames);
+        return frameInfos;
+    }
+
+    /**
+     * Appends the given values to the given csv file (must be writable) with highest precision.
+     * @param filePath File path of the csv file.
+     */
+    static void appendToCsv(string filePath, double frameNo, double msec, double similarity) {
+        char sep = ',';
+        ofstream ioFileStream;
+        // Setting the precision is not strictly necessary, but useful to preserve exact similarity values.
+        ioFileStream << setprecision(100);
+        ioFileStream.open(filePath, ios::app); // append
+        ioFileStream << frameNo << sep << msec << sep << similarity << endl;
+        ioFileStream.close();
     }
 };
 

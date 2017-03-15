@@ -16,7 +16,7 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
                                      bool verbose) {
     vector<double> qualityScoresPerFile;
 
-    vector<ClusterInfoContainer> clustersFromAllFiles = tagFileUtils::readTagFiles(pathToTagFileDirectory, verbose);
+    vector<ClusterInfoContainer> clustersFromAllFiles = similarityFileUtils::readTagFiles(pathToTagFileDirectory, verbose);
     for (ClusterInfoContainer clustersFromFile : clustersFromAllFiles) {
         double qualityScoreForFile = getQualityScore(clustersFromFile, determinedClusters);
         double precision = getClusterOverlapPrecision(clustersFromFile, determinedClusters);
@@ -44,7 +44,7 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
  * @param verbose Activate verbosity to cout.
  */
 void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, vector<FrameInfo> frames, bool verbose) {
-    vector<ClusterInfoContainer> clustersFromAllFiles = tagFileUtils::readTagFiles(pathToTagFileDirectory, verbose);
+    vector<ClusterInfoContainer> clustersFromAllFiles = similarityFileUtils::readTagFiles(pathToTagFileDirectory, verbose);
     for (ClusterInfoContainer clustersFromFile : clustersFromAllFiles) {
         double overlappingFrames = 0;
         for (ClusterInfo cluster : clustersFromFile.clusterInfos) {
@@ -65,7 +65,7 @@ void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, vector<Fra
  * @param verbose Activate verbosity to cout.
  */
 void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, bool verbose) {
-    vector<ClusterInfoContainer> clustersFromAllFiles = tagFileUtils::readTagFiles(pathToTagFileDirectory, verbose);
+    vector<ClusterInfoContainer> clustersFromAllFiles = similarityFileUtils::readTagFiles(pathToTagFileDirectory, verbose);
 
     for (int i = 0; i < clustersFromAllFiles.size(); i++) {
         for (int j = i + 1; j < clustersFromAllFiles.size(); j++) {
