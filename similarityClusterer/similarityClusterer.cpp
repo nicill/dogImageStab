@@ -23,7 +23,6 @@ void clusterRegion(vector<FrameInfo> frames, string pathToTagFiles, bool verbose
 void clusterLabels(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
 void groupAndEvaluate(ClusterInfoContainer clusters, string pathToTagFiles, bool verbose);
 void classify(vector<FrameInfo> classifiedFrames, string pathToTagFiles, bool verbose);
-bool canOpenDir(string path);
 vector<FrameInfo> readFrameInfosFromCsv(string filePath);
 void appendToCsv(string filePath, double frameNo, double msec, double similarity);
 void announceMode(string mode);
@@ -136,7 +135,7 @@ int main(int argc, char **argv) {
             if (userInput != "d") pathToTagFiles = userInput;
         }
 
-        if (!canOpenDir(pathToTagFiles)) {
+        if (!utils::canOpenDir(pathToTagFiles)) {
             cerr << "Could not open tag file directory \"" << pathToTagFiles << "\"" << endl;
             return 1;
         }
@@ -190,7 +189,7 @@ int main(int argc, char **argv) {
         string ioFileName = videoName + "_" + to_string(metricIndex) + "_" + to_string(subSpecifier) + ".csv";
         ioFilePath = workingDirectory + "/" + ioFileName;
 
-        if (!canOpenDir(workingDirectory)) {
+        if (!utils::canOpenDir(workingDirectory)) {
             int directoryNotCreated = mkdir(workingDirectory.c_str(), 0777);
             if (directoryNotCreated) {
                 cerr << "Could not create or access working directory \"" << workingDirectory << "\"" << endl;
@@ -399,21 +398,6 @@ void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
 
     cout << "Matching low similarity frames..." << endl;
     qualityMeasurer::calculateOverlap(pathToTagFiles, lowSimilarityFrames, verbose);
-}
-
-/**
- * Checks to see if a given directory can be opened.
- * @param path The directory to check.
- * @return True for success.
- */
-bool canOpenDir(string path) {
-    DIR *directory = opendir(path.c_str());
-    if (directory == nullptr || readdir(directory) == nullptr) {
-        return false;
-    }
-
-    closedir(directory);
-    return true;
 }
 
 /**
