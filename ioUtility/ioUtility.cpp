@@ -3,14 +3,19 @@
 //
 
 #include <iostream>
+#include <opencv2/opencv.hpp>
 #include "../similarityClusterer/defaults.h"
+#include "../similarityClusterer/utils.cpp"
 
 using std::cout;
+using std::cerr;
 using std::endl;
 using std::string;
+using cv::VideoCapture;
 
 // Declarations
 void help();
+int  main(int argc, char **argv);
 void mainCsvMode();
 void mainTagMode();
 
@@ -18,9 +23,9 @@ void mainTagMode();
  * Output help.
  */
 void help() {
-    cout << "Usage: ./name video.mp4 [-flag]" << endl
+    cout << "Usage: ./name video.mp4 -flag" << endl
          << endl
-         << "Flags (only one at a time)" << endl
+         << "Flags (always supply exactly one)" << endl
          << "-c: Create csv file from data" << endl
          << "-t: Read from / write to tag files" << endl;
 }
@@ -40,24 +45,32 @@ int main(int argc, char **argv) {
     bool hasFlag = last_arg.find("-") == 0;
 
     // Check validity of arguments
-    if ((hasFlag && argc != 3) || !hasFlag && argc != 2) {
+    if (!hasFlag || argc != 3) {
         help();
         return 1;
     }
 
-    if (hasFlag) {
-        if (last_arg.find('c') != string::npos) {
-            mainCsvMode();
-        } else if (last_arg.find('t') != string::npos) {
-            mainTagMode();
-        }
+    // TODO Is the VideoCapture necessary?
+    VideoCapture capture(argv[1]);
+    if (!capture.isOpened()) {
+        cerr << "Could not open the video supplied: " << argv[1] << endl;
+        return 1;
     }
 
-    // TODO check validity of given video
+    // Check validity of working directory and tag file directory
+    if (!utils::canOpenDir(defaults::workingDirectory) || !utils::canOpenDir(defaults::pathToTagFiles)) {
+        cerr << "Could not open default directory, please check defaults file." << endl;
+        return 1;
+    }
 
     // TODO
-    cout << "IMPLEMENTATION MISSING" << endl;
-    return 1;
+    if (last_arg.find('c') != string::npos) {
+        mainCsvMode();
+    } else if (last_arg.find('t') != string::npos) {
+        mainTagMode();
+    }
+
+    return 0;
 }
 
 void mainCsvMode() {
@@ -71,8 +84,8 @@ void mainCsvMode() {
     // 2) Read similarity from video (file), build clusters and label
     // 3) Write result to CSV file
     //    Frame, Msec, Similarity, Classification, Stop, Bark
-    //    1      0     0.321       1               1     1
-    //    2      200   0.9833      3               0     1
+    //    1,     0,    0.321,      1,              1,    1
+    //    2,     200,  0.9833,     3,              0,    1
     //    ...
 
     // TODO implement
