@@ -62,14 +62,6 @@ int main(int argc, char **argv) {
     int metricIndex = atoi(argv[2]);
     int subSpecifier = atoi(argv[3]);
 
-    // Check validity of working directory and tag file directory
-    if (!utils::canOpenDir(defaults::workingDirectory) || !utils::canOpenDir(pathToTagFiles)) {
-        cerr << "Could not open directory, please check these directories:" << endl
-             << defaults::workingDirectory << endl
-             << pathToTagFiles << endl;
-        return 1;
-    }
-
     // Is the video path given valid?
     cv::VideoCapture capture(argv[1]);
     if (!capture.isOpened()) {
@@ -79,8 +71,17 @@ int main(int argc, char **argv) {
     totalFrames = capture.get(cv::CAP_PROP_FRAME_COUNT);
     capture.release();
     string videoName = basename(argv[1]);
-    pathToTagFiles = utils::combine({ defaults::tagFileDirectory, "/", videoName });
 
+    // Check validity of working directory and tag file directory
+    pathToTagFiles = utils::combine({ defaults::tagFileDirectory, "/", videoName });
+    if (!utils::canOpenDir(defaults::workingDirectory) || !utils::canOpenDir(pathToTagFiles)) {
+        cerr << "Could not open directory, please check these directories:" << endl
+             << defaults::workingDirectory << endl
+             << pathToTagFiles << endl;
+        return 1;
+    }
+
+    // Check existence of IO file.
     ioFileName = utils::getCsvFileName(basename(argv[1]), metricIndex, subSpecifier);
     ioFilePath = utils::combine({ defaults::workingDirectory, "/", ioFileName });
     if (!utils::fileExists(ioFilePath)) {
@@ -89,6 +90,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // Main logic.
     if (last_arg.find('c') != string::npos) {
         return mainCsvMode();
     } else if (last_arg.find('t') != string::npos) {
