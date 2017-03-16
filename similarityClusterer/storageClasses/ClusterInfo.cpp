@@ -151,6 +151,19 @@ struct ClusterInfo {
         return equal;
     }
 
+    /**
+     * Comparison method for sorting by begin time. If begin times are equal it compares the end time.
+     */
+    static bool less(ClusterInfo first, ClusterInfo second) {
+        if (first.beginMsec < second.beginMsec) {
+            return true;
+        } else if (first.beginMsec == second.beginMsec) {
+            return first.endMsec <= second.endMsec;
+        } else {
+            return false;
+        }
+    }
+
 private:
     /**
      * Updates length and average similarity fields of this object.
