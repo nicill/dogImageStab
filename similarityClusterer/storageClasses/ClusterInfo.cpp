@@ -104,6 +104,24 @@ struct ClusterInfo {
     }
 
     /**
+     * Creates a ClusterInfo with the overlap with the given cluster.
+     * @param other The ClusterInfo to compare this to.
+     * @return A ClusterInfo with begin and end (msec) of the overlap.
+     */
+    ClusterInfo getOverlap(ClusterInfo other) {
+        double biggerBegin =
+                ( this->beginMsec > other.beginMsec)
+                ? this->beginMsec
+                : other.beginMsec;
+        double smallerEnd =
+                ( this->endMsec < other.endMsec)
+                ? this->endMsec
+                : other.endMsec;
+
+        return ClusterInfo("Overlap of " + this->label + " and " + other.label, biggerBegin, smallerEnd);
+    }
+
+    /**
      * Equals method which compares begin and end time as well as begin and end frame number.
      * @param compare The ClusterInfo to compare this to.
      */
