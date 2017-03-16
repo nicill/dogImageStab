@@ -21,6 +21,7 @@ void help();
 int  main(int argc, char **argv);
 int  mainCsvMode();
 int  mainTagMode();
+bool getTagFilesByNames(string, vector<string>, vector<string>, ClusterInfoContainer*, ClusterInfoContainer*);
 
 string workingDirectory = getenv("HOME");
 string ioFileName;
@@ -100,28 +101,18 @@ int main(int argc, char **argv) {
 
 int mainCsvMode() {
     cout << "CSV mode activated" << endl
-         << "(Using working directory \"" << workingDirectory << "\"" << endl
-         << " Reading similarity values from directory \"" << defaults::workingDirectory << "\")" << endl
-         << " Reading tag files from directory \"" << pathToTagFiles << "\")" << endl;
+         << "- Using working directory \"" << workingDirectory << "\"" << endl
+         << "- Reading similarity values from directory \"" << defaults::workingDirectory << "\"" << endl
+         << "- Reading tag files from directory \"" << pathToTagFiles << "\"" << endl << endl;
 
-    // 1) Read tag files and create ClusterInfos
-    vector<ClusterInfoContainer> allTagFileClusters =
-            similarityFileUtils::readTagFiles(pathToTagFiles, false);
-    //    Make sure we have tag files for stop and bark.
-    int hasBoth = 0;
+    // 1) Read tag files and make sure we have tag files for bark and stop.
     ClusterInfoContainer barkFileClusters;
     ClusterInfoContainer stopFileClusters;
-    for (ClusterInfoContainer tagFile : allTagFileClusters) {
-        if (utils::stringContainsAny(tagFile.name, { "bark", "Bark" })) {
-            hasBoth |= 1;
-            barkFileClusters = tagFile;
-        } else if (utils::stringContainsAny(tagFile.name, { "stop", "Stop" })) {
-            hasBoth |= 2;
-            stopFileClusters = tagFile;
-        }
-    }
-    if ((hasBoth & 3) != 3) {
-        cerr << "Couldn't find tag files for stop and/or bark. Please make sure both exist and are named correctly." << endl;
+    bool success = getTagFilesByNames(pathToTagFiles,
+                                      {"bark", "Bark"}, {"stop", "Stop"},
+                                      &barkFileClusters, &stopFileClusters);
+
+    if (!success) {
         return 1;
     }
 
@@ -193,6 +184,66 @@ int mainCsvMode() {
 
 int mainTagMode() {
     cout << "Tag file mode activated" << endl;
+
+    // 1. Load tag files to be combined and make sure we have tag files for bark and stop.
+    ClusterInfoContainer barkFileClusters;
+    ClusterInfoContainer stopFileClusters;
+    bool success = getTagFilesByNames(pathToTagFiles,
+                                      {"bark", "Bark"}, {"stop", "Stop"},
+                                      &barkFileClusters, &stopFileClusters);
+
+    if (!success) {
+        return 1;
+    }
+    // 2. Iterate through clusters and combine with AND
+    ClusterInfoContainer overlaps = ClusterInfoContainer("Overlaps of bark and stop");
+    vector<ClusterInfo>::iterator barkFileClustersIterator = barkFileClusters.clusterInfos.begin();
+    vector<ClusterInfo>::iterator stopFileClustersIterator = stopFileClusters.clusterInfos.begin();
+    while (barkFileClustersIterator != barkFileClusters.clusterInfos.end()
+           && stopFileClustersIterator != stopFileClusters.clusterInfos.end()) {
+        if ((*barkFileClustersIterator).beginMsec > (*stopFileClustersIterator).endMsec) {
+            barkFileClustersIterator++;
+            continue;
+        }
+
+        if ((*stopFileClustersIterator).beginMsec > (*barkFileClustersIterator).endMsec) {
+            stopFileClustersIterator++;
+            continue;
+        }
+
+
+    }
+
     // TODO implement
     throw("NOT IMPLEMENTED");
+}
+
+/**
+ * Checks the given list for two ClusterInfoContainer objects with one of the respective, given names.
+ */
+bool getTagFilesByNames(string pathToTagFiles,
+                        vector<string> names_1, vector<string> names_2,
+                        ClusterInfoContainer *fileClusters_1, ClusterInfoContainer *fileClusters_2) {
+    vector<ClusterInfoContainer> allTagFileClusters = similarityFileUtils::readTagFiles(pathToTagFiles, false);
+
+    int hasBoth = 0;
+    for (ClusterInfoContainer tagFile : allTagFileClusters) {
+        if (utils::stringContainsAny(tagFile.name, names_1)) {
+            hasBoth |= 1;
+            (*fileClusters_1) = tagFile;
+        } else if (utils::stringContainsAny(tagFile.name, names_2)) {
+            hasBoth |= 2;
+            (*fileClusters_2) = tagFile;
+        }
+    }
+
+    if ((hasBoth & 3) != 3) {
+        cerr << "Couldn't find tag files for "
+             << utils::combine(names_1, ", ") << " and/or "
+             << utils::combine(names_2, ", ") << ". Please make sure both exist and are named correctly."
+             << endl;
+        return false;
+    }
+
+    return true;
 }
