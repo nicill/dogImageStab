@@ -220,23 +220,47 @@ int mainTagMode() {
     ClusterInfoContainer overlaps = ClusterInfoContainer("Overlaps of bark and stop");
     vector<ClusterInfo>::iterator barkFileClustersIterator = barkFileClusters.clusterInfos.begin();
     vector<ClusterInfo>::iterator stopFileClustersIterator = stopFileClusters.clusterInfos.begin();
+    // TODO Solve without code duplication (see qualityMeasurer.getClusterOverlapMsec())
     while (barkFileClustersIterator != barkFileClusters.clusterInfos.end()
            && stopFileClustersIterator != stopFileClusters.clusterInfos.end()) {
-        if ((*barkFileClustersIterator).beginMsec > (*stopFileClustersIterator).endMsec) {
-            barkFileClustersIterator++;
-            continue;
-        }
-
-        if ((*stopFileClustersIterator).beginMsec > (*barkFileClustersIterator).endMsec) {
+        if ((*barkFileClustersIterator).beginMsec >= (*stopFileClustersIterator).endMsec) {
             stopFileClustersIterator++;
             continue;
         }
 
+        if ((*stopFileClustersIterator).beginMsec >= (*barkFileClustersIterator).endMsec) {
+            barkFileClustersIterator++;
+            continue;
+        }
 
+        ClusterInfo overlap = (*barkFileClustersIterator).getOverlap((*stopFileClustersIterator));
+        assert(overlap.beginMsec != -1 && overlap.endMsec != -1);
+        overlaps.add(overlap);
+
+        // Iterate the cluster that has been matched to its end.
+        if (overlap.endMsec == (*stopFileClustersIterator).endMsec) {
+            stopFileClustersIterator++;
+        } else {
+            barkFileClustersIterator++;
+        }
     }
 
-    // TODO implement
-    throw("NOT IMPLEMENTED");
+    // 3. Save as new tag file
+    ofstream fileStream;
+    string filePath = workingDirectory + "/" + videoName_noExt + "_bark-and-stop.txt";
+    if (utils::fileExists(filePath)) {
+        errorFileToWriteExists(filePath);
+        return 1;
+    }
+
+    fileStream.open(filePath);
+    for (const auto &cluster : overlaps.clusterInfos) {
+        fileStream << "bark+stop\t\t" << cluster.beginMsec << "\t" << cluster.endMsec << "\t" << cluster.length << endl;
+    }
+    fileStream.close();
+
+    successfulWrite(filePath);
+    return 0;
 }
 
 /**
