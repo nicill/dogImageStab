@@ -85,8 +85,25 @@ struct utils {
     /**
      * Builds the csv file name (so that all methods use the same naming scheme).
      */
-    static string getCsvFileName(string videoName, int metricIndex, int subSpecifier) {
-        return videoName + "_" + to_string(metricIndex) + "_" + to_string(subSpecifier) + ".csv";
+    static string getCsvFileName(string videoName, int metricIndex, int subSpecifier, bool extension = true) {
+        string name = videoName + "_" + to_string(metricIndex) + "_" + to_string(subSpecifier);
+
+        return extension
+            ? name + ".csv"
+            : name;
+    }
+
+    /**
+     * Removes the extension from a string. If none is found, it's not modified.
+     * @param s The string. The last extension of the form ".*" is removed.
+     */
+    static string removeExtension(string s) {
+        size_t lastDot = s.find_last_of(".");
+        if (lastDot == string::npos) {
+            return s;
+        } else {
+            return s.substr(0, lastDot);
+        }
     }
 };
 
