@@ -199,37 +199,26 @@ double qualityMeasurer::getClusterOverlapMsec(ClusterInfoContainer groundTruthCl
            && groundTruthClustersIterator != groundTruthClusters.clusterInfos.end()) {
         if ((*evaluatedClustersIterator).beginMsec >= (*groundTruthClustersIterator).endMsec) {
             groundTruthClustersIterator++;
+            continue;
         }
 
         if ((*evaluatedClustersIterator).endMsec <= (*groundTruthClustersIterator).beginMsec) {
             evaluatedClustersIterator++;
-        }
-
-        if ((*evaluatedClustersIterator).beginMsec >= (*groundTruthClustersIterator).endMsec
-            || (*evaluatedClustersIterator).endMsec <= (*groundTruthClustersIterator).beginMsec) {
             continue;
         }
 
-        // Logic: If an overlap exists (neither is the begin after the end nor the end before the begin)
-        //        it is between the bigger begin and the smaller end value.
-        double biggerBegin =
-                ((*evaluatedClustersIterator).beginMsec > (*groundTruthClustersIterator).beginMsec)
-                ? (*evaluatedClustersIterator).beginMsec
-                : (*groundTruthClustersIterator).beginMsec;
-        double smallerEnd =
-                ((*evaluatedClustersIterator).endMsec < (*groundTruthClustersIterator).endMsec)
-                ? (*evaluatedClustersIterator).endMsec
-                : (*groundTruthClustersIterator).endMsec;
-
-        double matchedLength = smallerEnd - biggerBegin;
+        ClusterInfo overlap = (*groundTruthClustersIterator).getOverlap((*evaluatedClustersIterator));
+        double matchedLength = overlap.endMsec - overlap.beginMsec;
+        assert(matchedLength > 0);
         clustersMatchedMsec += matchedLength;
 
         // Iterate the cluster that has been matched to its end.
         // Caution! Assumes that the clusters in both lists do NOT overlap with others in their list!
-        if (smallerEnd == (*evaluatedClustersIterator).endMsec) {
+        if (overlap.endMsec == (*evaluatedClustersIterator).endMsec) {
             evaluatedClustersIterator++;
+        } else {
+            groundTruthClustersIterator++;
         }
-        else groundTruthClustersIterator++;
     }
 
     return clustersMatchedMsec;
