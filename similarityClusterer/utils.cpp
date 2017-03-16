@@ -25,11 +25,16 @@ struct utils {
 
     /**
      * Combines all given strings into one.
+     * Optionally adds a separator between the strings.
      */
-    static string combine(vector<string> strings) {
+    static string combine(vector<string> strings, string sep = "") {
         string result = "";
-        for (string s : strings) {
-            result += s;
+        for (int i = 0; i < strings.size(); i++) {
+            result += strings[i];
+
+            if (i != strings.size() - 1) {
+                result += sep;
+            }
         }
 
         return result;
