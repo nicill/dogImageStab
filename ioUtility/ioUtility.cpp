@@ -22,12 +22,19 @@ int  main(int argc, char **argv);
 int  mainCsvMode();
 int  mainTagMode();
 bool getTagFilesByNames(string, vector<string>, vector<string>, ClusterInfoContainer*, ClusterInfoContainer*);
+void announceMode(string mode, vector<string> infos);
+void successfulWrite(string filePath);
+void errorFileToWriteExists(string filePath);
 
 string workingDirectory = getenv("HOME");
-string ioFileName;
+string videoName_noExt;
+string ioFileName_noExt;
 string ioFilePath;
 string pathToTagFiles;
 double totalFrames;
+// Messages
+string workingDirectoryMessage;
+string readingTagFilesFromMessage;
 
 /**
  * Output help.
@@ -71,10 +78,10 @@ int main(int argc, char **argv) {
     }
     totalFrames = capture.get(cv::CAP_PROP_FRAME_COUNT);
     capture.release();
-    string videoName = basename(argv[1]);
+    string videoName_ext = basename(argv[1]);
 
     // Check validity of working directory and tag file directory
-    pathToTagFiles = utils::combine({ defaults::tagFileDirectory, "/", videoName });
+    pathToTagFiles = utils::combine({ defaults::tagFileDirectory, "/", videoName_ext });
     if (!utils::canOpenDir(defaults::workingDirectory) || !utils::canOpenDir(pathToTagFiles)) {
         cerr << "Could not open directory, please check these directories:" << endl
              << defaults::workingDirectory << endl
@@ -83,13 +90,19 @@ int main(int argc, char **argv) {
     }
 
     // Check existence of IO file.
-    ioFileName = utils::getCsvFileName(basename(argv[1]), metricIndex, subSpecifier);
-    ioFilePath = utils::combine({ defaults::workingDirectory, "/", ioFileName });
+    string ioFileName_ext = utils::getCsvFileName(videoName_ext, metricIndex, subSpecifier);
+    ioFilePath = utils::combine({ defaults::workingDirectory, "/", ioFileName_ext });
     if (!utils::fileExists(ioFilePath)) {
         cout << "No IO file \"" << ioFilePath << "\" found. Please calculate similarity and save to the given file "
              << "before running this program." << endl;
         return 1;
     }
+
+    // Set global variables
+    videoName_noExt = utils::removeExtension(videoName_ext);
+    ioFileName_noExt = utils::removeExtension(ioFileName_ext);
+    workingDirectoryMessage    = "Using working directory \"" + workingDirectory + "\"";
+    readingTagFilesFromMessage = "Reading tag files from directory \"" + pathToTagFiles + "\"";
 
     // Main logic.
     if (last_arg.find('c') != string::npos) {
@@ -99,11 +112,14 @@ int main(int argc, char **argv) {
     }
 }
 
+/**
+ * Main method for CSV mode.
+ */
 int mainCsvMode() {
-    cout << "CSV mode activated" << endl
-         << "- Using working directory \"" << workingDirectory << "\"" << endl
-         << "- Reading similarity values from directory \"" << defaults::workingDirectory << "\"" << endl
-         << "- Reading tag files from directory \"" << pathToTagFiles << "\"" << endl << endl;
+    announceMode("CSV mode",
+                 { workingDirectoryMessage,
+                   utils::combine({ "Reading similarity values from directory \"", defaults::workingDirectory, "\"" }),
+                   readingTagFilesFromMessage });
 
     // 1) Read tag files and make sure we have tag files for bark and stop.
     ClusterInfoContainer barkFileClusters;
@@ -116,7 +132,7 @@ int mainCsvMode() {
         return 1;
     }
 
-    // 2) Read similarity from video file, build clusters and label
+    // 2) Read similarity from analysis file, build clusters and label
     vector<FrameInfo> frames = similarityFileUtils::readFrameInfosFromCsv(ioFilePath, totalFrames);
     //    Steps: Calculate region average, cluster, classify clusters
     clusterer::calculateRegionAverage(&frames);
@@ -148,9 +164,9 @@ int mainCsvMode() {
     //    2,     200,  0.9833,     0.8877472988     3,              0,    1
     //    ...
     ofstream fileStream;
-    string filePath = workingDirectory + "/" + ioFileName + "_extended.csv";
-    if(utils::fileExists(filePath)) {
-        cerr << "Please make sure the file \"" << filePath << "\" that's supposed to be written to doesn't exist" << endl;
+    string filePath = workingDirectory + "/" + ioFileName_noExt + "_extended.csv";
+    if (utils::fileExists(filePath)) {
+        errorFileToWriteExists(filePath);
         return 1;
     }
 
@@ -178,12 +194,17 @@ int mainCsvMode() {
                                          frame.averageSimilarity, frame.label, stop, bark);
     }
 
-    cout << "File \"" << filePath << "\" has been written successfully." << endl;
+    successfulWrite(filePath);
     return 0;
 }
 
+/**
+ * Main method for tag mode.
+ */
 int mainTagMode() {
-    cout << "Tag file mode activated" << endl;
+    announceMode("Tag file mode",
+                 { workingDirectoryMessage,
+                   readingTagFilesFromMessage });
 
     // 1. Load tag files to be combined and make sure we have tag files for bark and stop.
     ClusterInfoContainer barkFileClusters;
@@ -246,4 +267,31 @@ bool getTagFilesByNames(string pathToTagFiles,
     }
 
     return true;
+}
+
+/**
+ * Internal use. Announce mode and infos.
+ */
+void announceMode(string mode, vector<string> infos) {
+    cout << mode << " activated" << endl;
+
+    for (const auto &info : infos) {
+        cout << "- " << info << endl;
+    }
+
+    cout << endl;
+}
+
+/**
+ * Internal use. Announce successful write to file.
+ */
+void successfulWrite(string filePath) {
+    cout << endl << "File \"" << filePath << "\" has been written successfully." << endl;
+}
+
+/**
+ * Internal use. Announce error that file to write to exists.
+ */
+void errorFileToWriteExists(string filePath) {
+    cerr << "Please make sure the file \"" << filePath << "\" that's supposed to be written to doesn't exist" << endl;
 }
