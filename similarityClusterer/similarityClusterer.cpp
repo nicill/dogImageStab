@@ -20,12 +20,9 @@ using namespace cv;
 
 // Declarations
 void clusterRegion(vector<FrameInfo> frames, string pathToTagFiles, bool verbose);
-void clusterLabels(vector<FrameInfo> frameInfos, string pathToTagFiles, bool verbose);
+void clusterLabels(vector<FrameInfo> frames, string pathToTagFiles, bool verbose);
 void groupAndEvaluate(ClusterInfoContainer clusters, string pathToTagFiles, bool verbose);
 void classify(vector<FrameInfo> classifiedFrames, string pathToTagFiles, bool verbose);
-bool canOpenDir(string path);
-vector<FrameInfo> readFrameInfosFromCsv(string filePath);
-void appendToCsv(string filePath, double frameNo, double msec, double similarity);
 void announceMode(string mode);
 
 /**
@@ -79,12 +76,13 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // Try opening the video
+    // Try opening the video and set videoName.
     VideoCapture capture(argv[1]);
     if (!capture.isOpened()) {
         cerr << "Could not open the video supplied: " << argv[1] << endl;
         return 1;
     }
+    string videoName = basename(argv[1]);
 
     // Read provided flag, if given
     if (hasFlag) {
@@ -124,19 +122,21 @@ int main(int argc, char **argv) {
         }
     }
 
-    // Quality mode: Verify that the tag file directory exists.
+    // Quality mode: Verify that the tag file directory exists and that it contains a folder for the given video.
     string pathToTagFiles = "INVALID";
     if (qualityMeasurement) {
-        pathToTagFiles = defaults::pathToTagFiles;
+        pathToTagFiles = utils::combine({ defaults::tagFileDirectory, "/", utils::removeExtension(videoName) });
+
         if (!useDefaults) {
             string userInput = "";
-            cout << "Please input the directory which contains the tag files (\"d\" for \"" << pathToTagFiles << "\")..." << endl;
+            cout << "Please input the directory which contains tag files "
+                 << "(\"d\" for \"" << pathToTagFiles << "\")..." << endl;
             cin >> userInput;
 
             if (userInput != "d") pathToTagFiles = userInput;
         }
 
-        if (!canOpenDir(pathToTagFiles)) {
+        if (!utils::canOpenDir(pathToTagFiles)) {
             cerr << "Could not open tag file directory \"" << pathToTagFiles << "\"" << endl;
             return 1;
         }
@@ -186,11 +186,10 @@ int main(int argc, char **argv) {
     string ioFilePath = "INVALID";
     bool fileExists = false;
     if (fileIO) {
-        string videoName = basename(argv[1]);
-        string ioFileName = videoName + "_" + to_string(metricIndex) + "_" + to_string(subSpecifier) + ".csv";
+        string ioFileName = utils::getCsvFileName(videoName, metricIndex, subSpecifier);
         ioFilePath = workingDirectory + "/" + ioFileName;
 
-        if (!canOpenDir(workingDirectory)) {
+        if (!utils::canOpenDir(workingDirectory)) {
             int directoryNotCreated = mkdir(workingDirectory.c_str(), 0777);
             if (directoryNotCreated) {
                 cerr << "Could not create or access working directory \"" << workingDirectory << "\"" << endl;
@@ -208,9 +207,8 @@ int main(int argc, char **argv) {
 
             if (userInput != "d") ioFilePath = workingDirectory + "/" + userInput;
         }
-        struct stat result;
-        int fileNotFound = stat(ioFilePath.c_str(), &result);
-        if (fileNotFound) {
+
+        if (!utils::fileExists(ioFilePath)) {
             if (verbose) cout << "No IO file \"" << ioFilePath << "\" found. Will recalculate "
                               << "similarity and save to file." << endl;
             ofstream ioFileStream;
@@ -228,7 +226,7 @@ int main(int argc, char **argv) {
     time_t startTime = time(nullptr);
 
     // Don't calculate similarity if file I/O is not active or if the file doesn't exist yet.
-    vector<FrameInfo> frameInfos;
+    vector<FrameInfo> frames;
     double totalFrames = capture.get(CAP_PROP_FRAME_COUNT);
     if (!fileIO || !fileExists) {
 
@@ -237,9 +235,9 @@ int main(int argc, char **argv) {
 
         // Load first frame
         capture >> previous;
-        frameInfos.push_back(FrameInfo(previous, 1, 0));
+        frames.push_back(FrameInfo(previous, 1, 0));
         if (fileIO) {
-            appendToCsv(ioFilePath, 1, 0, -1);
+            similarityFileUtils::appendToCsv(ioFilePath, 1, 0, -1);
         }
         for (int frameCounter = 2; frameCounter <= totalFrames; frameCounter++) {
 
@@ -250,9 +248,9 @@ int main(int argc, char **argv) {
             }
 
             double currentSimilarity = comparer->computeSimilarity(&previous, &current);
-            frameInfos.push_back(FrameInfo(current, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity));
+            frames.push_back(FrameInfo(current, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity));
             if (fileIO) {
-                appendToCsv(ioFilePath, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity);
+                similarityFileUtils::appendToCsv(ioFilePath, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity);
             }
 
             current.copyTo(previous);
@@ -266,23 +264,22 @@ int main(int argc, char **argv) {
         }
     } else {
         // Read in data from file.
-        frameInfos = readFrameInfosFromCsv(ioFilePath);
-        assert(frameInfos.size() == totalFrames);
+        frames = similarityFileUtils::readFrameInfosFromCsv(ioFilePath, totalFrames);
     }
 
     time_t similarityFinishedTime = time(nullptr);
 
     if (regionClusterMode) {
         announceMode("Region-average-based clustering");
-        clusterRegion(frameInfos, pathToTagFiles, verbose);
+        clusterRegion(frames, pathToTagFiles, verbose);
     }
     if (classificationClusterMode) {
         announceMode("Frame-based clustering");
-        clusterLabels(frameInfos, pathToTagFiles, verbose);
+        clusterLabels(frames, pathToTagFiles, verbose);
     }
     if (frameClassifyMode) {
         announceMode("Frame classification");
-        classify(frameInfos, pathToTagFiles, verbose);
+        classify(frames, pathToTagFiles, verbose);
     }
 
     time_t qualityFinishedTime = time(nullptr);
@@ -306,29 +303,11 @@ int main(int argc, char **argv) {
  * @param verbose Activate verbosity to cout.
  */
 void clusterRegion(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
-    // Get average similarity for region and fill field in FrameInfo
-    int maxIndex = (int) frames.size() - 1;
-    for (int i = 0; i < maxIndex; i++) {
-        // calculate the average for each frame (5 back, 5 front)
-        int start = 0;
-        int end = maxIndex;
-
-        if (i >= 5) start = i - 5;
-        if (i <= maxIndex - 5) end = i + 5;
-
-        double summedUpSimilarities = 0;
-        for (int j = start; j <= end; j++) {
-            if (frames[j].similarityToPrevious != -1) {
-                summedUpSimilarities += frames[j].similarityToPrevious;
-            }
-        }
-        frames[i].averageSimilarity = summedUpSimilarities / (1 + end - start);
-    }
-
     // 1) Cluster based on region average (refined)
+    clusterer::calculateRegionAverage(&frames);
     ClusterInfoContainer clusters = clusterer::cluster(clusterer::AVERAGE_REFINED, frames, verbose);
     // 2) Classify clusters
-    clusters = classifier::classifyClusters(clusters);
+    classifier::classifyClusters(&clusters);
     // 3) Group and evaluate
     groupAndEvaluate(clusters, pathToTagFiles, verbose);
 }
@@ -341,7 +320,7 @@ void clusterRegion(vector<FrameInfo> frames, string pathToTagFiles, bool verbose
  */
 void clusterLabels(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
     // 1) Classify frames
-    vector<FrameInfo> classifiedFrames = classifier::classifyFramesSingle(frames);
+    classifier::classifyFramesSingle(&frames);
     // 2) Cluster based on classification
     ClusterInfoContainer clusters = clusterer::cluster(clusterer::LABELS, frames, verbose);
     // 3) Group and evaluate
@@ -378,14 +357,14 @@ void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
     vector<FrameInfo> averageSimilarityFrames;
     vector<FrameInfo> lowSimilarityFrames;
 
-    vector<FrameInfo> classifiedFrames = classifier::classifyFramesSingle(frames);
-    for (FrameInfo frame : classifiedFrames) {
+    classifier::classifyFramesSingle(&frames);
+    for (FrameInfo frame : frames) {
         if (frame.label == classifier::highSimLabel) highSimilarityFrames.push_back(frame);
         else if (frame.label == classifier::mediumSimLabel) averageSimilarityFrames.push_back(frame);
         else lowSimilarityFrames.push_back(frame);
     }
 
-    double totalFrames = classifiedFrames.size();
+    double totalFrames = frames.size();
     cout << "High similarity:    " << highSimilarityFrames.size() << " of " << totalFrames << " total frames" << endl
          << "Average similarity: " << averageSimilarityFrames.size() << " of " << totalFrames << " total frames" << endl
          << "Low similarity:     " << lowSimilarityFrames.size() << " of " << totalFrames << " total frames" << endl
@@ -399,64 +378,6 @@ void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
 
     cout << "Matching low similarity frames..." << endl;
     qualityMeasurer::calculateOverlap(pathToTagFiles, lowSimilarityFrames, verbose);
-}
-
-/**
- * Checks to see if a given directory can be opened.
- * @param path The directory to check.
- * @return True for success.
- */
-bool canOpenDir(string path) {
-    DIR *directory = opendir(path.c_str());
-    if (directory == nullptr || readdir(directory) == nullptr) {
-        return false;
-    }
-
-    closedir(directory);
-    return true;
-}
-
-/**
- * Reads in the given csv file to retrieve the saved frame infos.
- * @param csvStream The file stream. Needs to be open.
- * @return An empty vector if unsuccessful.
- */
-vector<FrameInfo> readFrameInfosFromCsv(string filePath) {
-    ifstream csvStream;
-    csvStream.open(filePath);
-    assert(csvStream.is_open());
-
-    vector<FrameInfo> frameInfos;
-    string line;
-    // Read in header line.
-    if (!getline(csvStream, line)) return vector<FrameInfo>();
-    while (getline(csvStream, line)) {
-        vector<char> charLine(line.c_str(), line.c_str() + line.size() + 1u);
-
-        double frameNo = stod(strtok(&charLine[0], ","));
-        double msec = stod(strtok(nullptr, ","));
-        double similarity = stod(strtok(nullptr, ","));
-        assert(nullptr == strtok(nullptr, ","));
-
-        frameInfos.push_back(FrameInfo(Mat(), frameNo, msec, similarity));
-    }
-
-    csvStream.close();
-    return frameInfos;
-}
-
-/**
- * Appends the given values to the given csv file (must be writable) with highest precision.
- * @param filePath File path of the csv file.
- */
-void appendToCsv(string filePath, double frameNo, double msec, double similarity) {
-    char sep = ',';
-    ofstream ioFileStream;
-    // Setting the precision is not strictly necessary, but useful to preserve exact similarity values.
-    ioFileStream << setprecision(100);
-    ioFileStream.open(filePath, ios::app); // append
-    ioFileStream << frameNo << sep << msec << sep << similarity << endl;
-    ioFileStream.close();
 }
 
 /**

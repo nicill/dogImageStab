@@ -10,10 +10,11 @@
 
 using std::string;
 using std::vector;
+using std::stable_sort;
 
 struct ClusterInfoContainer {
-    std::string name = "INVALID";
-    std::vector<ClusterInfo> clusterInfos;
+    string name = "INVALID";
+    vector<ClusterInfo> clusterInfos;
 
     /**
      * Empty constructor.
@@ -32,6 +33,23 @@ struct ClusterInfoContainer {
     ClusterInfoContainer(string _name, vector<ClusterInfo> _clusterInfos = vector<ClusterInfo>()) {
         this->name = _name;
         this->clusterInfos = _clusterInfos;
+        this->sortClusters();
+    }
+
+    /**
+     * Add a new cluster, sorted by begin time.
+     */
+    void add(ClusterInfo newCluster) {
+        this->clusterInfos.push_back(newCluster);
+        this->sortClusters();
+    }
+
+private:
+    /**
+     * Sorts the contained vector of ClusterInfo objects.
+     */
+    void sortClusters() {
+        stable_sort(this->clusterInfos.begin(), this->clusterInfos.end());
     }
 };
 

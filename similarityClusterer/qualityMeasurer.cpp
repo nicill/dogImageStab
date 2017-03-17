@@ -16,7 +16,7 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
                                      bool verbose) {
     vector<double> qualityScoresPerFile;
 
-    vector<ClusterInfoContainer> clustersFromAllFiles = readTagFiles(pathToTagFileDirectory, verbose);
+    vector<ClusterInfoContainer> clustersFromAllFiles = similarityFileUtils::readTagFiles(pathToTagFileDirectory, verbose);
     for (ClusterInfoContainer clustersFromFile : clustersFromAllFiles) {
         double qualityScoreForFile = getQualityScore(clustersFromFile, determinedClusters);
         double precision = getClusterOverlapPrecision(clustersFromFile, determinedClusters);
@@ -44,7 +44,7 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
  * @param verbose Activate verbosity to cout.
  */
 void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, vector<FrameInfo> frames, bool verbose) {
-    vector<ClusterInfoContainer> clustersFromAllFiles = readTagFiles(pathToTagFileDirectory, verbose);
+    vector<ClusterInfoContainer> clustersFromAllFiles = similarityFileUtils::readTagFiles(pathToTagFileDirectory, verbose);
     for (ClusterInfoContainer clustersFromFile : clustersFromAllFiles) {
         double overlappingFrames = 0;
         for (ClusterInfo cluster : clustersFromFile.clusterInfos) {
@@ -65,7 +65,7 @@ void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, vector<Fra
  * @param verbose Activate verbosity to cout.
  */
 void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, bool verbose) {
-    vector<ClusterInfoContainer> clustersFromAllFiles = readTagFiles(pathToTagFileDirectory, verbose);
+    vector<ClusterInfoContainer> clustersFromAllFiles = similarityFileUtils::readTagFiles(pathToTagFileDirectory, verbose);
 
     for (int i = 0; i < clustersFromAllFiles.size(); i++) {
         for (int j = i + 1; j < clustersFromAllFiles.size(); j++) {
@@ -90,101 +90,6 @@ void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, bool verbo
                  << clustersFromAllFiles[j].name << endl;
         }
     }
-}
-
-/**
- * Reads in the given tag files and creates ClusterInfoContainers to hold the info during run time.
- * @param pathToTagFileDirectory A directory containing tag files. Must be a valid directory.
- * @param verbose Activate verbosity to cout.
- * @return A vector of ClusterInfoContainer objects, one for each file in the directory.
- */
-vector<ClusterInfoContainer> qualityMeasurer::readTagFiles(string pathToTagFileDirectory, bool verbose) {
-    vector<ClusterInfoContainer> tagFilesClusterings;
-
-    DIR *tagFileDir = opendir(pathToTagFileDirectory.c_str());
-    struct dirent *fileEntity;
-    while ((fileEntity = readdir(tagFileDir)) != nullptr) {
-        // Necessary for comparison with string literals.
-        string fileName(fileEntity->d_name);
-        if (fileName == "." || fileName == "..") {
-            if (verbose) cout << "Skipping \"" << fileName << "\"." << endl;
-            continue;
-        }
-        if (verbose) cout << "Reading file \"" << fileName << "\"." << endl;
-
-        ClusterInfoContainer clustersFromFile = readTagFile(pathToTagFileDirectory + "/" + fileName);
-
-        if (clustersFromFile.clusterInfos.size() == 0) {
-            cerr << "Couldn't open file " << fileName << " as tag file. Skipping..." << endl;
-            continue;
-        }
-
-        tagFilesClusterings.push_back(clustersFromFile);
-    }
-
-    if (tagFilesClusterings.size() == 0) {
-        cerr << "Couldn't open any file." << endl;
-    }
-
-    closedir(tagFileDir);
-    return tagFilesClusterings;
-}
-
-/**
- * Tries to read the file at the given path as a tag file and interpret its clusterings.
- * @param pathToTagFile The path, including the file name.
- * @return A vector of clusterings if successful, otherwise an empty vector.
- */
-ClusterInfoContainer qualityMeasurer::readTagFile(string pathToTagFile) {
-    ifstream tagFile;
-    tagFile.open(pathToTagFile);
-    if (!tagFile.is_open()) return ClusterInfoContainer();
-
-    ClusterInfoContainer clustersFromFile = ClusterInfoContainer(basename(pathToTagFile.c_str()));
-    string line;
-    while (getline(tagFile, line)) {
-        // Check correctness with RegEx?
-        vector<string> split = splitLine(line);
-
-        // Split should contain: Name, start (msec), end (msec), duration (msec)
-        assert(split.size() == 4);
-        double beginMsec = stod(split[1].c_str());
-        double endMsec = stod(split[2].c_str());
-        assert(stod(split[3].c_str()) == (endMsec - beginMsec));
-
-        clustersFromFile.clusterInfos.push_back(ClusterInfo(split[0], beginMsec, endMsec));
-    }
-
-    tagFile.close();
-    return clustersFromFile;
-}
-
-/**
- * Splits the given line at whitespace/tab/carriage return characters.
- * @param inputString The string to split.
- * @return List of substrings. Empty strings are discarded.
- */
-vector<string> qualityMeasurer::splitLine(string inputString) {
-    vector<string> splitString;
-    bool building = false;
-    int baseIndex = 0;
-
-    for (int i = 0; i < inputString.length(); i++) {
-        char current = inputString[i];
-        if (current == ' ' || current == '\t' || current == '\r') {
-            if (building) {
-                splitString.push_back(inputString.substr((size_t)baseIndex, (size_t)i - baseIndex));
-                building = false;
-            }
-
-            baseIndex = i + 1;
-            continue;
-        }
-
-        building = true;
-    }
-
-    return splitString;
 }
 
 /**
@@ -302,31 +207,18 @@ double qualityMeasurer::getClusterOverlapMsec(ClusterInfoContainer groundTruthCl
             continue;
         }
 
-        if ((*evaluatedClustersIterator).beginMsec >= (*groundTruthClustersIterator).endMsec
-            || (*evaluatedClustersIterator).endMsec <= (*groundTruthClustersIterator).beginMsec) {
-            continue;
-        }
-
-        // Logic: If an overlap exists (neither is the begin after the end nor the end before the begin)
-        //        it is between the bigger begin and the smaller end value.
-        double biggerBegin =
-                ((*evaluatedClustersIterator).beginMsec > (*groundTruthClustersIterator).beginMsec)
-                ? (*evaluatedClustersIterator).beginMsec
-                : (*groundTruthClustersIterator).beginMsec;
-        double smallerEnd =
-                ((*evaluatedClustersIterator).endMsec < (*groundTruthClustersIterator).endMsec)
-                ? (*evaluatedClustersIterator).endMsec
-                : (*groundTruthClustersIterator).endMsec;
-
-        double matchedLength = smallerEnd - biggerBegin;
+        ClusterInfo overlap = (*groundTruthClustersIterator).getOverlap((*evaluatedClustersIterator));
+        double matchedLength = overlap.endMsec - overlap.beginMsec;
+        assert(matchedLength > 0);
         clustersMatchedMsec += matchedLength;
 
         // Iterate the cluster that has been matched to its end.
         // Caution! Assumes that the clusters in both lists do NOT overlap with others in their list!
-        if (smallerEnd == (*evaluatedClustersIterator).endMsec) {
+        if (overlap.endMsec == (*evaluatedClustersIterator).endMsec) {
             evaluatedClustersIterator++;
+        } else {
+            groundTruthClustersIterator++;
         }
-        else groundTruthClustersIterator++;
     }
 
     return clustersMatchedMsec;

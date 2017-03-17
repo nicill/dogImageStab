@@ -30,12 +30,19 @@ struct ClusterInfo {
     ClusterInfo() {};
 
     /**
-     * Constructor with only name, begin and end time.
+     * Consructor with only label.
      */
-    ClusterInfo(string _name,
+    ClusterInfo(string _label) {
+        this->label = _label;
+    }
+
+    /**
+     * Constructor with only label, begin and end time.
+     */
+    ClusterInfo(string _label,
                 double _beginMsec,
                 double _endMsec) {
-            this->label = _name;
+            this->label = _label;
             this->beginMsec = _beginMsec;
             this->endMsec = _endMsec;
             this->length = this->endMsec - this->beginMsec;
@@ -52,19 +59,19 @@ struct ClusterInfo {
      * Nested constructor with only a frame vector.
      */
     ClusterInfo(vector<FrameInfo> _frames)
-            : ClusterInfo(defaultName(_frames), _frames) {}
+            : ClusterInfo(defaultLabel(_frames), _frames) {}
 
     /**
-     * Nested constructor with name and one frame.
+     * Nested constructor with label and one frame.
      */
-    ClusterInfo(string _name, FrameInfo _frame)
-            : ClusterInfo(_name, utils::package(_frame)) {}
+    ClusterInfo(string _label, FrameInfo _frame)
+            : ClusterInfo(_label, utils::package(_frame)) {}
 
     /**
      * Constructor.
      */
-    ClusterInfo(string _name, vector<FrameInfo> _frames) {
-        this->label = _name;
+    ClusterInfo(string _label, vector<FrameInfo> _frames) {
+        this->label = _label;
         this->beginMsec = _frames.front().msec;
         this->endMsec = _frames.back().msec;
 
@@ -94,6 +101,40 @@ struct ClusterInfo {
     }
 
     /**
+     * Checks if the given frame is within the cluster boundaries.
+     */
+    bool containsFrame(FrameInfo frame) {
+        return frame.msec >= this->beginMsec
+               && frame.msec <= this->endMsec
+               && (!this->hasFrames || (frame.frameNo >= this->beginMsec
+                                        && frame.frameNo <= this->endFrameNo));
+    }
+
+    /**
+     * Creates a ClusterInfo with the overlap with the given cluster.
+     * @param other The ClusterInfo to compare this to.
+     * @return A ClusterInfo with begin and end (msec) of the overlap, an empty ClusterInfo if there is no overlap.
+     */
+    ClusterInfo getOverlap(ClusterInfo other) {
+        // Logic: If an overlap exists (neither is the begin after the end nor the end before the begin)
+        //        it is between the bigger begin and the smaller end value.
+        double biggerBegin =
+                ( this->beginMsec > other.beginMsec)
+                ? this->beginMsec
+                : other.beginMsec;
+        double smallerEnd =
+                ( this->endMsec < other.endMsec)
+                ? this->endMsec
+                : other.endMsec;
+
+        if (biggerBegin > smallerEnd) {
+            return ClusterInfo("No overlap");
+        } else {
+            return ClusterInfo("Overlap of " + this->label + " and " + other.label, biggerBegin, smallerEnd);
+        }
+    }
+
+    /**
      * Equals method which compares begin and end time as well as begin and end frame number.
      * @param compare The ClusterInfo to compare this to.
      */
@@ -111,6 +152,20 @@ struct ClusterInfo {
     }
 
     /**
+     * Sorts by begin time and if those are equal, by end time.
+     */
+    bool operator < (const ClusterInfo& second) const {
+        if (this->beginMsec < second.beginMsec) {
+            return true;
+        } else if (this->beginMsec == second.beginMsec) {
+            return this->endMsec < second.endMsec;
+        } else {
+            return false;
+        }
+    }
+
+private:
+    /**
      * Updates length and average similarity fields of this object.
      */
     void updateValues() {
@@ -122,11 +177,10 @@ struct ClusterInfo {
         }
         this->averageSimilarity = summedUpAverages / this->frames.size();
     }
-
     /**
-     * Creates a default name for the given cluster.
+     * Creates a default label for the given cluster.
      */
-    string defaultName(vector<FrameInfo> frames) {
+    string defaultLabel(vector<FrameInfo> frames) {
         return "Cluster from " + std::to_string(frames.front().msec) + " msec"
                + " to " + std::to_string(frames.back().msec) + " msec";
     }

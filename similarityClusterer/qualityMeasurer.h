@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <regex>
+#include "similarityFileUtils.cpp"
 #include "storageClasses/FrameInfo.cpp"
 #include "storageClasses/ClusterInfo.cpp"
 #include "storageClasses/ClusterInfoContainer.cpp"
@@ -26,10 +27,6 @@ public:
                                  bool verbose = false);
 
 private:
-    static vector<ClusterInfoContainer> readTagFiles(string pathToTagFileDirectory, bool verbose);
-    static ClusterInfoContainer readTagFile(string pathToTagFile);
-    static vector<string> splitLine(string inputString);
-
     static double getQualityScore(ClusterInfoContainer groundTruthClusters,
                                   ClusterInfoContainer evaluatedClusters);
     static double getClusterOverlapRecall(ClusterInfoContainer groundTruthClusters,

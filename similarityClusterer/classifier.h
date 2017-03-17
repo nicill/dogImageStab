@@ -18,9 +18,9 @@ public:
     static constexpr const char* mediumSimLabel = "Medium similarity";
     static constexpr const char* lowSimLabel = "Low similarity";
 
-    static vector<FrameInfo> classifyFramesSingle(vector<FrameInfo> frames);
-    static vector<FrameInfo> classifyFramesAverage(vector<FrameInfo> frames);
-    static ClusterInfoContainer classifyClusters(ClusterInfoContainer clusters);
+    static void classifyFramesSingle(vector<FrameInfo>* frames);
+    static void classifyFramesAverage(vector<FrameInfo>* frames);
+    static void classifyClusters(ClusterInfoContainer* clusters);
 
 private:
     static string classifySimilarity(double value);
