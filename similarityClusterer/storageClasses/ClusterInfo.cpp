@@ -152,13 +152,13 @@ struct ClusterInfo {
     }
 
     /**
-     * Comparison method for sorting by begin time. If begin times are equal it compares the end time.
+     * Sorts by begin time and if those are equal, by end time.
      */
-    static bool less(ClusterInfo first, ClusterInfo second) {
-        if (first.beginMsec < second.beginMsec) {
+    bool operator < (const ClusterInfo& second) const {
+        if (this->beginMsec < second.beginMsec) {
             return true;
-        } else if (first.beginMsec == second.beginMsec) {
-            return first.endMsec <= second.endMsec;
+        } else if (this->beginMsec == second.beginMsec) {
+            return this->endMsec < second.endMsec;
         } else {
             return false;
         }
