@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
     // Quality mode: Verify that the tag file directory exists and that it contains a folder for the given video.
     string pathToTagFiles = "INVALID";
     if (qualityMeasurement) {
-        pathToTagFiles = utils::combine({ defaults::tagFileDirectory, "/", videoName });
+        pathToTagFiles = utils::combine({ defaults::tagFileDirectory, "/", utils::removeExtension(videoName) });
 
         if (!useDefaults) {
             string userInput = "";

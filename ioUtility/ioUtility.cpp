@@ -79,9 +79,10 @@ int main(int argc, char **argv) {
     totalFrames = capture.get(cv::CAP_PROP_FRAME_COUNT);
     capture.release();
     string videoName_ext = basename(argv[1]);
+    videoName_noExt = utils::removeExtension(videoName_ext);
 
     // Check validity of working directory and tag file directory
-    pathToTagFiles = utils::combine({ defaults::tagFileDirectory, "/", videoName_ext });
+    pathToTagFiles = utils::combine({ defaults::tagFileDirectory, "/", videoName_noExt });
     if (!utils::canOpenDir(defaults::workingDirectory) || !utils::canOpenDir(pathToTagFiles)) {
         cerr << "Could not open directory, please check these directories:" << endl
              << defaults::workingDirectory << endl
@@ -99,7 +100,6 @@ int main(int argc, char **argv) {
     }
 
     // Set global variables
-    videoName_noExt = utils::removeExtension(videoName_ext);
     ioFileName_noExt = utils::removeExtension(ioFileName_ext);
     workingDirectoryMessage    = "Using working directory \"" + workingDirectory + "\"";
     readingTagFilesFromMessage = "Reading tag files from directory \"" + pathToTagFiles + "\"";
