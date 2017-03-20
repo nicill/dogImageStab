@@ -156,7 +156,7 @@ int main(int argc, char **argv) {
             subSpecs = subSpecHist;
             break;
         case 2 :
-            if (subSpecifier < 0 && subSpecifier > 2) {
+            if (subSpecifier < 0 || subSpecifier > 2) {
                 cerr << "Invalid sub specifier provided: " << subSpecifier << " (Use one of: " << subSpecFeat << ")" << endl;
                 return 1;
             }
