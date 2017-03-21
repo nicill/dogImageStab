@@ -17,6 +17,11 @@ using std::vector;
 
 struct utils {
     /**
+     * Global end of line delimiter;
+     */
+    static constexpr const char* tagFileEol = "\n";
+
+    /**
      * Packages an item in a list of that item's type.
      */
     template <typename T>
