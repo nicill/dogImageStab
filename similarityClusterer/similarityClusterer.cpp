@@ -263,8 +263,10 @@ int main(int argc, char **argv) {
             }
         }
     } else {
-        // Read in data from file.
-        frames = similarityFileUtils::readFrameInfosFromCsv(ioFilePath, totalFrames);
+        // Read in data from file. Failures of method will be output to cerr.
+        if (!similarityFileUtils::readFrameInfosFromCsv(ioFilePath, totalFrames, &frames)) {
+            return 1;
+        }
     }
 
     time_t similarityFinishedTime = time(nullptr);

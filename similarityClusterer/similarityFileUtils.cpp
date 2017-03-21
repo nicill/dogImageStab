@@ -42,10 +42,9 @@ struct similarityFileUtils {
             }
             if (verbose) cout << "Reading file \"" << fileName << "\"." << endl;
 
-            ClusterInfoContainer clustersFromFile = readTagFile(pathToTagFileDirectory + "/" + fileName);
-
-            if (clustersFromFile.clusterInfos.size() == 0) {
-                cerr << "Couldn't open file " << fileName << " as tag file. Skipping..." << endl;
+            ClusterInfoContainer clustersFromFile;
+            if (!readTagFile(pathToTagFileDirectory + "/" + fileName, &clustersFromFile)) {
+                cerr << "Skipping file..." << endl;
                 continue;
             }
 
@@ -62,76 +61,93 @@ struct similarityFileUtils {
 
     /**
      * Tries to read the file at the given path as a tag file and interpret its clusterings.
-     * @param pathToTagFile The path, including the file name.
-     * @return A vector of clusterings if successful, otherwise an empty vector.
+     * @param pathToTagFile Path to the tag file to read.
+     * @param clusters The ClusterInfoContainer to fill.
+     * @return False if unsuccessful. Will output error message to cerr.
      */
-    static ClusterInfoContainer readTagFile(string pathToTagFile) {
+    static bool readTagFile(string pathToTagFile, ClusterInfoContainer* clusters) {
+        string fileName = utils::getBasename(pathToTagFile);
+        *clusters = ClusterInfoContainer(fileName);
+
         ifstream tagFile;
         tagFile.open(pathToTagFile);
-        if (!tagFile.is_open()) return ClusterInfoContainer();
+        if (!tagFile.is_open()) {
+            cerr << "Couldn't open file \"" << pathToTagFile << "\" as tag file." << endl;
+            return false;
+        }
 
-        string fileName = utils::getBasename(pathToTagFile);
-        ClusterInfoContainer clustersFromFile = ClusterInfoContainer(fileName);
+        string parseErrorMsg = "The tag file \"" + pathToTagFile + "\" seems to be in a wrong format. Please verify its contents.";
 
         string line;
         getLineSafe(tagFile, line);
         if (line != "start,stop") {
-            cerr << "The CSV file \"" << pathToTagFile << "\" seems to be in a wrong format." << endl;
-            throw("Wrong CSV file format");
+            cerr << parseErrorMsg << endl;
+            return false;
         }
 
         vector<string> split;
         while (readLine(tagFile, &split)) {
             // Split should contain: Start (msec), end (msec)
-            assert(split.size() == 2);
-            double beginMsec = stod(split[0].c_str());
-            double endMsec = stod(split[1].c_str());
+            if(split.size() != 3) {
+                cerr << parseErrorMsg << endl;
+                return false;
+            }
 
-            clustersFromFile.clusterInfos.push_back(ClusterInfo(fileName, beginMsec, endMsec));
+            double beginMsec = 1000 * stod(split[0].c_str());
+            double endMsec = 1000 * stod(split[1].c_str());
+
+            (*clusters).add(ClusterInfo(fileName, beginMsec, endMsec));
         }
 
         tagFile.close();
-        return clustersFromFile;
+
+        if ((*clusters).size() == 0) {
+            cerr << "Didn't find any cluster entries in tag file." << endl;
+            return false;
+        }
+        return true;
     }
 
     /**
      * Reads in the given csv file to retrieve the saved frame infos and verifies that the number of entries corresponds
      * to the given frame number.
-     * @param csvStream The file stream. Needs to be open.
-     * @return An empty vector if unsuccessful.
+     * @param filePath Path to the CSV file.
+     * @param supposedNumberOfFrames The number of frames in the video.
+     * @param frames Empty vector to save the results to.
+     * @return False if unsuccessful. Will output error message to cerr.
      */
-    static vector<FrameInfo> readFrameInfosFromCsv(string filePath, double supposedNumberOfFrames) {
+    static bool readFrameInfosFromCsv(string filePath, double supposedNumberOfFrames, vector<FrameInfo>* frames) {
         ifstream csvStream;
         csvStream.open(filePath);
         assert(csvStream.is_open());
 
-        vector<FrameInfo> frameInfos;
+        *frames = vector<FrameInfo>();
         // Read in header line.
         string s;
-        if (!getLineSafe(csvStream, s)) return vector<FrameInfo>();
+        if (!getLineSafe(csvStream, s)) return false;
         vector<string> split;
         while (readLine(csvStream, &split)) {
             if(split.size() != 3) {
                 cerr << "Invalid file format in file \"" << filePath << "\". Please verify contents." << endl;
-                throw("Invalid file format");
+                return false;
             }
 
             double frameNo = stod(split[0]);
             double msec = stod(split[1]);
             double similarity = stod(split[2]);
 
-            frameInfos.push_back(FrameInfo(Mat(), frameNo, msec, similarity));
+            (*frames).push_back(FrameInfo(Mat(), frameNo, msec, similarity));
         }
 
         csvStream.close();
 
-        if (frameInfos.size() != supposedNumberOfFrames) {
+        if ((*frames).size() != supposedNumberOfFrames) {
             cerr << "Tag file \"" << filePath << "\" has the wrong number of entries." << endl
-                 << "Expected: " << supposedNumberOfFrames << ", actual: " << frameInfos.size() << endl
+                 << "Expected: " << supposedNumberOfFrames << ", actual: " << (*frames).size() << endl
                  << "Please verify the file integrity and recalculate, if necessary." << endl;
-            throw("Invalid number of entries in CSV file.");
+            return false;
         }
-        return frameInfos;
+        return true;
     }
 
     /**

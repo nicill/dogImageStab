@@ -27,7 +27,7 @@ void classifier::classifyFramesAverage(vector<FrameInfo>* frames) {
  * Labels each ClusterInfo with a classification.
  */
 void classifier::classifyClusters(ClusterInfoContainer* clusters) {
-    for (int i = 0; i < (*clusters).clusterInfos.size(); i++) {
+    for (int i = 0; i < (*clusters).size(); i++) {
         (*clusters).clusterInfos[i].label = classifySimilarity((*clusters).clusterInfos[i].averageSimilarity);
     }
 }

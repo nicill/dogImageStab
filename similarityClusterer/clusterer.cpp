@@ -34,14 +34,14 @@ ClusterInfoContainer clusterer::cluster(strategy givenStrategy, vector<FrameInfo
 vector<ClusterInfoContainer> clusterer::group(ClusterInfoContainer clustering) {
     vector<ClusterInfoContainer> groupedClusterings;
 
-    for (int i = 1; i < clustering.clusterInfos.size(); i++) {
+    for (int i = 1; i < clustering.size(); i++) {
         string name = clustering.clusterInfos[i].label;
         bool found = false;
 
         for (int j = 0; j < groupedClusterings.size(); j++) {
             // Container with name exists.
             if (name == groupedClusterings[j].name) {
-                groupedClusterings[j].clusterInfos.push_back(clustering.clusterInfos[i]);
+                groupedClusterings[j].add(clustering.clusterInfos[i]);
                 found = true;
                 break;
             }
