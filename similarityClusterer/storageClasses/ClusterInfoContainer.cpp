@@ -44,6 +44,13 @@ struct ClusterInfoContainer {
         this->sortClusters();
     }
 
+    /**
+     * Returns number of contained clusters.
+     */
+    size_t size() {
+        return this->clusterInfos.size();
+    }
+
 private:
     /**
      * Sorts the contained vector of ClusterInfo objects.
