@@ -88,7 +88,7 @@ struct similarityFileUtils {
         vector<string> split;
         while (readLine(tagFile, &split)) {
             // Split should contain: Start (msec), end (msec)
-            if(split.size() != 3) {
+            if(split.size() != 2) {
                 cerr << parseErrorMsg << endl;
                 return false;
             }
