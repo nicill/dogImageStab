@@ -70,19 +70,23 @@ struct similarityFileUtils {
         tagFile.open(pathToTagFile);
         if (!tagFile.is_open()) return ClusterInfoContainer();
 
-        ClusterInfoContainer clustersFromFile = ClusterInfoContainer(utils::getBasename(pathToTagFile));
+        string fileName = utils::getBasename(pathToTagFile);
+        ClusterInfoContainer clustersFromFile = ClusterInfoContainer(fileName);
         string line;
-        while (getline(tagFile, line)) {
-            // Check correctness with RegEx?
-            vector<string> split = splitLine(line);
+        getline(tagFile, line);
+        if (line != "start,stop\r") {
+            cerr << "The CSV file \"" << pathToTagFile << "\" seems to be in a wrong format." << endl;
+            throw("Wrong CSV file format");
+        }
 
-            // Split should contain: Name, start (msec), end (msec), duration (msec)
-            assert(split.size() == 4);
-            double beginMsec = stod(split[1].c_str());
-            double endMsec = stod(split[2].c_str());
-            assert(stod(split[3].c_str()) == (endMsec - beginMsec));
+        vector<string> split;
+        while (readLine(&tagFile, &split)) {
+            // Split should contain: Start (msec), end (msec)
+            assert(split.size() == 2);
+            double beginMsec = stod(split[0].c_str());
+            double endMsec = stod(split[1].c_str());
 
-            clustersFromFile.clusterInfos.push_back(ClusterInfo(split[0], beginMsec, endMsec));
+            clustersFromFile.clusterInfos.push_back(ClusterInfo(fileName, beginMsec, endMsec));
         }
 
         tagFile.close();
@@ -90,31 +94,33 @@ struct similarityFileUtils {
     }
 
     /**
-     * Splits the given line at whitespace/tab/carriage return characters.
-     * @param inputString The string to split.
-     * @return List of substrings. Empty strings are discarded.
+     * Reads the next line of the given CSV file.
+     * @param fileStream The CSV file's file stream.
+     * @param split The vector to save the split line into.
+     * @param separator (optional) Separator character.
+     * @return True if a line was read, false for EOF.
      */
-    static vector<string> splitLine(string inputString) {
-        vector<string> splitString;
-        bool building = false;
-        int baseIndex = 0;
-
-        for (int i = 0; i < inputString.length(); i++) {
-            char current = inputString[i];
-            if (current == ' ' || current == '\t' || current == '\r') {
-                if (building) {
-                    splitString.push_back(inputString.substr((size_t)baseIndex, (size_t)i - baseIndex));
-                    building = false;
-                }
-
-                baseIndex = i + 1;
-                continue;
+    static bool readLine(ifstream* fileStream, vector<string>* split, char separator = ',') {
+        *split = vector<string>();
+        string line;
+        if (getline((*fileStream), line)) {
+            size_t nextSepPos;
+            while (utils::findToken(line, separator, &nextSepPos)) {
+                split->push_back(line.substr(0, nextSepPos));
+                size_t nextStart = nextSepPos + 1;
+                line = line.substr(nextStart, line.size() - nextStart);
             }
 
-            building = true;
+            bool foundChar = utils::findToken(line, '\r', &nextSepPos);
+            if (!foundChar) {
+                cerr << "Line doesn't adhere to given format. Please verify file contents." << endl;
+                throw("Wrong line format");
+            }
+            split->push_back(line.substr(0, nextSepPos));
+            return true;
+        } else {
+            return false;
         }
-
-        return splitString;
     }
 
     /**
