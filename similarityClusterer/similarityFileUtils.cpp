@@ -95,6 +95,46 @@ struct similarityFileUtils {
     }
 
     /**
+     * Reads in the given csv file to retrieve the saved frame infos and verifies that the number of entries corresponds
+     * to the given frame number.
+     * @param csvStream The file stream. Needs to be open.
+     * @return An empty vector if unsuccessful.
+     */
+    static vector<FrameInfo> readFrameInfosFromCsv(string filePath, double supposedNumberOfFrames) {
+        ifstream csvStream;
+        csvStream.open(filePath);
+        assert(csvStream.is_open());
+
+        vector<FrameInfo> frameInfos;
+        // Read in header line.
+        string s;
+        if (!getLineSafe(csvStream, s)) return vector<FrameInfo>();
+        vector<string> split;
+        while (readLine(csvStream, &split)) {
+            if(split.size() != 3) {
+                cerr << "Invalid file format in file \"" << filePath << "\". Please verify contents." << endl;
+                throw("Invalid file format");
+            }
+
+            double frameNo = stod(split[0]);
+            double msec = stod(split[1]);
+            double similarity = stod(split[2]);
+
+            frameInfos.push_back(FrameInfo(Mat(), frameNo, msec, similarity));
+        }
+
+        csvStream.close();
+
+        if (frameInfos.size() != supposedNumberOfFrames) {
+            cerr << "Tag file \"" << filePath << "\" has the wrong number of entries." << endl
+                 << "Expected: " << supposedNumberOfFrames << ", actual: " << frameInfos.size() << endl
+                 << "Please verify the file integrity and recalculate, if necessary." << endl;
+            throw("Invalid number of entries in CSV file.");
+        }
+        return frameInfos;
+    }
+
+    /**
      * Reads the next line of the given CSV file.
      * @param fileStream The CSV file's file stream.
      * @param split The vector to save the split line into.
@@ -118,43 +158,6 @@ struct similarityFileUtils {
         } else {
             return false;
         }
-    }
-
-    /**
-     * Reads in the given csv file to retrieve the saved frame infos and verifies that the number of entries corresponds
-     * to the given frame number.
-     * @param csvStream The file stream. Needs to be open.
-     * @return An empty vector if unsuccessful.
-     */
-    static vector<FrameInfo> readFrameInfosFromCsv(string filePath, double supposedNumberOfFrames) {
-        ifstream csvStream;
-        csvStream.open(filePath);
-        assert(csvStream.is_open());
-
-        vector<FrameInfo> frameInfos;
-        string line;
-        // Read in header line.
-        if (!getLineSafe(csvStream, line)) return vector<FrameInfo>();
-        while (getLineSafe(csvStream, line)) {
-            vector<char> charLine(line.c_str(), line.c_str() + line.size() + 1u);
-
-            double frameNo = stod(strtok(&charLine[0], ","));
-            double msec = stod(strtok(nullptr, ","));
-            double similarity = stod(strtok(nullptr, ","));
-            assert(nullptr == strtok(nullptr, ","));
-
-            frameInfos.push_back(FrameInfo(Mat(), frameNo, msec, similarity));
-        }
-
-        csvStream.close();
-
-        if (frameInfos.size() != supposedNumberOfFrames) {
-            cerr << "Tag file \"" << filePath << "\" has the wrong number of entries." << endl
-                 << "Expected: " << supposedNumberOfFrames << ", actual: " << frameInfos.size() << endl
-                 << "Please verify the file integrity and recalculate, if necessary." << endl;
-            throw("Invalid number of entries in CSV file.");
-        }
-        return frameInfos;
     }
 
     /**
