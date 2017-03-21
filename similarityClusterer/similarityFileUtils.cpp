@@ -72,15 +72,16 @@ struct similarityFileUtils {
 
         string fileName = utils::getBasename(pathToTagFile);
         ClusterInfoContainer clustersFromFile = ClusterInfoContainer(fileName);
+
         string line;
-        getline(tagFile, line);
-        if (line != "start,stop\r") {
+        getLineSafe(tagFile, line);
+        if (line != "start,stop") {
             cerr << "The CSV file \"" << pathToTagFile << "\" seems to be in a wrong format." << endl;
             throw("Wrong CSV file format");
         }
 
         vector<string> split;
-        while (readLine(&tagFile, &split)) {
+        while (readLine(tagFile, &split)) {
             // Split should contain: Start (msec), end (msec)
             assert(split.size() == 2);
             double beginMsec = stod(split[0].c_str());
@@ -100,10 +101,10 @@ struct similarityFileUtils {
      * @param separator (optional) Separator character.
      * @return True if a line was read, false for EOF.
      */
-    static bool readLine(ifstream* fileStream, vector<string>* split, char separator = ',') {
+    static bool readLine(ifstream& fileStream, vector<string>* split, char separator = ',') {
         *split = vector<string>();
         string line;
-        if (getline((*fileStream), line)) {
+        if (getLineSafe(fileStream, line)) {
             size_t nextSepPos;
             while (utils::findToken(line, separator, &nextSepPos)) {
                 split->push_back(line.substr(0, nextSepPos));
@@ -111,12 +112,8 @@ struct similarityFileUtils {
                 line = line.substr(nextStart, line.size() - nextStart);
             }
 
-            bool foundChar = utils::findToken(line, '\r', &nextSepPos);
-            if (!foundChar) {
-                cerr << "Line doesn't adhere to given format. Please verify file contents." << endl;
-                throw("Wrong line format");
-            }
-            split->push_back(line.substr(0, nextSepPos));
+            // Add last value (after the last separator)
+            split->push_back(line);
             return true;
         } else {
             return false;
@@ -137,8 +134,8 @@ struct similarityFileUtils {
         vector<FrameInfo> frameInfos;
         string line;
         // Read in header line.
-        if (!getline(csvStream, line)) return vector<FrameInfo>();
-        while (getline(csvStream, line)) {
+        if (!getLineSafe(csvStream, line)) return vector<FrameInfo>();
+        while (getLineSafe(csvStream, line)) {
             vector<char> charLine(line.c_str(), line.c_str() + line.size() + 1u);
 
             double frameNo = stod(strtok(&charLine[0], ","));
@@ -199,6 +196,34 @@ private:
 
         ioFileStream << endl;
         ioFileStream.close();
+    }
+
+    /**
+     * Replaces getLine. Works independently of used EOL character sequence.
+     * @param fileStream The stream to read from.
+     * @param line The string to save to.
+     * @return False for EOF.
+     */
+    static bool getLineSafe(ifstream& fileStream, string& line) {
+        for(;;) {
+            int c = fileStream.get();
+            switch (c) {
+                case '\n':
+                    return true;
+                case '\r':
+                    if (fileStream.peek() == '\n') {
+                        fileStream.get();
+                    }
+                    return true;
+                case EOF:
+                    if (line.empty()) {
+                        fileStream.setstate(std::ios::eofbit);
+                    }
+                    return false;
+                default:
+                    line += (char)c;
+            }
+        }
     }
 };
 
