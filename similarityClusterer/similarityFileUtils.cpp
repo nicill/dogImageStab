@@ -44,7 +44,9 @@ struct similarityFileUtils {
 
             ClusterInfoContainer clustersFromFile;
             if (!readTagFile(pathToTagFileDirectory + "/" + fileName, &clustersFromFile)) {
-                cerr << "Skipping file..." << endl;
+                if (verbose) {
+                    cout << "Skipping file \"" << fileName << "\"..." << endl;
+                }
                 continue;
             }
 
@@ -102,7 +104,7 @@ struct similarityFileUtils {
         tagFile.close();
 
         if ((*clusters).size() == 0) {
-            cerr << "Didn't find any cluster entries in tag file." << endl;
+            cerr << "Didn't find any cluster entries in tag file \"" << pathToTagFile << "\"" << endl;
             return false;
         }
         return true;

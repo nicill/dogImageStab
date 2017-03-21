@@ -55,7 +55,7 @@ void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, vector<Fra
             }
         }
         double overlapRatio = overlappingFrames / frames.size();
-        cout << overlapRatio * 100 << " % of frames overlap clusters in " << clustersFromFile.name << endl;
+        cout << overlapRatio * 100 << " % of frames overlap clusters in \"" << clustersFromFile.name << "\"" << endl;
     }
 }
 
