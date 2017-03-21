@@ -121,6 +121,18 @@ struct utils {
             return s.substr(0, lastDot);
         }
     }
+
+    /**
+     * Finds the next occurrence of the given token in the given string. Returns if successful.
+     * @param str String to search.
+     * @param tok Token to find.
+     * @param pos Position of token in string. string::npos if not found.
+     * @return Flag indicating success.
+     */
+    static bool findToken(string str, char tok, size_t* pos) {
+        *pos = str.find(tok);
+        return ((*pos) != string::npos);
+    }
 };
 
 #endif // DOGIMAGESTABILIZATION_UTILS_CPP
