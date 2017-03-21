@@ -133,7 +133,10 @@ int mainCsvMode() {
     }
 
     // 2) Read similarity from analysis file, build clusters and label
-    vector<FrameInfo> frames = similarityFileUtils::readFrameInfosFromCsv(ioFilePath, totalFrames);
+    vector<FrameInfo> frames;
+    if (!similarityFileUtils::readFrameInfosFromCsv(ioFilePath, totalFrames, &frames)) {
+        return 1;
+    }
     //    Steps: Calculate region average, cluster, classify clusters
     clusterer::calculateRegionAverage(&frames);
     ClusterInfoContainer clusters = clusterer::cluster(clusterer::AVERAGE_REFINED, frames, false);
