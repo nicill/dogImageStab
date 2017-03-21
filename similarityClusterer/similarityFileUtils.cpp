@@ -145,7 +145,12 @@ struct similarityFileUtils {
 
         csvStream.close();
 
-        assert(frameInfos.size() == supposedNumberOfFrames);
+        if (frameInfos.size() != supposedNumberOfFrames) {
+            cerr << "Tag file \"" << filePath << "\" has the wrong number of entries." << endl
+                 << "Expected: " << supposedNumberOfFrames << ", actual: " << frameInfos.size() << endl
+                 << "Please verify the file integrity and recalculate, if necessary." << endl;
+            throw("Invalid number of entries in CSV file.");
+        }
         return frameInfos;
     }
 
