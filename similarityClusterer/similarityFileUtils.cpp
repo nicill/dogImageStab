@@ -70,8 +70,7 @@ struct similarityFileUtils {
         tagFile.open(pathToTagFile);
         if (!tagFile.is_open()) return ClusterInfoContainer();
 
-        ClusterInfoContainer clustersFromFile =
-                ClusterInfoContainer(basename(const_cast<char*>(pathToTagFile.c_str())));
+        ClusterInfoContainer clustersFromFile = ClusterInfoContainer(utils::getBasename(pathToTagFile));
         string line;
         while (getline(tagFile, line)) {
             // Check correctness with RegEx?

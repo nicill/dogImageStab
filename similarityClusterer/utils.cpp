@@ -9,6 +9,7 @@
 #include <vector>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <assert.h>
 
 using std::string;
 using std::to_string;
@@ -91,6 +92,21 @@ struct utils {
         return extension
             ? name + ".csv"
             : name;
+    }
+
+    /**
+     * Replacement for basename for string. Extracts the file name (including extension) from a path.
+     */
+    static string getBasename(string path) {
+        // Not implemented for Windows system paths
+        assert(path.find("\\") == string::npos);
+        size_t lastSlash = path.find_last_of("/");
+        if (lastSlash == string::npos) {
+            return path;
+        } else {
+            size_t beginOfName = lastSlash + 1;
+            return path.substr(beginOfName, path.size() - beginOfName);
+        }
     }
 
     /**
