@@ -247,15 +247,16 @@ int mainTagMode() {
 
     // 3. Save as new tag file
     ofstream fileStream;
-    string filePath = workingDirectory + "/" + videoName_noExt + "_bark-and-stop.txt";
+    string filePath = workingDirectory + "/bark+stop.csv";
     if (utils::fileExists(filePath)) {
         errorFileToWriteExists(filePath);
         return 1;
     }
 
     fileStream.open(filePath);
+    fileStream << "start,stop" << endl;
     for (const auto &cluster : overlaps.clusterInfos) {
-        fileStream << "bark+stop\t\t" << cluster.beginMsec << "\t" << cluster.endMsec << "\t" << cluster.length << endl;
+        fileStream << cluster.beginMsec << "," << cluster.endMsec << endl;
     }
     fileStream.close();
 
