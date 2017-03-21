@@ -254,9 +254,9 @@ int mainTagMode() {
     }
 
     fileStream.open(filePath);
-    fileStream << "start,stop" << endl;
+    fileStream << "start,stop" << utils::tagFileEol;
     for (const auto &cluster : overlaps.clusterInfos) {
-        fileStream << cluster.beginMsec << "," << cluster.endMsec << endl;
+        fileStream << cluster.beginMsec << "," << cluster.endMsec << utils::tagFileEol;
     }
     fileStream.close();
 
