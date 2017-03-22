@@ -26,7 +26,7 @@ void announceMode(string mode, vector<string> infos);
 void successfulWrite(string filePath);
 void errorFileToWriteExists(string filePath);
 
-string workingDirectory = getenv("HOME");
+string workingDirectory = utils::combine({ getenv("HOME"), "/dog/results" });
 string videoName_noExt;
 string ioFileName_noExt;
 string ioFilePath;
