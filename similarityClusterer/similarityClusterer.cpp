@@ -289,9 +289,9 @@ int main(int argc, char **argv) {
     if (measureTime) {
         cout << "----------" << endl
              << "Time taken" << endl
-             << "Total: " << qualityFinishedTime - startTime << " s" << endl
+             << "Total:                  " << qualityFinishedTime - startTime << " s" << endl
              << "Similarity measurement: " << similarityFinishedTime - startTime << " s" << endl
-             << "Quality measurement: " << qualityFinishedTime - similarityFinishedTime << " s" << endl;
+             << "Quality scoring:        " << qualityFinishedTime - similarityFinishedTime << " s" << endl;
     }
 
     delete comparer;
@@ -336,7 +336,7 @@ void groupAndEvaluate(ClusterInfoContainer clusters, string pathToTagFiles, bool
     // Evaluate groups
     vector<tuple<double, string>> results;
     for (ClusterInfoContainer group : groupedClusters) {
-        cout << " -- Scoring clustering \"" << group.name << "\"... -- " << endl;
+        cout << endl << " -- Scoring clustering \"" << group.name << "\" (" << group.size() << " clusters)... -- " << endl;
         vector<QualityScore> scores = qualityMeasurer::scoreQuality(pathToTagFiles, group, verbose);
 
         double averageQualityScore = 0;
@@ -378,19 +378,21 @@ void classify(vector<FrameInfo> frames, string pathToTagFiles, bool verbose) {
     }
 
     double totalFrames = frames.size();
-    cout << "High similarity:    " << highSimilarityFrames.size() << " of " << totalFrames << " total frames" << endl
+    cout << endl
+         << "High similarity:    " << highSimilarityFrames.size() << " of " << totalFrames << " total frames" << endl
          << "Average similarity: " << averageSimilarityFrames.size() << " of " << totalFrames << " total frames" << endl
-         << "Low similarity:     " << lowSimilarityFrames.size() << " of " << totalFrames << " total frames" << endl
-         << endl;
+         << "Low similarity:     " << lowSimilarityFrames.size() << " of " << totalFrames << " total frames" << endl;
 
-    cout << "Matching high similarity frames..." << endl;
+    cout << endl << "Matching high similarity frames..." << endl;
     qualityMeasurer::calculateOverlap(pathToTagFiles, highSimilarityFrames, verbose);
 
-    cout << "Matching average similarity frames..." << endl;
+    cout << endl << "Matching average similarity frames..." << endl;
     qualityMeasurer::calculateOverlap(pathToTagFiles, averageSimilarityFrames, verbose);
 
-    cout << "Matching low similarity frames..." << endl;
+    cout << endl << "Matching low similarity frames..." << endl;
     qualityMeasurer::calculateOverlap(pathToTagFiles, lowSimilarityFrames, verbose);
+
+    cout << endl;
 }
 
 /**
