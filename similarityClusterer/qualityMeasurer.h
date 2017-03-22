@@ -12,14 +12,15 @@
 #include "storageClasses/FrameInfo.cpp"
 #include "storageClasses/ClusterInfo.cpp"
 #include "storageClasses/ClusterInfoContainer.cpp"
+#include "storageClasses/QualityScore.cpp"
 
 using namespace std;
 
 class qualityMeasurer {
 public:
-    static double scoreQuality(string pathToTagFileDirectory,
-                               ClusterInfoContainer determinedClusterFrameInfos,
-                               bool verbose = false);
+    static vector<QualityScore> scoreQuality(string pathToTagFileDirectory,
+                                             ClusterInfoContainer determinedClusterFrameInfos,
+                                             bool verbose = false);
     static void calculateOverlap(string pathToTagFileDirectory,
                                  vector<FrameInfo> frames,
                                  bool verbose = false);

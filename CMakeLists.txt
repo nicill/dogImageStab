@@ -41,6 +41,7 @@ add_executable(similarityClusterer
         similarityClusterer/storageClasses/FrameInfo.cpp
         similarityClusterer/storageClasses/ClusterInfo.cpp
         similarityClusterer/storageClasses/ClusterInfoContainer.cpp
+        similarityClusterer/storageClasses/QualityScore.cpp
         similarityClusterer/defaults.h
         similarityClusterer/similarityFileUtils.cpp
         similarityClusterer/utils.cpp)

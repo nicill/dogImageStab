@@ -9,32 +9,22 @@
  * @param pathToTagFileDirectory A directory containing tag files. Must be a valid directory.
  * @param determinedClusterFrameInfos The clustering to be evaluated.
  * @param verbose Activate verbosity to cout.
- * @return A quality score in [0,1].
+ * @return A vector of a QualityScore object for each tag file.
  */
-double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
+vector<QualityScore> qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
                                      ClusterInfoContainer determinedClusters,
                                      bool verbose) {
-    vector<double> qualityScoresPerFile;
+    vector<QualityScore> qualityScorePerFile;
 
     vector<ClusterInfoContainer> clustersFromAllFiles = similarityFileUtils::readTagFiles(pathToTagFileDirectory, verbose);
     for (ClusterInfoContainer clustersFromFile : clustersFromAllFiles) {
         double qualityScoreForFile = getQualityScore(clustersFromFile, determinedClusters);
         double precision = getClusterOverlapPrecision(clustersFromFile, determinedClusters);
         double recall = getClusterOverlapRecall(clustersFromFile, determinedClusters);
-
-        cout << "Quality score " << qualityScoreForFile
-             << " (" << precision * 100 << " % precision, " << recall * 100 << " % recall) "
-             << "for ground truth \"" << clustersFromFile.name << "\"." << endl;
-        qualityScoresPerFile.push_back(qualityScoreForFile);
+        qualityScorePerFile.push_back(QualityScore(clustersFromFile.name, qualityScoreForFile, precision, recall));
     }
 
-    // Calculate average quality score based on all tag files. Option to prioritise files could be necessary.
-    double averageQualityScore = 0;
-    for (double qualityScoreInFile : qualityScoresPerFile) {
-        averageQualityScore += qualityScoreInFile / qualityScoresPerFile.size();
-    }
-
-    return averageQualityScore;
+    return qualityScorePerFile;
 }
 
 /**
