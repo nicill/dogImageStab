@@ -23,6 +23,7 @@ int  mainCsvMode();
 int  mainTagMode();
 int  mainSegMode();
 bool getTagFilesByNames(string, vector<string>, vector<string>, ClusterInfoContainer*, ClusterInfoContainer*);
+string timeString(double msec);
 void announceMode(string mode, vector<string> infos);
 void successfulWrite(string filePath);
 void errorFileToWriteExists(string filePath);
@@ -280,7 +281,7 @@ int mainTagMode() {
  * Main method for video segmentation mode.
  */
 int mainSegMode() {
-    workingDirectory = getenv("HOME");
+    workingDirectory = utils::combine({ getenv("HOME"), "/dog/segments" });
     announceMode("Video segmentation mode",
                  { "Using working directory \"" + workingDirectory + "\"" });
 
@@ -300,7 +301,9 @@ int mainSegMode() {
     totalFrames = capture.get(cv::CAP_PROP_FRAME_COUNT);
 
     for (int i = 0; i < segments.size(); i++) {
-        string videoPath = utils::combine({ workingDirectory, "/", segments.name, "_segment_", to_string(i), ".mp4" });
+        string videoPath = utils::combine({ workingDirectory, "/", videoName_noExt, "_segment_",
+                                            timeString(segments[i].beginMsec), "-", timeString(segments[i].endMsec),
+                                            ".mp4" });
         if (utils::fileExists(videoPath)) {
             errorFileToWriteExists(videoPath);
             continue;
@@ -308,7 +311,7 @@ int mainSegMode() {
 
         cv::VideoWriter writer(
                 videoPath,
-                CV_FOURCC('M','P','4','2'),
+                0x21,
                 capture.get(CV_CAP_PROP_FPS),
                 cv::Size((int)capture.get(CV_CAP_PROP_FRAME_WIDTH), (int)capture.get(CV_CAP_PROP_FRAME_HEIGHT)));
 
@@ -317,12 +320,22 @@ int mainSegMode() {
             continue;
         }
 
-
-        // TODO
-        throw("NOT IMPLEMENTED");
-
         // Iterate through frames and write frame by frame
-        // writer.write(frame);
+        for (int frameCounter = (int)capture.get(CV_CAP_PROP_POS_FRAMES); frameCounter <= totalFrames; frameCounter++) {
+            Mat currentFrame;
+            capture >> currentFrame;
+
+            if (currentFrame.data == nullptr || segments[i].endMsec < capture.get(CV_CAP_PROP_POS_MSEC)) {
+                break;
+            }
+
+            if (segments[i].containsFrame(FrameInfo(currentFrame, frameCounter, capture.get(CV_CAP_PROP_POS_MSEC)))) {
+                writer.write(currentFrame);
+            }
+        }
+
+        successfulWrite(videoPath);
+        writer.release();
     }
 
     capture.release();
@@ -356,6 +369,16 @@ bool getTagFilesByNames(string pathToTagFiles,
     }
 
     return true;
+}
+
+/**
+ * Formats a time in msec as a human readable string, e.g. 73500 -> 1m3s.
+ */
+string timeString(double msec) {
+    double sec = msec / 1000;
+    int fullMinutes = (int)floor(sec / 60);
+    int roundedRemains = (int)sec - (fullMinutes * 60);
+    return utils::combine({ to_string(fullMinutes), "m", to_string(roundedRemains), "s" });
 }
 
 /**
