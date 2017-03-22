@@ -280,10 +280,11 @@ int mainTagMode() {
  * Main method for video segmentation mode.
  */
 int mainSegMode() {
+    workingDirectory = getenv("HOME");
     announceMode("Video segmentation mode",
-                 { workingDirectoryMessage });
+                 { "Using working directory \"" + workingDirectory + "\"" });
 
-    string filePath = workingDirectory + "/segments.csv";
+    string filePath = workingDirectory + "/" + videoName_noExt + "_segments.csv";
     if (!utils::fileExists(filePath)) {
         cerr << "Segment file \"" << filePath << "\" not found." << endl;
         return 1;
@@ -298,7 +299,31 @@ int mainSegMode() {
     cv::VideoCapture capture(videoFilePath);
     totalFrames = capture.get(cv::CAP_PROP_FRAME_COUNT);
 
-    
+    for (int i = 0; i < segments.size(); i++) {
+        string videoPath = utils::combine({ workingDirectory, "/", segments.name, "_segment_", to_string(i), ".mp4" });
+        if (utils::fileExists(videoPath)) {
+            errorFileToWriteExists(videoPath);
+            continue;
+        }
+
+        cv::VideoWriter writer(
+                videoPath,
+                CV_FOURCC('M','P','4','2'),
+                capture.get(CV_CAP_PROP_FPS),
+                cv::Size((int)capture.get(CV_CAP_PROP_FRAME_WIDTH), (int)capture.get(CV_CAP_PROP_FRAME_HEIGHT)));
+
+        if (!writer.isOpened()) {
+            cerr << "Couldn't open video writer for \"" << videoPath << "\"." << endl;
+            continue;
+        }
+
+
+        // TODO
+        throw("NOT IMPLEMENTED");
+
+        // Iterate through frames and write frame by frame
+        // writer.write(frame);
+    }
 
     capture.release();
 }
