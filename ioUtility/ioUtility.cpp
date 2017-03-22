@@ -21,12 +21,14 @@ void help();
 int  main(int argc, char **argv);
 int  mainCsvMode();
 int  mainTagMode();
+int  mainSegMode();
 bool getTagFilesByNames(string, vector<string>, vector<string>, ClusterInfoContainer*, ClusterInfoContainer*);
 void announceMode(string mode, vector<string> infos);
 void successfulWrite(string filePath);
 void errorFileToWriteExists(string filePath);
 
 string workingDirectory = utils::combine({ getenv("HOME"), "/dog/results" });
+string videoFilePath;
 string videoName_noExt;
 string ioFileName_noExt;
 string ioFilePath;
@@ -44,7 +46,8 @@ void help() {
          << endl
          << "Flags (always supply exactly one)" << endl
          << "-c: Create csv file from data" << endl
-         << "-t: Read from / write to tag files" << endl;
+         << "-t: Read from / write to tag files" << endl
+         << "-s: Cut video to specified segments" << endl;
 }
 
 /**
@@ -78,6 +81,7 @@ int main(int argc, char **argv) {
     }
     totalFrames = capture.get(cv::CAP_PROP_FRAME_COUNT);
     capture.release();
+    videoFilePath = argv[1];
     string videoName_ext = basename(argv[1]);
     videoName_noExt = utils::removeExtension(videoName_ext);
 
@@ -109,7 +113,12 @@ int main(int argc, char **argv) {
         return mainCsvMode();
     } else if (last_arg.find('t') != string::npos) {
         return mainTagMode();
+    } else if (last_arg.find('s') != string::npos) {
+        return mainSegMode();
     }
+
+    cerr << "Invalid flag: " << last_arg << endl;
+    return 1;
 }
 
 /**
@@ -249,13 +258,13 @@ int mainTagMode() {
     }
 
     // 3. Save as new tag file
-    ofstream fileStream;
     string filePath = workingDirectory + "/bark+stop.csv";
     if (utils::fileExists(filePath)) {
         errorFileToWriteExists(filePath);
         return 1;
     }
 
+    ofstream fileStream;
     fileStream.open(filePath);
     fileStream << "start,stop" << utils::tagFileEol;
     for (const auto &cluster : overlaps.clusterInfos) {
@@ -265,6 +274,29 @@ int mainTagMode() {
 
     successfulWrite(filePath);
     return 0;
+}
+
+/**
+ * Main method for video segmentation mode.
+ */
+int mainSegMode() {
+    announceMode("Video segmentation mode",
+                 { workingDirectoryMessage });
+
+    string filePath = workingDirectory + "/segments.csv";
+    if (utils::fileExists(filePath)) {
+        errorFileToWriteExists(filePath);
+        return 1;
+    }
+
+    ofstream fileStream;
+
+    cv::VideoCapture capture(videoFilePath);
+    totalFrames = capture.get(cv::CAP_PROP_FRAME_COUNT);
+
+    // Read segments from tag file
+
+    capture.release();
 }
 
 /**
