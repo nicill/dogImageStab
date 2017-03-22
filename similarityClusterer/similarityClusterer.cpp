@@ -337,8 +337,19 @@ void groupAndEvaluate(ClusterInfoContainer clusters, string pathToTagFiles, bool
     vector<tuple<double, string>> results;
     for (ClusterInfoContainer group : groupedClusters) {
         cout << " -- Scoring clustering \"" << group.name << "\"... -- " << endl;
-        double score = qualityMeasurer::scoreQuality(pathToTagFiles, group, verbose);
-        results.push_back(tuple<double, string>(score, group.name));
+        vector<QualityScore> scores = qualityMeasurer::scoreQuality(pathToTagFiles, group, verbose);
+
+        double averageQualityScore = 0;
+        for (QualityScore score : scores) {
+            cout << "Quality score " << score.qualityScore
+                 << " (" << score.precision * 100 << " % precision, " << score.recall * 100 << " % recall) "
+                 << "for ground truth \"" << score.tagFileName << "\"." << endl;
+
+            // Calculate average quality score based on all tag files. Option to prioritise files could be necessary.
+            averageQualityScore += score.qualityScore / scores.size();
+        }
+
+        results.push_back(tuple<double, string>(averageQualityScore, group.name));
     }
 
     cout << endl;
