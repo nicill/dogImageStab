@@ -51,6 +51,13 @@ struct ClusterInfoContainer {
         return this->clusterInfos.size();
     }
 
+    /**
+     * Direct accessor to contained ClusterInfo objects.
+     */
+    ClusterInfo operator [] (int i) {
+        return this->clusterInfos[i];
+    }
+
 private:
     /**
      * Sorts the contained vector of ClusterInfo objects.
