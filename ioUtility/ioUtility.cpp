@@ -284,17 +284,21 @@ int mainSegMode() {
                  { workingDirectoryMessage });
 
     string filePath = workingDirectory + "/segments.csv";
-    if (utils::fileExists(filePath)) {
-        errorFileToWriteExists(filePath);
+    if (!utils::fileExists(filePath)) {
+        cerr << "Segment file \"" << filePath << "\" not found." << endl;
         return 1;
     }
 
-    ofstream fileStream;
+    // Read segments from segment file - file has to be formatted like a tag file.
+    ClusterInfoContainer segments;
+    if (!similarityFileUtils::readTagFile(filePath, &segments)) {
+        return 1;
+    }
 
     cv::VideoCapture capture(videoFilePath);
     totalFrames = capture.get(cv::CAP_PROP_FRAME_COUNT);
 
-    // Read segments from tag file
+    
 
     capture.release();
 }
