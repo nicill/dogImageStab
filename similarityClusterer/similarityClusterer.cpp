@@ -229,7 +229,6 @@ int main(int argc, char **argv) {
     vector<FrameInfo> frames;
     double totalFrames = capture.get(CAP_PROP_FRAME_COUNT);
     if (!fileIO || !fileExists) {
-
         // Framewise metric computation
         Mat current, previous;
 
@@ -239,8 +238,8 @@ int main(int argc, char **argv) {
         if (fileIO) {
             similarityFileUtils::appendToCsv(ioFilePath, 1, 0, -1);
         }
-        for (int frameCounter = 2; frameCounter <= totalFrames; frameCounter++) {
 
+        for (int frameCounter = 2; frameCounter <= totalFrames; frameCounter++) {
             capture >> current;
 
             if (current.data == NULL) {
