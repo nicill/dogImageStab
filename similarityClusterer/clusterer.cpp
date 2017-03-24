@@ -35,20 +35,20 @@ vector<ClusterInfoContainer> clusterer::group(ClusterInfoContainer clustering) {
     vector<ClusterInfoContainer> groupedClusterings;
 
     for (int i = 1; i < clustering.size(); i++) {
-        string name = clustering.clusterInfos[i].label;
+        string name = clustering.clusters[i].label;
         bool found = false;
 
         for (int j = 0; j < groupedClusterings.size(); j++) {
             // Container with name exists.
             if (name == groupedClusterings[j].name) {
-                groupedClusterings[j].add(clustering.clusterInfos[i]);
+                groupedClusterings[j].add(clustering.clusters[i]);
                 found = true;
                 break;
             }
         }
 
         // Name hasn't been seen before.
-        if (!found) groupedClusterings.push_back(ClusterInfoContainer(name, clustering.clusterInfos[i]));
+        if (!found) groupedClusterings.push_back(ClusterInfoContainer(name, clustering.clusters[i]));
     }
 
     return groupedClusterings;

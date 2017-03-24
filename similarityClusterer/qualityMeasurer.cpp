@@ -37,7 +37,7 @@ void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, vector<Fra
     vector<ClusterInfoContainer> clustersFromAllFiles = similarityFileUtils::readTagFiles(pathToTagFileDirectory, verbose);
     for (ClusterInfoContainer clustersFromFile : clustersFromAllFiles) {
         double overlappingFrames = 0;
-        for (ClusterInfo cluster : clustersFromFile.clusterInfos) {
+        for (ClusterInfo cluster : clustersFromFile.clusters) {
             for (FrameInfo frame : frames) {
                 if (frame.msec >= cluster.beginMsec && frame.msec <= cluster.endMsec) {
                     overlappingFrames++;
@@ -102,9 +102,9 @@ double qualityMeasurer::getQualityScore(ClusterInfoContainer groundTruthClusters
     //          malus += 25 * (overlap / best overlap) (in ]2.5,25])
     //    Add up all overlaps and multiply by (100 - malus) - can be negative!
     vector<double> scoresForCFF;
-    for (ClusterInfo clusterFromFile : groundTruthClusters.clusterInfos) {
+    for (ClusterInfo clusterFromFile : groundTruthClusters.clusters) {
         vector<double> overlapScoresOfDC;
-        for (ClusterInfo determinedCluster : evaluatedClusters.clusterInfos) {
+        for (ClusterInfo determinedCluster : evaluatedClusters.clusters) {
             if (determinedCluster.endMsec <= clusterFromFile.beginMsec
                 || determinedCluster.beginMsec >= clusterFromFile.endMsec) {
                 continue;
@@ -183,10 +183,10 @@ double qualityMeasurer::getClusterOverlapMsec(ClusterInfoContainer groundTruthCl
     // Try to match the evaluatedClusters to the groundTruthClusters.
     double clustersMatchedMsec = 0; // msec of overlap between determined and actual clusters
 
-    vector<ClusterInfo>::iterator evaluatedClustersIterator = evaluatedClusters.clusterInfos.begin();
-    vector<ClusterInfo>::iterator groundTruthClustersIterator = groundTruthClusters.clusterInfos.begin();
-    while (evaluatedClustersIterator != evaluatedClusters.clusterInfos.end()
-           && groundTruthClustersIterator != groundTruthClusters.clusterInfos.end()) {
+    vector<ClusterInfo>::iterator evaluatedClustersIterator = evaluatedClusters.clusters.begin();
+    vector<ClusterInfo>::iterator groundTruthClustersIterator = groundTruthClusters.clusters.begin();
+    while (evaluatedClustersIterator != evaluatedClusters.clusters.end()
+           && groundTruthClustersIterator != groundTruthClusters.clusters.end()) {
         if ((*evaluatedClustersIterator).beginMsec >= (*groundTruthClustersIterator).endMsec) {
             groundTruthClustersIterator++;
             continue;
@@ -252,7 +252,7 @@ double qualityMeasurer::getClusterOverlapRecall(ClusterInfoContainer groundTruth
 
 double qualityMeasurer::getClustersTotalMsec(ClusterInfoContainer clusters) {
     double totalMsec = 0; // total msec of the evaluatedClusters
-    for (ClusterInfo clusterInfo : clusters.clusterInfos) {
+    for (ClusterInfo clusterInfo : clusters.clusters) {
         totalMsec += clusterInfo.length;
     }
     return totalMsec;

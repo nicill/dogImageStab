@@ -14,7 +14,7 @@ using std::stable_sort;
 
 struct ClusterInfoContainer {
     string name = "INVALID";
-    vector<ClusterInfo> clusterInfos;
+    vector<ClusterInfo> clusters;
 
     /**
      * Empty constructor.
@@ -32,7 +32,7 @@ struct ClusterInfoContainer {
      */
     ClusterInfoContainer(string _name, vector<ClusterInfo> _clusterInfos = vector<ClusterInfo>()) {
         this->name = _name;
-        this->clusterInfos = _clusterInfos;
+        this->clusters = _clusterInfos;
         this->sortClusters();
     }
 
@@ -40,7 +40,7 @@ struct ClusterInfoContainer {
      * Add a new cluster, sorted by begin time.
      */
     void add(ClusterInfo newCluster) {
-        this->clusterInfos.push_back(newCluster);
+        this->clusters.push_back(newCluster);
         this->sortClusters();
     }
 
@@ -48,14 +48,14 @@ struct ClusterInfoContainer {
      * Returns number of contained clusters.
      */
     size_t size() {
-        return this->clusterInfos.size();
+        return this->clusters.size();
     }
 
     /**
      * Direct accessor to contained ClusterInfo objects.
      */
     ClusterInfo operator [] (int i) {
-        return this->clusterInfos[i];
+        return this->clusters[i];
     }
 
 private:
@@ -63,7 +63,7 @@ private:
      * Sorts the contained vector of ClusterInfo objects.
      */
     void sortClusters() {
-        stable_sort(this->clusterInfos.begin(), this->clusterInfos.end());
+        stable_sort(this->clusters.begin(), this->clusters.end());
     }
 };
 

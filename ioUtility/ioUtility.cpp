@@ -153,7 +153,7 @@ int mainCsvMode() {
     classifier::classifyClusters(&clusters);
 
     vector<FrameInfo>::iterator framesIterator = frames.begin();
-    for (const auto &cluster : clusters.clusterInfos) {
+    for (const auto &cluster : clusters.clusters) {
         for (const auto &frame : cluster.frames) {
             assert((*framesIterator).frameNo == frame.frameNo);
 
@@ -188,15 +188,15 @@ int mainCsvMode() {
     fileStream.close();
 
     // Iterate through all FrameInfo objects and save info plus stop and bark field
-    vector<ClusterInfo>::iterator barkFileClustersIterator = barkFileClusters.clusterInfos.begin();
-    vector<ClusterInfo>::iterator stopFileClustersIterator = stopFileClusters.clusterInfos.begin();
+    vector<ClusterInfo>::iterator barkFileClustersIterator = barkFileClusters.clusters.begin();
+    vector<ClusterInfo>::iterator stopFileClustersIterator = stopFileClusters.clusters.begin();
     for (FrameInfo frame : frames) {
         while (frame.msec > (*barkFileClustersIterator).endMsec
-               && barkFileClustersIterator != barkFileClusters.clusterInfos.end()) {
+               && barkFileClustersIterator != barkFileClusters.clusters.end()) {
             barkFileClustersIterator++;
         }
         while (frame.msec > (*stopFileClustersIterator).endMsec
-               && stopFileClustersIterator != stopFileClusters.clusterInfos.end()) {
+               && stopFileClustersIterator != stopFileClusters.clusters.end()) {
             stopFileClustersIterator++;
         }
 
@@ -231,11 +231,11 @@ int mainTagMode() {
     }
     // 2. Iterate through clusters and combine with AND
     ClusterInfoContainer overlaps = ClusterInfoContainer("Overlaps of bark and stop");
-    vector<ClusterInfo>::iterator barkFileClustersIterator = barkFileClusters.clusterInfos.begin();
-    vector<ClusterInfo>::iterator stopFileClustersIterator = stopFileClusters.clusterInfos.begin();
+    vector<ClusterInfo>::iterator barkFileClustersIterator = barkFileClusters.clusters.begin();
+    vector<ClusterInfo>::iterator stopFileClustersIterator = stopFileClusters.clusters.begin();
     // TODO Solve without code duplication (see qualityMeasurer.getClusterOverlapMsec())
-    while (barkFileClustersIterator != barkFileClusters.clusterInfos.end()
-           && stopFileClustersIterator != stopFileClusters.clusterInfos.end()) {
+    while (barkFileClustersIterator != barkFileClusters.clusters.end()
+           && stopFileClustersIterator != stopFileClusters.clusters.end()) {
         if ((*barkFileClustersIterator).beginMsec >= (*stopFileClustersIterator).endMsec) {
             stopFileClustersIterator++;
             continue;
@@ -268,7 +268,7 @@ int mainTagMode() {
     ofstream fileStream;
     fileStream.open(filePath);
     fileStream << "start,stop" << utils::tagFileEol;
-    for (const auto &cluster : overlaps.clusterInfos) {
+    for (const auto &cluster : overlaps.clusters) {
         fileStream << cluster.beginMsec << "," << cluster.endMsec << utils::tagFileEol;
     }
     fileStream.close();
