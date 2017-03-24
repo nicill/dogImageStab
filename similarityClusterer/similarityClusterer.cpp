@@ -290,7 +290,7 @@ int main(int argc, char **argv) {
              << "Time taken" << endl
              << "Total:                  " << qualityFinishedTime - startTime << " s" << endl
              << "Similarity measurement: " << similarityFinishedTime - startTime << " s" << endl
-             << "Quality scoring:        " << qualityFinishedTime - similarityFinishedTime << " s" << endl;
+             << "Calculations / scoring: " << qualityFinishedTime - similarityFinishedTime << " s" << endl;
     }
 
     delete comparer;

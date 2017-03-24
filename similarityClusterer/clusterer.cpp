@@ -12,6 +12,7 @@ using std::to_string;
  * Cluster the given frameInfos with the givenStrategy as one clustering.
  * @param givenStrategy A strategy to follow. No internal sanity check!
  * @param frameInfos Frames to cluster.
+ * @param verbose Activate verbosity to cout.
  */
 ClusterInfoContainer clusterer::cluster(strategy givenStrategy, vector<FrameInfo> frameInfos, bool verbose) {
     switch (givenStrategy) {
@@ -27,8 +28,8 @@ ClusterInfoContainer clusterer::cluster(strategy givenStrategy, vector<FrameInfo
 }
 
 /**
- * Cluster the given frameInfos with a label-based clustering and group based on label.
- * @param frameInfos Frames to cluster.
+ * Group the clustering based on its labels.
+ * @param clustering The clustering to group.
  * @param verbose Activate verbosity to cout.
  */
 vector<ClusterInfoContainer> clusterer::group(ClusterInfoContainer clustering) {
@@ -83,7 +84,6 @@ void clusterer::calculateRegionAverage(vector<FrameInfo>* frameInfos) {
 /**
  * Cluster the given frameInfos with an average similarity clustering.
  * @param frameInfos Frames to cluster.
- * @param verbose Activate verbosity to cout.
  */
 vector<ClusterInfo> clusterer::clusterAverageVector(vector<FrameInfo> frameInfos) {
     int currentCluster = 0;
@@ -111,7 +111,6 @@ vector<ClusterInfo> clusterer::clusterAverageVector(vector<FrameInfo> frameInfos
 /**
  * Cluster the given frameInfos with an average similarity clustering.
  * @param frameInfos Frames to cluster.
- * @param verbose Activate verbosity to cout.
  */
 ClusterInfoContainer clusterer::clusterAverage(vector<FrameInfo> frameInfos) {
     vector<ClusterInfo> clusters = clusterAverageVector(frameInfos);
@@ -169,7 +168,6 @@ ClusterInfoContainer clusterer::clusterAverageRefined(vector<FrameInfo> frameInf
 /**
  * Cluster the given frameInfos with a label-based clustering.
  * @param frameInfos Frames to cluster.
- * @param verbose Activate verbosity to cout.
  */
 ClusterInfoContainer clusterer::clusterLabels(vector<FrameInfo> frameInfos) {
     int currentCluster = 0;
