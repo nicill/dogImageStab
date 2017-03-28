@@ -1,0 +1,19 @@
+//
+// Created by tokuyama on 17/02/21.
+//
+
+#ifndef DOGIMAGESTABILIZATION_DEFAULTS_H
+#define DOGIMAGESTABILIZATION_DEFAULTS_H
+
+#include <string>
+
+using std::string;
+
+class defaults {
+public:
+    static constexpr const char* workingDirectory = "/home/similarityClusterer";
+    static constexpr const char* tagFileDirectory = "/home/similarityClusterer/tagFiles";
+};
+
+#endif //DOGIMAGESTABILIZATION_DEFAULTS_H
+

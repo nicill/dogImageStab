@@ -9,31 +9,22 @@
  * @param pathToTagFileDirectory A directory containing tag files. Must be a valid directory.
  * @param determinedClusterFrameInfos The clustering to be evaluated.
  * @param verbose Activate verbosity to cout.
- * @return A quality score in [0,1].
+ * @return A vector of a QualityScore object for each tag file.
  */
-double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
-                                     vector<ClusterInfo> determinedClusterClusterInfos,
+vector<QualityScore> qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
+                                     ClusterInfoContainer determinedClusters,
                                      bool verbose) {
-    vector<double> qualityScoresPerFile;
-    ClusterInfoContainer determinedClusters = ClusterInfoContainer("Determined clusters", determinedClusterClusterInfos);
+    vector<QualityScore> qualityScorePerFile;
 
-    vector<ClusterInfoContainer> clustersFromAllFiles = readTagFiles(pathToTagFileDirectory, verbose);
+    vector<ClusterInfoContainer> clustersFromAllFiles = similarityFileUtils::readTagFiles(pathToTagFileDirectory, verbose);
     for (ClusterInfoContainer clustersFromFile : clustersFromAllFiles) {
         double qualityScoreForFile = getQualityScore(clustersFromFile, determinedClusters);
-        double ratioMatched = getClusterOverlap(clustersFromFile, determinedClusters);
-
-        cout << "Calculated quality score of " << qualityScoreForFile << " (" << ratioMatched * 100 << " % overlap) "
-                << "for ground truth \"" << clustersFromFile.name << "\"." << endl;
-        qualityScoresPerFile.push_back(qualityScoreForFile);
+        double precision = getClusterOverlapPrecision(clustersFromFile, determinedClusters);
+        double recall = getClusterOverlapRecall(clustersFromFile, determinedClusters);
+        qualityScorePerFile.push_back(QualityScore(clustersFromFile.name, qualityScoreForFile, precision, recall));
     }
 
-    // Calculate average quality score based on all tag files. Option to prioritise files could be necessary.
-    double averageQualityScore = 0;
-    for (double qualityScoreInFile : qualityScoresPerFile) {
-        averageQualityScore += qualityScoreInFile / qualityScoresPerFile.size();
-    }
-
-    return averageQualityScore;
+    return qualityScorePerFile;
 }
 
 /**
@@ -43,10 +34,10 @@ double qualityMeasurer::scoreQuality(string pathToTagFileDirectory,
  * @param verbose Activate verbosity to cout.
  */
 void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, vector<FrameInfo> frames, bool verbose) {
-    vector<ClusterInfoContainer> clustersFromAllFiles = readTagFiles(pathToTagFileDirectory, verbose);
+    vector<ClusterInfoContainer> clustersFromAllFiles = similarityFileUtils::readTagFiles(pathToTagFileDirectory, verbose);
     for (ClusterInfoContainer clustersFromFile : clustersFromAllFiles) {
         double overlappingFrames = 0;
-        for (ClusterInfo cluster : clustersFromFile.clusterInfos) {
+        for (ClusterInfo cluster : clustersFromFile.clusters) {
             for (FrameInfo frame : frames) {
                 if (frame.msec >= cluster.beginMsec && frame.msec <= cluster.endMsec) {
                     overlappingFrames++;
@@ -54,123 +45,51 @@ void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, vector<Fra
             }
         }
         double overlapRatio = overlappingFrames / frames.size();
-        cout << overlapRatio * 100 << " % of frames overlap clusters in " << clustersFromFile.name << endl;
+        cout << overlapRatio * 100 << " % of frames overlap clusters in \"" << clustersFromFile.name << "\"" << endl;
     }
-}
-
-ClusterInfoContainer qualityMeasurer::frameInfosToClusterInfo(string name, vector<vector<FrameInfo>> frameInfosList) {
-    ClusterInfoContainer clusterings = ClusterInfoContainer(name);
-
-    for (vector<FrameInfo> frameInfos : frameInfosList) {
-        double beginMsec = frameInfos.front().msec;
-        double endMsec = frameInfos.back().msec;
-        clusterings.clusterInfos.push_back(
-                ClusterInfo(
-                        "Cluster from " + to_string((int)beginMsec) + " to " + to_string((int)endMsec),
-                        frameInfos));
-    }
-
-    return clusterings;
-}
-
-vector<ClusterInfoContainer> qualityMeasurer::readTagFiles(string pathToTagFileDirectory, bool verbose) {
-    vector<ClusterInfoContainer> tagFilesClusterings;
-
-    DIR *tagFileDir = opendir(pathToTagFileDirectory.c_str());
-    struct dirent *fileEntity;
-    while ((fileEntity = readdir(tagFileDir)) != nullptr) {
-        // Necessary for comparison with string literals.
-        string fileName(fileEntity->d_name);
-        if (fileName == "." || fileName == "..") {
-            if (verbose) cout << "Skipping \"" << fileName << "\"." << endl;
-            continue;
-        }
-        if (verbose) cout << "Reading file \"" << fileName << "\"." << endl;
-
-        ClusterInfoContainer clustersFromFile = readTagFile(pathToTagFileDirectory + "/" + fileName);
-
-        if (clustersFromFile.clusterInfos.size() == 0) {
-            cerr << "Couldn't open file " << fileName << " as tag file. Skipping..." << endl;
-            continue;
-        }
-
-        tagFilesClusterings.push_back(clustersFromFile);
-    }
-
-    if (tagFilesClusterings.size() == 0) {
-        cerr << "Couldn't open any file." << endl;
-    }
-
-    closedir(tagFileDir);
-    return tagFilesClusterings;
 }
 
 /**
- * Tries to read the file at the given path as a tag file and interpret its clusterings.
- * @param pathToTagFile The path, including the file name.
- * @return A vector of clusterings if successful, otherwise an empty vector.
+ * Calculates the overlap of labels in the given tag files and outputs it.
+ * @param pathToTagFileDirectory A directory containing tag files. Must be a valid directory.
+ * @param verbose Activate verbosity to cout.
  */
-ClusterInfoContainer qualityMeasurer::readTagFile(string pathToTagFile) {
-    ifstream tagFile;
-    tagFile.open(pathToTagFile);
-    if (!tagFile.is_open()) return ClusterInfoContainer();
+void qualityMeasurer::calculateOverlap(string pathToTagFileDirectory, bool verbose) {
+    vector<ClusterInfoContainer> clustersFromAllFiles = similarityFileUtils::readTagFiles(pathToTagFileDirectory, verbose);
 
-    ClusterInfoContainer clustersFromFile = ClusterInfoContainer(basename(pathToTagFile.c_str()));
-    string line;
-    while (getline(tagFile, line)) {
-        // Check correctness with RegEx?
-        vector<string> split = splitLine(line);
+    for (int i = 0; i < clustersFromAllFiles.size(); i++) {
+        for (int j = i + 1; j < clustersFromAllFiles.size(); j++) {
+            double overlapMsec = getClusterOverlapMsec(clustersFromAllFiles[i], clustersFromAllFiles[j]);
 
-        // Split should contain: Name, start (msec), end (msec), duration (msec)
-        assert(split.size() == 4);
-        double beginMsec = stod(split[1].c_str());
-        double endMsec = stod(split[2].c_str());
-        assert(stod(split[3].c_str()) == (endMsec - beginMsec));
-
-        clustersFromFile.clusterInfos.push_back(ClusterInfo(split[0], beginMsec, endMsec));
-    }
-
-    tagFile.close();
-    return clustersFromFile;
-}
-
-/**
- * Splits the given line at whitespace/tab/carriage return characters.
- * @param inputString The string to split.
- * @return List of substrings. Empty strings are discarded.
- */
-vector<string> qualityMeasurer::splitLine(string inputString) {
-    vector<string> splitString;
-    bool building = false;
-    int baseIndex = 0;
-
-    for (int i = 0; i < inputString.length(); i++) {
-        char current = inputString[i];
-        if (current == ' ' || current == '\t' || current == '\r') {
-            if (building) {
-                splitString.push_back(inputString.substr((size_t)baseIndex, (size_t)i - baseIndex));
-                building = false;
+            if (overlapMsec == 0) {
+                cout << "No overlap of " << clustersFromAllFiles[i].name << " and " << clustersFromAllFiles[j].name
+                     << endl;
+                continue;
             }
 
-            baseIndex = i + 1;
-            continue;
+            cout << "Overlap of " << clustersFromAllFiles[i].name << " and " << clustersFromAllFiles[j].name << ": "
+                 << overlapMsec << " msec" << endl;
+
+            if (overlapMsec == 0) continue;
+
+            double percentageI = getClusterOverlapPrecision(clustersFromAllFiles[i], clustersFromAllFiles[j]);
+            double percentageJ = getClusterOverlapPrecision(clustersFromAllFiles[j], clustersFromAllFiles[i]);
+            cout << " -> " << percentageI * 100 << " % of " << clustersFromAllFiles[j].name << " matches "
+                 << clustersFromAllFiles[i].name << endl
+                 << " -> " << percentageJ * 100 << " % of " << clustersFromAllFiles[i].name << " matches "
+                 << clustersFromAllFiles[j].name << endl;
         }
-
-        building = true;
     }
-
-    return splitString;
 }
 
 /**
  * Calculates a quality score with a ground truth and an estimation.
- * @param clustersFromFile Ground truth to compare to.
- * @param determinedClusters Estimation that will be evaluated.
+ * @param groundTruthClusters Ground truth to compare to.
+ * @param evaluatedClusters Estimation that will be evaluated.
  * @return Quality score in ]-inf,1]
  */
-double qualityMeasurer::getQualityScore(
-        ClusterInfoContainer clustersFromFile,
-        ClusterInfoContainer determinedClusters) {
+double qualityMeasurer::getQualityScore(ClusterInfoContainer groundTruthClusters,
+                                        ClusterInfoContainer evaluatedClusters) {
     // For each cluster in tag file:
     //    For each determined cluster:
     //       if (overlap):                  (given clustering:         |-------|
@@ -183,9 +102,9 @@ double qualityMeasurer::getQualityScore(
     //          malus += 25 * (overlap / best overlap) (in ]2.5,25])
     //    Add up all overlaps and multiply by (100 - malus) - can be negative!
     vector<double> scoresForCFF;
-    for (ClusterInfo clusterFromFile : clustersFromFile.clusterInfos) {
+    for (ClusterInfo clusterFromFile : groundTruthClusters.clusters) {
         vector<double> overlapScoresOfDC;
-        for (ClusterInfo determinedCluster : determinedClusters.clusterInfos) {
+        for (ClusterInfo determinedCluster : evaluatedClusters.clusters) {
             if (determinedCluster.endMsec <= clusterFromFile.beginMsec
                 || determinedCluster.beginMsec >= clusterFromFile.endMsec) {
                 continue;
@@ -254,60 +173,87 @@ double qualityMeasurer::getQualityScore(
 }
 
 /**
- * Calculates the percentage of evaluated clusters that overlap with the ground truth.
- * @param clustersFromFile Ground truth to compare to.
- * @param determinedClusters Estimation that will be evaluated.
- * @return Ratio of matches to non-matches in [0,1].
+ * Calculates the milliseconds of overlap of evaluated clusters and ground truth.
+ * @param groundTruthClusters Ground truth to compare to.
+ * @param evaluatedClusters Clustering that will be evaluated.
+ * @return Total msec of cluster overlaps.
  */
-double qualityMeasurer::getClusterOverlap(
-        ClusterInfoContainer clustersFromFile,
-        ClusterInfoContainer determinedClusters) {
-    // Try to match the clusters from the tag files to the determined clusters. We aim to find
-    // out what percentage of the determinedClusters overlaps with the clustersFromFile.
-    double clustersTotalMsec = 0; // total msec of determined clusters
-    for (ClusterInfo clusterInfo : determinedClusters.clusterInfos) {
-        clustersTotalMsec += clusterInfo.length;
-    }
+double qualityMeasurer::getClusterOverlapMsec(ClusterInfoContainer groundTruthClusters,
+                                              ClusterInfoContainer evaluatedClusters) {
+    // Try to match the evaluatedClusters to the groundTruthClusters.
     double clustersMatchedMsec = 0; // msec of overlap between determined and actual clusters
 
-    vector<ClusterInfo>::iterator determinedClustersIterator = determinedClusters.clusterInfos.begin();
-    vector<ClusterInfo>::iterator clustersFromFileIterator = clustersFromFile.clusterInfos.begin();
-    while (determinedClustersIterator != determinedClusters.clusterInfos.end()
-           && clustersFromFileIterator != clustersFromFile.clusterInfos.end()) {
-        if ((*determinedClustersIterator).beginMsec >= (*clustersFromFileIterator).endMsec) {
-            clustersFromFileIterator++;
-        }
-
-        if ((*determinedClustersIterator).endMsec <= (*clustersFromFileIterator).beginMsec) {
-            determinedClustersIterator++;
-        }
-
-        if ((*determinedClustersIterator).beginMsec >= (*clustersFromFileIterator).endMsec
-            || (*determinedClustersIterator).endMsec <= (*clustersFromFileIterator).beginMsec) {
+    vector<ClusterInfo>::iterator evaluatedClustersIterator = evaluatedClusters.clusters.begin();
+    vector<ClusterInfo>::iterator groundTruthClustersIterator = groundTruthClusters.clusters.begin();
+    while (evaluatedClustersIterator != evaluatedClusters.clusters.end()
+           && groundTruthClustersIterator != groundTruthClusters.clusters.end()) {
+        if ((*evaluatedClustersIterator).beginMsec >= (*groundTruthClustersIterator).endMsec) {
+            groundTruthClustersIterator++;
             continue;
         }
 
-        // Logic: If an overlap exists (neither is the begin after the end nor the end before the begin)
-        //        it is between the bigger begin and the smaller end value.
-        double biggerBegin =
-                ((*determinedClustersIterator).beginMsec > (*clustersFromFileIterator).beginMsec)
-                ? (*determinedClustersIterator).beginMsec
-                : (*clustersFromFileIterator).beginMsec;
-        double smallerEnd =
-                ((*determinedClustersIterator).endMsec < (*clustersFromFileIterator).endMsec)
-                ? (*determinedClustersIterator).endMsec
-                : (*clustersFromFileIterator).endMsec;
+        if ((*evaluatedClustersIterator).endMsec <= (*groundTruthClustersIterator).beginMsec) {
+            evaluatedClustersIterator++;
+            continue;
+        }
 
-        double matchedLength = smallerEnd - biggerBegin;
+        ClusterInfo overlap = (*groundTruthClustersIterator).getOverlap((*evaluatedClustersIterator));
+        double matchedLength = overlap.endMsec - overlap.beginMsec;
+        assert(matchedLength > 0);
         clustersMatchedMsec += matchedLength;
 
         // Iterate the cluster that has been matched to its end.
         // Caution! Assumes that the clusters in both lists do NOT overlap with others in their list!
-        if (smallerEnd == (*determinedClustersIterator).endMsec) {
-            determinedClustersIterator++;
+        if (overlap.endMsec == (*evaluatedClustersIterator).endMsec) {
+            evaluatedClustersIterator++;
+        } else {
+            groundTruthClustersIterator++;
         }
-        else clustersFromFileIterator++;
     }
 
-    return clustersMatchedMsec / clustersTotalMsec;
+    return clustersMatchedMsec;
+}
+
+/**
+ * Calculates the precision of the clustering, which is the percentage of evaluated clusters
+ * that overlap with the ground truth.
+ * @param groundTruthClusters Ground truth to compare to.
+ * @param evaluatedClusters Clustering that will be evaluated.
+ * @return Precision ratio in [0,1].
+ */
+double qualityMeasurer::getClusterOverlapPrecision(ClusterInfoContainer groundTruthClusters,
+                                                   ClusterInfoContainer evaluatedClusters) {
+    double overlapMsec = getClusterOverlapMsec(groundTruthClusters, evaluatedClusters);
+    double evaluatedClustersTotalMsec = getClustersTotalMsec(evaluatedClusters);
+
+    // How many selected items (overlapping clusters) are relevant?
+    double precision = overlapMsec / evaluatedClustersTotalMsec;
+
+    return precision;
+}
+
+/**
+ * Calculates the recall of the clustering, which is the percentage of overlapping clusters
+ * relative to the total clusters of the ground truth.
+ * @param groundTruthClusters Ground truth to compare to.
+ * @param evaluatedClusters Clustering that will be evaluated.
+ * @return Recall ratio in [0,1].
+ */
+double qualityMeasurer::getClusterOverlapRecall(ClusterInfoContainer groundTruthClusters,
+                                                ClusterInfoContainer evaluatedClusters) {
+    double overlapMsec = getClusterOverlapMsec(groundTruthClusters, evaluatedClusters);
+    double groundTruthClustersTotalMsec = getClustersTotalMsec(groundTruthClusters);
+
+    // How many relevant items (overlapping clusters) do overlap?
+    double recall = overlapMsec / groundTruthClustersTotalMsec;
+
+    return recall;
+}
+
+double qualityMeasurer::getClustersTotalMsec(ClusterInfoContainer clusters) {
+    double totalMsec = 0; // total msec of the evaluatedClusters
+    for (ClusterInfo clusterInfo : clusters.clusters) {
+        totalMsec += clusterInfo.length;
+    }
+    return totalMsec;
 }

@@ -8,29 +8,35 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <regex>
-#include "FrameInfo.cpp"
-#include "ClusterInfo.cpp"
-#include "ClusterInfoContainer.cpp"
+#include "similarityFileUtils.cpp"
+#include "storageClasses/FrameInfo.cpp"
+#include "storageClasses/ClusterInfo.cpp"
+#include "storageClasses/ClusterInfoContainer.cpp"
+#include "storageClasses/QualityScore.cpp"
 
 using namespace std;
 
 class qualityMeasurer {
 public:
-    static double scoreQuality(string pathToTagFileDirectory,
-                               vector<ClusterInfo> determinedClusterFrameInfos,
-                               bool verbose = false);
+    static vector<QualityScore> scoreQuality(string pathToTagFileDirectory,
+                                             ClusterInfoContainer determinedClusterFrameInfos,
+                                             bool verbose = false);
     static void calculateOverlap(string pathToTagFileDirectory,
                                  vector<FrameInfo> frames,
                                  bool verbose = false);
+    static void calculateOverlap(string pathToTagFileDirectory,
+                                 bool verbose = false);
 
 private:
-    static ClusterInfoContainer frameInfosToClusterInfo(string name, vector<vector<FrameInfo>> frameInfosList);
-    static vector<ClusterInfoContainer> readTagFiles(string pathToTagFileDirectory, bool verbose);
-    static ClusterInfoContainer readTagFile(string pathToTagFile);
-    static vector<string> splitLine(string inputString);
-
-    static double getQualityScore(ClusterInfoContainer clustersFromFile, ClusterInfoContainer determinedClusters);
-    static double getClusterOverlap(ClusterInfoContainer clustersFromFile, ClusterInfoContainer determinedClusters);
+    static double getQualityScore(ClusterInfoContainer groundTruthClusters,
+                                  ClusterInfoContainer evaluatedClusters);
+    static double getClusterOverlapRecall(ClusterInfoContainer groundTruthClusters,
+                                          ClusterInfoContainer evaluatedClusters);
+    static double getClusterOverlapMsec(ClusterInfoContainer groundTruthClusters,
+                                        ClusterInfoContainer evaluatedClusters);
+    static double getClusterOverlapPrecision(ClusterInfoContainer groundTruthClusters,
+                                             ClusterInfoContainer evaluatedClusters);
+    static double getClustersTotalMsec(ClusterInfoContainer clusters);
 };
 
 #endif // DOGIMAGESTABILIZATION_QUALITYMEASURER_H

@@ -9,8 +9,7 @@
 
 using cv::Mat;
 
-struct FrameInfo
-{
+struct FrameInfo {
     Mat frame = Mat();
     double frameNo = -1;
     double msec = -1;

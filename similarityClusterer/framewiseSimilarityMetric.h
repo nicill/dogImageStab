@@ -6,6 +6,7 @@
 #define DOGIMAGESTABILIZATION_FRAMEWISESIMILARITYMETRIC_H
 
 #include <opencv2/core/core.hpp>
+
 using namespace cv;
 
 class framewiseSimilarityMetric {
@@ -16,10 +17,6 @@ public:
     virtual ~framewiseSimilarityMetric() { }
 
 };
-
-
-
-
 
 #endif //DOGIMAGESTABILIZATION_FRAMEWISESIMILARITYMETRIC_H
 
