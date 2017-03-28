@@ -34,10 +34,6 @@ target_link_libraries( showTwoTogether ${OpenCV_LIBS} )
 add_executable(brno brno.cpp Stabilizer.h StabilizerGCBPM.cpp StabilizerGCBPM.h Exceptions.h Parameters.cpp Parameters.h xgetopt.cpp xgetopt.h StabilizerSVD.cpp StabilizerSVD.h)
 target_link_libraries( brno ${OpenCV_LIBS} )
 
-<<<<<<< HEAD
-add_executable(similarityClusterer similarityClusterer/similarityClusterer.cpp similarityClusterer/framewiseSimilarityMetric.h similarityClusterer/opencvHistComparer.cpp similarityClusterer/opencvHistComparer.h similarityClusterer/opencvImageMetric.cpp similarityClusterer/opencvImageMetric.h similarityClusterer/featureComparer.cpp similarityClusterer/featureComparer.h  similarityClusterer/qualityMeasurer.cpp similarityClusterer/qualityMeasurer.h similarityClusterer/FrameInfo.cpp similarityClusterer/ClusterInfo.cpp similarityClusterer/ClusterInfoContainer.cpp similarityClusterer/defaults.h similarityClusterer/defaults.h similarityClusterer/opencvITKmetric.cpp similarityClusterer/opencvITKmetric.h)
-target_link_libraries( similarityClusterer ${OpenCV_LIBS} ${ITK_LIBRARIES} )
-=======
 add_executable(similarityClusterer
         similarityClusterer/similarityClusterer.cpp
         similarityClusterer/framewiseSimilarityMetric.h
@@ -53,9 +49,9 @@ add_executable(similarityClusterer
         similarityClusterer/storageClasses/QualityScore.cpp
         similarityClusterer/defaults.h
         similarityClusterer/similarityFileUtils.cpp
-        similarityClusterer/utils.cpp)
-target_link_libraries( similarityClusterer ${OpenCV_LIBS} )
->>>>>>> master
+        similarityClusterer/utils.cpp
+        similarityClusterer/opencvITKmetric.cpp similarityClusterer/opencvITKmetric.h)
+target_link_libraries( similarityClusterer ${OpenCV_LIBS} ${ITK_LIBRARIES} )
 
 add_executable(ioUtility
         ioUtility/ioUtility.cpp
