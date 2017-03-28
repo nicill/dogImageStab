@@ -118,7 +118,11 @@ framewiseSimilarityMetric* metric;
             cout<<computeOtherMetrics(argv[1],metric);
             break;
         case 12: //ITK 1 MS
-            metric=new opencvITKmetric();
+            metric=new opencvITKmetric(0);
+            cout<<computeOtherMetrics(argv[1],metric);
+            break;
+        case 13: //ITK 2 MI
+            metric=new opencvITKmetric(1);
             cout<<computeOtherMetrics(argv[1],metric);
             break;
         default :

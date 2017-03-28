@@ -92,10 +92,10 @@ int main(int argc, char **argv)
             resize(canvas, canvas, Size(canvas.cols/2, canvas.rows/2));
         }
 
-        imshow("Showing videos side by side ", canvas);
+        //imshow("Showing videos side by side ", canvas);
         // save the output video and the comparison side by side
-        //outputVideo << canvas;
-        waitKey(20);
+        outputVideo << canvas;
+        //waitKey(20);
 
         k++;
 

@@ -1,0 +1,14 @@
+//
+// Created by yago on 17/03/27.
+//
+
+#ifndef DOGIMAGESTABILIZATION_ITKSTABILIZER_H
+#define DOGIMAGESTABILIZATION_ITKSTABILIZER_H
+
+
+class itkStabilizer {
+
+};
+
+
+#endif //DOGIMAGESTABILIZATION_ITKSTABILIZER_H

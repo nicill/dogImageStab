@@ -19,6 +19,7 @@
 #include <itkOpenCVImageBridge.h>
 #include "itkMeanSquaresImageToImageMetric.h"
 #include <itkMinimumMaximumImageCalculator.h>
+#include "itkMattesMutualInformationImageToImageMetric.h"
 
 using namespace std;
 using namespace cv;
@@ -27,7 +28,7 @@ using namespace cv;
 class opencvITKmetric : public framewiseSimilarityMetric {
 
 public:
-    opencvITKmetric(int comparisonType=2);
+    opencvITKmetric(int comparisonType=0);
     double computeSimilarity(Mat* im1, Mat* im2);
     void activateVerbosity();
 
