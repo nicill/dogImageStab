@@ -67,3 +67,5 @@ target_link_libraries( ioUtility ${OpenCV_LIBS} )
 add_executable(similarityTEST similarityTEST.cpp similarityTEST.h)
 target_link_libraries( similarityTEST ${OpenCV_LIBS} )
 
+add_executable(itkStabilizer itkBasedStabilization/itkStabilizer.cpp itkBasedStabilization/itkStabilizer.h)
+target_link_libraries( itkStabilizer ${OpenCV_LIBS} ${ITK_LIBRARIES})

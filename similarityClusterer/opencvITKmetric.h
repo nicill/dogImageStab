@@ -20,6 +20,7 @@
 #include "itkMeanSquaresImageToImageMetric.h"
 #include <itkMinimumMaximumImageCalculator.h>
 #include "itkMattesMutualInformationImageToImageMetric.h"
+#include <itkNormalizedCorrelationImageToImageMetric.h>
 
 using namespace std;
 using namespace cv;

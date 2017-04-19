@@ -36,10 +36,11 @@ double opencvITKmetric::computeSimilarity(Mat* im1, Mat* im2) {
 
     float threshold = 1;
 
-    bool erMMI = false, erRMS = false, erNHMMI = false;
+    bool erMMI = false, erRMS = false, erNCC = false;
 
     typedef itk::MeanSquaresImageToImageMetric<InputImageType, InputImageType> MSMetricType;
     typedef itk::MattesMutualInformationImageToImageMetric<InputImageType, InputImageType> MattesMIMetricType;
+    typedef itk::NormalizedCorrelationImageToImageMetric<InputImageType,InputImageType> MetricTypeNCC; // Normalised correlation metric
 
     typedef itk::LinearInterpolateImageFunction<InputImageType, double> linInterpolatorType;
     typedef itk::AffineTransform<double, 2> AffineTransformType;
@@ -48,6 +49,7 @@ double opencvITKmetric::computeSimilarity(Mat* im1, Mat* im2) {
 
     MSMetricType::Pointer metricMS = MSMetricType::New();
     MattesMIMetricType::Pointer metricMMI = MattesMIMetricType::New();
+    MetricTypeNCC::Pointer metricNCC = MetricTypeNCC::New();
 
     // minmax thingie calculator
     MinimumMaximumImageCalculatorType::Pointer minmax;
@@ -64,6 +66,7 @@ double opencvITKmetric::computeSimilarity(Mat* im1, Mat* im2) {
     displacement.Fill(0.0);
 
     double valueMMI = 7777;
+    double valueNCC = 7777;
 
     switch (comparisonType) {
         case 0: // MS metric
@@ -145,6 +148,35 @@ double opencvITKmetric::computeSimilarity(Mat* im1, Mat* im2) {
             //std::cout << "MMI = " << valueMMI << std::endl;
             // std::cout << "mesurar distancies entre imatge, cambio el signe de MMI"<< std::endl;
             ret = -valueMMI;
+            break;
+        case 2: // Normalised Correlation
+
+            metricNCC->SetInterpolator(interpolator);
+            metricNCC->SetTransform(transform);
+
+            transform->SetIdentity();
+
+            metricNCC->SetFixedImage(itkFrame1);
+            metricNCC->SetMovingImage(itkFrame2);
+
+            metricNCC->SetFixedImageRegion(itkFrame1->GetBufferedRegion());
+
+            try {
+                metricNCC->Initialize();
+            }
+            catch (itk::ExceptionObject &excep) {
+                std::cerr << "Exception catched !" << std::endl;
+                std::cerr << excep << std::endl;
+                erNCC = true;
+            }
+            if (!erNCC) {
+                valueNCC = metricNCC->GetValue(displacement);
+            }
+
+            //std::cout << im1 << " vs " << im2 << " \n";
+            //std::cout << "MMI = " << valueMMI << std::endl;
+            // std::cout << "mesurar distancies entre imatge, cambio el signe de MMI"<< std::endl;
+            ret = -valueNCC;
             break;
         default:
             cout << "opencvITKmetric::computeSimilarity wrong type of metric " << endl;
