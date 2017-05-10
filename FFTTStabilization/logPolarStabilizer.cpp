@@ -111,7 +111,7 @@ float logpolar(Mat& src, Mat& dst)
     float angles = src.rows;
     Point2f center(src.cols / 2, src.rows / 2);
     float d = norm(Vec2f(src.cols - center.x, src.rows - center.y));
-    float log_base = pow(10.0, log10(d) / radii);
+    float log_base = pow((float)10.0, log10(d) / radii);
     float d_theta = CV_PI / (float)angles;
     float theta = CV_PI / 2.0;
     float radius = 0;
@@ -230,13 +230,13 @@ Mat LogPolarFFTTemplateMatch(Mat& im0, Mat& im1, double canny_threshold1, double
     Point2d rotation_and_scale = cv::phaseCorrelate(f1lp, f0lp);
 
     float angle = 180.0 * rotation_and_scale.y / f0lp.rows;
-    float scale = pow(log_base, rotation_and_scale.x);
+    float scale = pow((float)log_base, rotation_and_scale.x);
     // --------------
     if (scale > 1.8)
     {
         rotation_and_scale = cv::phaseCorrelate(f1lp, f0lp);
         angle = -180.0 * rotation_and_scale.y / f0lp.rows;
-        scale = 1.0 / pow(log_base, rotation_and_scale.x);
+        scale = 1.0 / pow(log_base, (float)rotation_and_scale.x);
         if (scale > 1.8)
         {
             cout << "Images are not compatible. Scale change > 1.8" << endl;
