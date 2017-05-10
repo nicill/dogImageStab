@@ -27,7 +27,7 @@ public:
     //double computeSimilarity(Mat* im1, Mat* im2);
     void activateVerbosity();
 
-    featureStabilizer(type givenType = SIFT_BFL2);
+    featureStabilizer(type givenType = SIFT_BFL2, string paramInit="NOINIT");
     ~featureStabilizer();
 
     vector<vector<DMatch>> getMatches(Mat* img1, Mat* img2,vector<KeyPoint> * keypoints_1, vector<KeyPoint> * keypoints_2D);
@@ -44,7 +44,6 @@ private:
     // Usage example: https://github.com/kipr/opencv/blob/master/samples/cpp/descriptor_extractor_matcher.cpp
     // also check: http://docs.opencv.org/3.0-beta/doc/py_tutorials/py_feature2d/py_matcher/py_matcher.html
 
-    int processedComparisons;
     bool verbose = false;
 
     vector<DMatch>* goodMatches();

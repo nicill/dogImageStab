@@ -80,6 +80,9 @@ int main(int argc, char **argv)
     int detectorCode=atoi(argv[4]);
     if(detectorCode==1) detectorType=true;
 
+    cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+    cout<<endl<<endl<<"simple example params "<<SMOOTHING_RADIUS<<" "<<motionCode<<" "<<motionType<<endl;
+
     bool verbose=false;
 
     // For further analysis
@@ -145,8 +148,19 @@ int main(int argc, char **argv)
 
         // in rare cases no transform is found. We'll just use the last known good transform.
         if(T.data == NULL) {
-            last_T.copyTo(T);
+           // last_T.copyTo(T);
 
+            //NOT REALLY, we will just make up an identity transform
+            Mat identity;
+            try{
+                identity=estimateRigidTransform(cur_corner2, cur_corner2, motionType);
+                identity.copyTo(T);
+            }
+            catch(Exception e)
+            {
+                cout<<"Exception caught when making up identity transform, moving on! "<<e.what()<<endl;
+                last_T.copyTo(T);
+            }
         }
 
         T.copyTo(last_T);
@@ -184,36 +198,46 @@ int main(int argc, char **argv)
 
         trajectory.push_back(Trajectory(x,y,a));
 
-        out_trajectory << (i+1) << " " << x << " " << y << " " << a << endl;
+       // out_trajectory << (i+1) << " " << x << " " << y << " " << a << endl;
     }
 
 
     // Step 3 - Smooth out the trajectory using an averaging window
+    bool trajectorySmoothing=false;
+
     vector <Trajectory> smoothed_trajectory; // trajectory at all frames
+    if(trajectorySmoothing) {
+        for (size_t i = 0; i < trajectory.size(); i++) {
+            double sum_x = 0;
+            double sum_y = 0;
+            double sum_a = 0;
+            int count = 0;
 
-    for(size_t i=0; i < trajectory.size(); i++) {
-        double sum_x = 0;
-        double sum_y = 0;
-        double sum_a = 0;
-        int count = 0;
+            for (int j = -SMOOTHING_RADIUS; j <= SMOOTHING_RADIUS; j++) {
+                if (i + j >= 0 && i + j < trajectory.size()) {
+                    sum_x += trajectory[i + j].x;
+                    sum_y += trajectory[i + j].y;
+                    sum_a += trajectory[i + j].a;
 
-        for(int j=-SMOOTHING_RADIUS; j <= SMOOTHING_RADIUS; j++) {
-            if(i+j >= 0 && i+j < trajectory.size()) {
-                sum_x += trajectory[i+j].x;
-                sum_y += trajectory[i+j].y;
-                sum_a += trajectory[i+j].a;
-
-                count++;
+                    count++;
+                }
             }
+
+            double avg_a = sum_a / count;
+            double avg_x = sum_x / count;
+            double avg_y = sum_y / count;
+
+            smoothed_trajectory.push_back(Trajectory(avg_x, avg_y, avg_a));
+
+            out_smoothed_trajectory << (i + 1) << " " << avg_x << " " << avg_y << " " << avg_a << endl;
         }
-
-        double avg_a = sum_a / count;
-        double avg_x = sum_x / count;
-        double avg_y = sum_y / count;
-
-        smoothed_trajectory.push_back(Trajectory(avg_x, avg_y, avg_a));
-
-        out_smoothed_trajectory << (i+1) << " " << avg_x << " " << avg_y << " " << avg_a << endl;
+    }
+    else
+    {
+        for (size_t i = 0; i < trajectory.size(); i++)
+        {
+            smoothed_trajectory.push_back(Trajectory(trajectory[i].x,trajectory[i].y,trajectory[i].a ));
+        }
     }
 
     // Step 4 - Generate new set of previous to current transform, such that the trajectory ends up being the same as the smoothed trajectory
@@ -240,7 +264,7 @@ int main(int argc, char **argv)
 
         new_prev_to_cur_transform.push_back(TransformParam(dx, dy, da));
 
-        out_new_transform << (i+1) << " " << dx << " " << dy << " " << da << endl;
+       // out_new_transform << (i+1) << " " << dx << " " << dy << " " << da << endl;
     }
 
 
@@ -251,7 +275,7 @@ int main(int argc, char **argv)
     //int vert_border = HORIZONTAL_BORDER_CROP * prev.rows / prev.cols; // get the aspect ratio correct
     int vert_border = prev.rows / prev.cols; // get the aspect ratio correct
 
-    //prepare outpout video
+    //prepare output video
     int ex = static_cast<int>(cap.get(CAP_PROP_FOURCC)); // Get Codec Type- Int form
     Size S = Size((int) cap.get(CAP_PROP_FRAME_WIDTH),    // Acquire input size
                   (int) cap.get(CAP_PROP_FRAME_HEIGHT));

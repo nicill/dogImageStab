@@ -4,11 +4,8 @@
 
 // based on http://docs.opencv.org/2.4/doc/tutorials/features2d/feature_homography/feature_homography.html
 
-#include <stdio.h>
 #include <iostream>
 #include <opencv2/xfeatures2d/nonfree.hpp>
-#include "opencv2/core/core.hpp"
-#include "opencv2/features2d/features2d.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
 #include "featureStabilizer.h"
@@ -23,8 +20,8 @@ void readme();
 int main( int argc, char** argv ) {
 
     bool verbose=true;
-    if (argc != 4) {
-        std::cerr << "featureBasedStabilizer main::Wrong number of parameters, supplied: " << argc << std::endl;
+    if (argc != 5) {
+        std::cerr << "featureBasedStabilizer main::Possible Wrong number of parameters, supplied: " << argc << std::endl;
     }
     // read Video
     VideoCapture capture(argv[1]);
@@ -49,7 +46,9 @@ int main( int argc, char** argv ) {
 
     // Stabilizer type treatment
     featureStabilizer *stabilizer;
-    stabilizer=new featureStabilizer((featureStabilizer::type)atoi(argv[3]));
+    string initString="NOINIT";
+    if(argc>4) initString=argv[4];
+    stabilizer=new featureStabilizer((featureStabilizer::type)atoi(argv[3]),initString);
 
 
     // Framewise stabilization
@@ -106,8 +105,8 @@ int main( int argc, char** argv ) {
 
         // Step 5, compute deformation from point couples
         try {
-            H  = findHomography( obj, scene, CV_RANSAC );
-            //H = estimateRigidTransform(obj, scene, false);
+            //H  = findHomography( obj, scene, CV_RANSAC );
+            H = estimateRigidTransform(obj, scene, false);
             previousH=H;
         }
         catch (Exception e)
@@ -123,7 +122,8 @@ int main( int argc, char** argv ) {
         // Step 6 warp video
         Mat cur2;
         try{
-            warpPerspective(current, cur2, H, current.size());
+           // warpPerspective(current, cur2, H, current.size());
+           warpAffine(current, cur2, H, current.size());
         }
         catch(Exception e)
         {

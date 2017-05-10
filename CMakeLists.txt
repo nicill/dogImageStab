@@ -34,6 +34,12 @@ target_link_libraries( showTwoTogether ${OpenCV_LIBS} )
 add_executable(brno brno.cpp Stabilizer.h StabilizerGCBPM.cpp StabilizerGCBPM.h Exceptions.h Parameters.cpp Parameters.h xgetopt.cpp xgetopt.h StabilizerSVD.cpp StabilizerSVD.h)
 target_link_libraries( brno ${OpenCV_LIBS} )
 
+add_executable(logPolarStab FFTTStabilization/logPolarStabilizer.cpp)
+target_link_libraries( logPolarStab ${OpenCV_LIBS} )
+
+add_executable(segmentByTags ioUtility/ioSegmentVideoByTagFile.cpp similarityClusterer/similarityFileUtils.cpp)
+target_link_libraries(segmentByTags  ${OpenCV_LIBS} )
+
 add_executable(similarityClusterer
         similarityClusterer/similarityClusterer.cpp
         similarityClusterer/framewiseSimilarityMetric.h
