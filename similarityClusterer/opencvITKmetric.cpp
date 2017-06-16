@@ -31,15 +31,15 @@ double opencvITKmetric::computeSimilarity(Mat* im1, Mat* im2) {
     InputImageType::Pointer itkFrame2 = itk::OpenCVImageBridge::CVMatToITKImage<InputImageType>(*im2);
 
     double ret;
-    int numberOfBins = 256;
-    unsigned int numberOfSamples = 10000;
+   // int numberOfBins = 256;
+    unsigned int numberOfSamples = 1000;
 
     float threshold = 1;
 
     bool erMMI = false, erRMS = false, erNCC = false;
 
     typedef itk::MeanSquaresImageToImageMetric<InputImageType, InputImageType> MSMetricType;
-    typedef itk::MattesMutualInformationImageToImageMetric<InputImageType, InputImageType> MattesMIMetricType;
+    typedef itk::MattesMutualInformationImageToImageMetric<InputImageType,InputImageType> MIMetricType;
     typedef itk::NormalizedCorrelationImageToImageMetric<InputImageType,InputImageType> MetricTypeNCC; // Normalised correlation metric
 
     typedef itk::LinearInterpolateImageFunction<InputImageType, double> linInterpolatorType;
@@ -47,8 +47,10 @@ double opencvITKmetric::computeSimilarity(Mat* im1, Mat* im2) {
     typedef AffineTransformType::ParametersType parametersType;
     typedef itk::MinimumMaximumImageCalculator<InputImageType> MinimumMaximumImageCalculatorType;
 
+    typedef itk::RegularStepGradientDescentOptimizer OptimizerType;
+
     MSMetricType::Pointer metricMS = MSMetricType::New();
-    MattesMIMetricType::Pointer metricMMI = MattesMIMetricType::New();
+    MIMetricType::Pointer metricMMI = MIMetricType::New();
     MetricTypeNCC::Pointer metricNCC = MetricTypeNCC::New();
 
     // minmax thingie calculator
@@ -67,6 +69,8 @@ double opencvITKmetric::computeSimilarity(Mat* im1, Mat* im2) {
 
     double valueMMI = 7777;
     double valueNCC = 7777;
+
+    unsigned int numberOfPixels =0;
 
     switch (comparisonType) {
         case 0: // MS metric
@@ -106,8 +110,7 @@ double opencvITKmetric::computeSimilarity(Mat* im1, Mat* im2) {
 
 
         case 1: // Mattes mutual information
-            // MATES MUTUAL INFORMATION METRIC
-
+            // Normalized MUTUAL INFORMATION METRIC
 
             metricMMI->SetInterpolator(interpolator);
             metricMMI->SetTransform(transform);
@@ -119,10 +122,12 @@ double opencvITKmetric::computeSimilarity(Mat* im1, Mat* im2) {
 
             metricMMI->SetFixedImageRegion(itkFrame1->GetBufferedRegion());
 
+            numberOfPixels = itkFrame1->GetBufferedRegion().GetNumberOfPixels();
+            numberOfSamples = static_cast< unsigned int >( numberOfPixels * 0.01 );
             metricMMI->SetNumberOfSpatialSamples(numberOfSamples);
-            metricMMI->SetNumberOfHistogramBins(numberOfBins);
 
-            metricMMI->SetFixedImageSamplesIntensityThreshold(minmax->GetMaximum() * 0.05);
+            metricMMI->SetNumberOfHistogramBins( 256 );
+            //metricMMI->SetFixedImageSamplesIntensityThreshold(minmax->GetMaximum() * 0.05);
 
             /* if(useAvancedMethods)
              {
@@ -161,6 +166,8 @@ double opencvITKmetric::computeSimilarity(Mat* im1, Mat* im2) {
 
             metricNCC->SetFixedImageRegion(itkFrame1->GetBufferedRegion());
 
+            metricNCC->SetNumberOfSpatialSamples(numberOfSamples);
+
             try {
                 metricNCC->Initialize();
             }
@@ -173,9 +180,6 @@ double opencvITKmetric::computeSimilarity(Mat* im1, Mat* im2) {
                 valueNCC = metricNCC->GetValue(displacement);
             }
 
-            //std::cout << im1 << " vs " << im2 << " \n";
-            //std::cout << "MMI = " << valueMMI << std::endl;
-            // std::cout << "mesurar distancies entre imatge, cambio el signe de MMI"<< std::endl;
             ret = -valueNCC;
             break;
         default:

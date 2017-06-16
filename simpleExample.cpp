@@ -13,6 +13,10 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+//also check:
+//http://nghiaho.com/uploads/videostabKalman.cpp
+
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/videoio/videoio.hpp>
 
@@ -107,8 +111,11 @@ int main(int argc, char **argv)
     int max_frames = cap.get(CV_CAP_PROP_FRAME_COUNT);
     Mat last_T;
 
+    vector<bool> fucked (max_frames);
+    fucked[0]=false;
+
     while(true) {
-            cap >> cur;
+        cap >> cur;
 
             if(cur.data == NULL) {
                 break;
@@ -148,10 +155,11 @@ int main(int argc, char **argv)
 
         // in rare cases no transform is found. We'll just use the last known good transform.
         if(T.data == NULL) {
-           // last_T.copyTo(T);
+            last_T.copyTo(T);
+            fucked[k]=true;
 
-            //NOT REALLY, we will just make up an identity transform
-            Mat identity;
+            //NOT REALLYWORKING!!!!, we will just make up an identity transform
+            /*Mat identity;
             try{
                 identity=estimateRigidTransform(cur_corner2, cur_corner2, motionType);
                 identity.copyTo(T);
@@ -160,8 +168,8 @@ int main(int argc, char **argv)
             {
                 cout<<"Exception caught when making up identity transform, moving on! "<<e.what()<<endl;
                 last_T.copyTo(T);
-            }
-        }
+            }*/
+        } else {fucked[k]= false;}
 
         T.copyTo(last_T);
 
@@ -277,8 +285,7 @@ int main(int argc, char **argv)
 
     //prepare output video
     int ex = static_cast<int>(cap.get(CAP_PROP_FOURCC)); // Get Codec Type- Int form
-    Size S = Size((int) cap.get(CAP_PROP_FRAME_WIDTH),    // Acquire input size
-                  (int) cap.get(CAP_PROP_FRAME_HEIGHT));
+    Size S = Size((int) cap.get(CAP_PROP_FRAME_WIDTH), (int) cap.get(CAP_PROP_FRAME_HEIGHT));   // Acquire input size
 
     VideoWriter outputVideo;
     outputVideo.open(argv[2], ex, cap.get(CAP_PROP_FPS), S, true);
@@ -339,7 +346,9 @@ int main(int argc, char **argv)
         }
 
         // save the output video and the comparison side by side
-        outputVideo << cur2;
+        if(!fucked[k]) outputVideo << cur2;
+        else outputVideo << cur;
+
         //char str[256];
         //sprintf(str, "images/%08d.jpg", k);
         //imwrite(str, canvas);

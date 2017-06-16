@@ -7,7 +7,7 @@
 #include <iostream>
 #include <opencv2/xfeatures2d/nonfree.hpp>
 #include "opencv2/highgui/highgui.hpp"
-#include "opencv2/calib3d/calib3d.hpp"
+//#include "opencv2/calib3d/calib3d.hpp"
 #include "featureStabilizer.h"
 
 using namespace cv;
@@ -71,11 +71,18 @@ int main( int argc, char** argv ) {
         // Stabilize
         //Step 1,2,3 compute detectors, keypoints and their matches
         vector<KeyPoint> keypoints_1, keypoints_2;
+
+        clock_t t;
+        t = clock();
         vector<vector<DMatch>> matchesOfAllKeypoints = stabilizer->getMatches(&current, &previous,&keypoints_1,&keypoints_2);
+        t = clock() - t;
+        if(verbose) cout<<endl<<endl<<"Detection and description for Frame "<<frameCounter<<" took in seconds: "<<((float)t)/CLOCKS_PER_SEC<<" and in clicks "<<t<<endl;
 
        //cout<<"feature stabilizer, keypoint sizes "<<keypoints_1.size()<<" "<<keypoints_2.size()<<endl;
 
         // Step 4, find points with good matches to compute transformation
+
+        t = clock();
         vector<DMatch> goodMatches;
         for (vector<DMatch> matchesAtKeypoint : matchesOfAllKeypoints) {
             // Match list might not contain any matches
@@ -89,7 +96,7 @@ int main( int argc, char** argv ) {
             }
         }
 
-       //cout<<"feature stabilizer, goodmatches size "<<goodMatches.size()<<endl;
+        //cout<<"feature stabilizer, goodmatches size "<<goodMatches.size()<<endl;
 
         //-- Get the keypoints from the good matches
         std::vector<Point2f> obj;
@@ -101,8 +108,13 @@ int main( int argc, char** argv ) {
             scene.push_back( keypoints_2[ goodMatches[i].trainIdx ].pt );
         }
 
-       //if(frameCounter%100==0) cout<<"feature stabilizer, matches with good keypoint sizes "<<obj.size()<<" "<<scene.size()<< " frame "<<frameCounter<<"/"<<totalFrames<<endl;
+        t = clock() - t;
+        if(verbose) cout<<"Match Points refinement for Frame "<<frameCounter<<" took in seconds: "<<((float)t)/CLOCKS_PER_SEC<<" and in clicks "<<t<<endl;
 
+        //if(frameCounter%100==0) cout<<"feature stabilizer, matches with good keypoint sizes "<<obj.size()<<" "<<scene.size()<< " frame "<<frameCounter<<"/"<<totalFrames<<endl;
+
+
+        t = clock();
         // Step 5, compute deformation from point couples
         try {
             //H  = findHomography( obj, scene, CV_RANSAC );
@@ -117,9 +129,13 @@ int main( int argc, char** argv ) {
             H=previousH;
         }
 
+        t = clock() - t;
+        if(verbose) cout<<"computing transform for Frame "<<frameCounter<<" took in seconds: "<<((float)t)/CLOCKS_PER_SEC<<" and in clicks "<<t<<endl;
+
         // Other possible computations possible!!!!!
 
         // Step 6 warp video
+        t = clock();
         Mat cur2;
         try{
            // warpPerspective(current, cur2, H, current.size());
@@ -130,6 +146,10 @@ int main( int argc, char** argv ) {
             cout<<"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FUCKED warping "<<e.what()<<" , doing nothing "<<obj.size()<<" "<<scene.size()<<" frame "<<frameCounter<<"/"<<totalFrames<<endl;
             current.copyTo(cur2);
         }
+
+        t = clock() - t;
+        if(verbose) cout<<"Output (applying transform) for frame "<<frameCounter<<" took in seconds: "<<((float)t)/CLOCKS_PER_SEC<<" and in clicks "<<t<<endl;
+
         //warpAffine(current, cur2, H, current.size());
 
         //cur2 = cur2(Range(vert_border, cur2.rows-vert_border), Range(HORIZONTAL_BORDER_CROP, cur2.cols-HORIZONTAL_BORDER_CROP));

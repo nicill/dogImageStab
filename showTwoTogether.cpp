@@ -16,7 +16,7 @@ using namespace cv;
 int main(int argc, char **argv)
 {
     if(argc < 3) {
-        cout << "./showTwoTogether [video1] [video2]" << endl;
+        cout << "./showTwoTogether [video1] [video2] (skipFirst)" << endl;
         return 0;
     }
 
@@ -44,6 +44,15 @@ int main(int argc, char **argv)
     cout << "Input codec type: " << EXT << endl;
 
     Mat cur,cur2;
+
+    cout<<"Checking shit "<<argv[4]<<"   "<<argc<<endl;
+
+    // Read one frame of the original video so we are showing the same frames
+    if((argc>4) && atoi( argv[4])==1)
+    {
+        cout<<"Skipping the first frame because you told me to  "<<atoi( argv[4])<<endl;
+        cap1 >> cur;
+    }
 
     int  k=0;
     int max_frames = cap1.get(CV_CAP_PROP_FRAME_COUNT);

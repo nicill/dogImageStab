@@ -31,13 +31,15 @@
 #include <itkImageRegistrationMethod.h>
 #include <itkResampleImageFilter.h>
 #include <itkMeanSquaresImageToImageMetricv4.h>
-#include <itkMattesMutualInformationImageToImageMetricv4.h>
+//#include <itkMattesMutualInformationImageToImageMetricv4.h>
 #include <itkCorrelationImageToImageMetricv4.h>
 
 #include <itkRegularStepGradientDescentOptimizerv4.h>
 #include <itkConjugateGradientLineSearchOptimizerv4.h>
 
 #include <itkImageRegistrationMethodv4.h>
+#include <itkNormalizedMutualInformationHistogramImageToImageMetric.h>
+
 
 
 using namespace std;

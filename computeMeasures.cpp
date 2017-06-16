@@ -46,7 +46,7 @@ double computeOtherMetrics(String video, framewiseSimilarityMetric* comparer)
 
         // accumulate
         average=average+currentSimilarity;
-        //cout<<"Frame "<<frameCounter<<"/"<<totalFrames<<" returned similarity "<<current<<" current average "<<average<<endl;
+//        cout<<"Frame "<<frameCounter<<"/"<<totalFrames<<" returned similarity "<<currentSimilarity<<" current average "<<average/frameCounter<<endl;
 
         current.copyTo(previous);
     }
@@ -127,7 +127,7 @@ framewiseSimilarityMetric* metric;
             break;
         case 14: //ITK 3 NCC
             metric=new opencvITKmetric(2);
-            cout<<computeOtherMetrics(argv[2],metric);
+            cout<<computeOtherMetrics(argv[1],metric);
             break;
         default :
             cout << "computeMeasures, wrong measure code" << endl;

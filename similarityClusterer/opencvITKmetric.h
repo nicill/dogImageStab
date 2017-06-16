@@ -21,6 +21,9 @@
 #include <itkMinimumMaximumImageCalculator.h>
 #include "itkMattesMutualInformationImageToImageMetric.h"
 #include <itkNormalizedCorrelationImageToImageMetric.h>
+#include <itkRegularStepGradientDescentOptimizer.h>
+
+
 
 using namespace std;
 using namespace cv;

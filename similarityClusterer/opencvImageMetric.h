@@ -10,6 +10,7 @@
 #include "framewiseSimilarityMetric.h"
 #include <iostream>
 #include <stdio.h>
+#include <itkNormalizedMutualInformationHistogramImageToImageMetric.h>
 
 class opencvImageMetric: public framewiseSimilarityMetric {
 

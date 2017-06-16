@@ -59,7 +59,8 @@ void itkStabilizer::singleResolutionITKStab(VideoCapture capture, VideoWriter ou
 
     // deffine all metric types
     typedef itk::MeanSquaresImageToImageMetric< InputImageType,  InputImageType >    MetricTypeSSD; // SSD metric
-    typedef itk::MattesMutualInformationImageToImageMetric<InputImageType,InputImageType >    MetricTypeMI; //MattesMI metric
+    //typedef itk::MattesMutualInformationImageToImageMetric<InputImageType,InputImageType >    MetricTypeMI; //MattesMI metric
+    typedef itk::NormalizedMutualInformationHistogramImageToImageMetric<InputImageType,InputImageType >    MetricTypeMI;
     typedef itk::NormalizedCorrelationImageToImageMetric<InputImageType,InputImageType> MetricTypeNCC; // Normalised correlation metric
 
     // other declarations
@@ -105,11 +106,18 @@ void itkStabilizer::singleResolutionITKStab(VideoCapture capture, VideoWriter ou
             MetricTypeSSD::Pointer         metricSSD        = MetricTypeSSD::New();
             registration->SetMetric(        metricSSD        );
         }
-        else if (this->getStabType()==1)  //MattesMI metric
+        else if (this->getStabType()==1)  //NormalisedMI metric
         {
             MetricTypeMI::Pointer         metricMI        = MetricTypeMI::New();
-            metricMI->SetNumberOfHistogramBins( 512 ); // Mattes MI PARAMETERS!!!!
-            metricMI->SetNumberOfSpatialSamples( 10000 );
+            MetricTypeMI::HistogramType::SizeType histogramSize;
+            int numberOfHistogramBins =32;
+            histogramSize.SetSize(2);
+            histogramSize[0] = numberOfHistogramBins;
+            histogramSize[1] = numberOfHistogramBins;
+            metricMI->SetHistogramSize( histogramSize );
+
+            //metricMI->SetNumberOfHistogramBins( 512 ); // Mattes MI PARAMETERS!!!!
+            //metricMI->SetNumberOfSpatialSamples( 10000 );
             registration->SetMetric(        metricMI        );
         }
         else if (this->getStabType()==2)  //Normalised Cross correlation
@@ -264,7 +272,8 @@ void itkStabilizer::multiResolutionITKStab(VideoCapture capture, VideoWriter out
 
     // deffine all metric types
     typedef itk::MeanSquaresImageToImageMetricv4< InputImageType,  InputImageType >    MetricTypeSSD; // SSD metric
-    typedef itk::MattesMutualInformationImageToImageMetricv4<InputImageType,InputImageType >    MetricTypeMI; //MattesMI metric
+    //typedef itk::MattesMutualInformationImageToImageMetricv4<InputImageType,InputImageType >    MetricTypeMI; //MattesMI metric
+    typedef itk::NormalizedMutualInformationHistogramImageToImageMetric<InputImageType,InputImageType >    MetricTypeMI;
     typedef itk::CorrelationImageToImageMetricv4<InputImageType,InputImageType> MetricTypeNCC; // Normalised correlation metric
 
     // other declarations
@@ -316,18 +325,23 @@ void itkStabilizer::multiResolutionITKStab(VideoCapture capture, VideoWriter out
 
         // Each component is now connected to the instance of the registration method.
         MetricTypeSSD::Pointer         metricSSD        = MetricTypeSSD::New();
-        MetricTypeMI::Pointer         metricMI        = MetricTypeMI::New();
+        //MetricTypeMI::Pointer         metricMI        = MetricTypeMI::New();
+        MetricTypeMI::Pointer           metricMI        = MetricTypeMI::New();
+
         MetricTypeNCC::Pointer         metricNCC        = MetricTypeNCC::New();
 
         if(this->getStabType()==3) //SSD metric
         {
             registration->SetMetric(        metricSSD        );
         }
-        else if (this->getStabType()==4)  //MattesMI metric
+        else if (this->getStabType()==4)  //Normalised MI metric
         {
-            metricMI->SetNumberOfHistogramBins( 512 ); // Mattes MI PARAMETERS!!!!
+           // this is really not supported
+            cout<<"FUCK MULTIRES MI NOT SUPPORTED"<<endl;
+            throw("NOT SUPPORTED");
+            //metricMI->SetNumberOfHistogramBins( 512 ); // Mattes MI PARAMETERS!!!!
            // metricMI->SetNumberOfSpatialSamples( 10000 );
-            registration->SetMetric(        metricMI        );
+           // registration->SetMetric(        metricMI        );
         }
         else if (this->getStabType()==5)  //Normalised Cross correlation
         {
@@ -370,7 +384,7 @@ void itkStabilizer::multiResolutionITKStab(VideoCapture capture, VideoWriter out
         typedef itk::RegistrationParameterScalesFromPhysicalShift< MetricTypeNCC> ScalesEstimatorTypeNCC;
 
         ScalesEstimatorTypeSSD::Pointer scalesEstimatorSSD =  ScalesEstimatorTypeSSD::New();
-        ScalesEstimatorTypeMI::Pointer scalesEstimatorMI =  ScalesEstimatorTypeMI::New();
+       // ScalesEstimatorTypeMI::Pointer scalesEstimatorMI =  ScalesEstimatorTypeMI::New();
         ScalesEstimatorTypeNCC::Pointer scalesEstimatorNCC =  ScalesEstimatorTypeNCC::New();
 
         if(this->getStabType()==3) //SSD metric
@@ -380,11 +394,11 @@ void itkStabilizer::multiResolutionITKStab(VideoCapture capture, VideoWriter out
             optimizer->SetScalesEstimator( scalesEstimatorSSD );
 
         }
-        else if (this->getStabType()==4)  //MattesMI metric
+        else if (this->getStabType()==4)  //metric
         {
-            scalesEstimatorMI->SetMetric( metricMI );
-            scalesEstimatorMI->SetTransformForward( true );
-            optimizer->SetScalesEstimator( scalesEstimatorMI );
+            //scalesEstimatorMI->SetMetric( metricMI );
+            //scalesEstimatorMI->SetTransformForward( true );
+            //optimizer->SetScalesEstimator( scalesEstimatorMI );
 
         }
         else if (this->getStabType()==5)  //Normalised Cross correlation

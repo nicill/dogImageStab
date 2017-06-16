@@ -173,12 +173,20 @@ void featureStabilizer::activateVerbosity() {
  */
 vector<vector<DMatch>> featureStabilizer::getMatches(Mat* img1, Mat* img2, vector<KeyPoint> * keypoints_1, vector<KeyPoint> * keypoints_2) {
    // vector<KeyPoint> keypoints_1, keypoints_2;
+    bool verbose=true;
     Mat descriptors_1, descriptors_2;
     vector<vector<DMatch>> matchesOfAllKeypoints;
 
     // Detect keypoints and compute descriptors (feature vectors)
+    clock_t t;
+    t = clock();
     this->featureDetector->detectAndCompute(*img1, noArray(), *keypoints_1, descriptors_1);
+    t = clock() - t;
+    if(verbose) cout<<"                           Current frame detection and description took in seconds: "<<((float)t)/CLOCKS_PER_SEC<<" and in clicks "<<t<<endl;
+    t = clock();
     this->featureDetector->detectAndCompute(*img2, noArray(), *keypoints_2, descriptors_2);
+    t = clock() - t;
+    if(verbose) cout<<"                           Previous frame detection and description took in seconds: "<<((float)t)/CLOCKS_PER_SEC<<" and in clicks "<<t<<endl;
 
     // Make sure that keypoints have been found in both images before matching.
     if (keypoints_1->size() == 0 || keypoints_2->size() == 0) {
@@ -187,7 +195,10 @@ vector<vector<DMatch>> featureStabilizer::getMatches(Mat* img1, Mat* img2, vecto
     }
 
     // Match descriptors and retrieve the k=2 best results
+    t = clock();
     this->descriptorMatcher->knnMatch(descriptors_1,descriptors_2, matchesOfAllKeypoints, 2);
+    t = clock() - t;
+    if(verbose) cout<<"                           Key-point matching took: "<<((float)t)/CLOCKS_PER_SEC<<" and in clicks "<<t<<endl;
 
     //Other matching option!!!
     //FlannBasedMatcher matcher;
