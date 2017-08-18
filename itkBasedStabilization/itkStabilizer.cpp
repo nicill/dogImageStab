@@ -75,6 +75,19 @@ void itkStabilizer::singleResolutionITKStab(VideoCapture capture, VideoWriter ou
     // Matrices to store transformations
     Mat H, previousH ;
 
+    // Also in itk format
+    typedef itk::Matrix< double, Dimension + 1, Dimension + 1 > MatrixType;
+    MatrixType matrixH,matrixPrevious,tempMatrix;
+    matrixPrevious[0][0] = 1;
+    matrixPrevious[0][1] = 0;
+    matrixPrevious[0][2] = 0.;
+    matrixPrevious[1][0] = 0;
+    matrixPrevious[1][1] = 1;
+    matrixPrevious[1][2] = 0.;
+    matrixPrevious[2][0] = 0;
+    matrixPrevious[2][1] = 0;
+    matrixPrevious[2][2] = 1.;
+
     // Load first frame
     capture >> previous;
     for (int frameCounter = 2; frameCounter <= totalFrames; frameCounter++) {
@@ -175,8 +188,32 @@ void itkStabilizer::singleResolutionITKStab(VideoCapture capture, VideoWriter ou
 
 
         ParametersType finalParameters; // retrieve the final transform, depending on what we had success or not
-        if(!registrationFailure) finalParameters = registration->GetLastTransformParameters();
-        else  finalParameters=initialParameters;
+        if(!registrationFailure)finalParameters = registration->GetLastTransformParameters();
+        else finalParameters=initialParameters;
+
+        // Collect the matrix for the current transform
+        // https://itk.org/ITKExamples/src/Core/Transform/ApplyAffineTransformFromHomogeneousMatrixAndResample/Documentation.html
+        matrixH[0][0] = finalParameters[0];
+        matrixH[0][1] = finalParameters[1];
+        matrixH[0][2] = 0.;
+        matrixH[1][0] = finalParameters[2];
+        matrixH[1][1] = finalParameters[3];
+        matrixH[1][2] = 0.;
+        matrixH[2][0] = finalParameters[4];
+        matrixH[2][1] = finalParameters[5];
+        matrixH[2][2] = 1.;
+
+        //Accumulate transformation
+        tempMatrix=matrixH*matrixPrevious;
+        matrixH=tempMatrix;
+        matrixPrevious=matrixH; // store current as previous transform
+
+        finalParameters[0]=matrixH[0][0];
+        finalParameters[1]=matrixH[0][1];
+        finalParameters[2]=matrixH[1][0];
+        finalParameters[3]=matrixH[1][1];
+        finalParameters[4]=matrixH[2][0];
+        finalParameters[5]=matrixH[2][1];
 
         if (verbose) std::cout << "Final parameters: " << finalParameters << std::endl;
 
@@ -295,6 +332,19 @@ void itkStabilizer::multiResolutionITKStab(VideoCapture capture, VideoWriter out
 
     // Matrices to store transformations
     Mat H, previousH ;
+
+    // Also in itk format
+    typedef itk::Matrix< double, Dimension + 1, Dimension + 1 > MatrixType;
+    MatrixType matrixH,matrixPrevious,tempMatrix;
+    matrixPrevious[0][0] = 1;
+    matrixPrevious[0][1] = 0;
+    matrixPrevious[0][2] = 0.;
+    matrixPrevious[1][0] = 0;
+    matrixPrevious[1][1] = 1;
+    matrixPrevious[1][2] = 0.;
+    matrixPrevious[2][0] = 0;
+    matrixPrevious[2][1] = 0;
+    matrixPrevious[2][2] = 1.;
 
     // Load first frame
     capture >> previous;
@@ -463,6 +513,33 @@ void itkStabilizer::multiResolutionITKStab(VideoCapture capture, VideoWriter out
         ParametersType finalParameters; // retrieve the final transform, depending on what we had success or not
         if(!registrationFailure) finalParameters = transform->GetParameters();
         else  finalParameters=initialParameters;
+
+
+        // Collect the matrix for the current transform
+        // https://itk.org/ITKExamples/src/Core/Transform/ApplyAffineTransformFromHomogeneousMatrixAndResample/Documentation.html
+        matrixH[0][0] = finalParameters[0];
+        matrixH[0][1] = finalParameters[1];
+        matrixH[0][2] = 0.;
+        matrixH[1][0] = finalParameters[2];
+        matrixH[1][1] = finalParameters[3];
+        matrixH[1][2] = 0.;
+        matrixH[2][0] = finalParameters[4];
+        matrixH[2][1] = finalParameters[5];
+        matrixH[2][2] = 1.;
+
+        //Accumulate transformation
+        tempMatrix=matrixH*matrixPrevious;
+        matrixH=tempMatrix;
+
+        finalParameters[0]=matrixH[0][0];
+        finalParameters[1]=matrixH[0][1];
+        finalParameters[2]=matrixH[1][0];
+        finalParameters[3]=matrixH[1][1];
+        finalParameters[4]=matrixH[2][0];
+        finalParameters[5]=matrixH[2][1];
+
+        matrixPrevious=matrixH; // store current as previous transform
+
 
         if (verbose) std::cout << "Final parameters: " << finalParameters << std::endl;
 

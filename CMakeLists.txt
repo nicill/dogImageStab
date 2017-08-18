@@ -16,6 +16,10 @@ target_link_libraries( computeMeasures ${OpenCV_LIBS} ${ITK_LIBRARIES} )
 add_executable(dogImageStabilization simpleExample.cpp )
 target_link_libraries( dogImageStabilization ${OpenCV_LIBS} )
 
+add_executable(farnebackStabilization simpleFarneback.cpp )
+target_link_libraries( farnebackStabilization ${OpenCV_LIBS} )
+
+
 add_executable(testVideoGenerator testVideoGenerator/testVideoGenerator.cpp )
 target_link_libraries( testVideoGenerator ${OpenCV_LIBS} )
 

@@ -202,10 +202,12 @@ int main(int argc, char **argv) {
         // Check to see if a CSV file with the name of the video exists.
         if (!useDefaults) {
             string userInput = "";
-            cout << "Please input the file name to write to / read from (\"d\" for \"" << ioFileName << "\")..." << endl;
-            cin >> userInput;
+            //cout << "Please input the file name to write to / read from (\"d\" for \"" << ioFileName << "\")..." << endl;
+            //cin >> userInput;
+            //if (userInput != "d") ioFilePath = workingDirectory + "/" + userInput;
 
-            if (userInput != "d") ioFilePath = workingDirectory + "/" + userInput;
+            cout << "Automatically using file " << ioFileName << endl;
+
         }
 
         if (!utils::fileExists(ioFilePath)) {

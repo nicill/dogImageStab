@@ -95,7 +95,7 @@ featureStabilizer::featureStabilizer(type givenType, string paramInit) {
             double patternScale=1.0f;
             int pos1=paramInit.find("thresh");
             double pos2=paramInit.find("patternScale");
-            if(pos1!= string::npos) thresh=stoi(paramInit.substr(pos1+9,1));
+            if(pos1!= string::npos) thresh=stoi(paramInit.substr(pos1+5,1));
             if(pos2!= string::npos) patternScale=stof(paramInit.substr(pos2+12));
 
             this->featureDetector = cv::BRISK::create(thresh,3, patternScale);
@@ -103,6 +103,32 @@ featureStabilizer::featureStabilizer(type givenType, string paramInit) {
 
             break;
         }
+        case featureStabilizer::AKAZE_BFHAMMING: {
+            this->detectorType = featureStabilizer::AKAZE;
+           /* C++: AKAZE::AKAZE(int descriptor_type, int descriptor_size, int descriptor_channels, float threshold, int octaves, int sublevels, int diffusivity)
+            Parameters:
+
+            descriptor_type – Type of the extracted descriptor: DESCRIPTOR_KAZE, DESCRIPTOR_KAZE_UPRIGHT, DESCRIPTOR_MLDB or DESCRIPTOR_MLDB_UPRIGHT.
+                descriptor_size – Size of the descriptor in bits. 0 -> Full size
+            descriptor_channels – Number of channels in the descriptor (1, 2, 3)
+            threshold – Detector response threshold to accept point
+            octaves – Maximum octave evolution of the image
+            sublevels – Default number of sublevels per scale level
+            diffusivity – Diffusivity type. DIFF_PM_G1, DIFF_PM_G2, DIFF_WEICKERT or DIFF_CHARBONNIER*/
+            int kazeType=AKAZE::DESCRIPTOR_MLDB; //2 KAze upright, 3 Kaze, 4 MLDB UPRIGHT, 5 MLDB
+            float thresholdKaze=0.001f;
+            int pos1=paramInit.find("kazeType");
+            int pos2=paramInit.find("kazeThresh");
+            if(pos1!= string::npos) kazeType=stoi(paramInit.substr(pos1+8,1));
+            if(pos2!= string::npos) thresholdKaze=stof(paramInit.substr(pos2+10));
+
+            this->featureDetector = cv::AKAZE::create(kazeType,0,3,thresholdKaze,4,4,KAZE::DIFF_PM_G2);
+            std::cout<<"INITIALIZED AKAZE WITH PARAMS "<<kazeType<<" "<<thresholdKaze<<" "<<paramInit<<std::endl;
+
+            break;
+        }
+
+
         default:
             throw("This descriptor hasn't been implemented yet.");
     }
@@ -115,6 +141,7 @@ featureStabilizer::featureStabilizer(type givenType, string paramInit) {
             break;
         case featureStabilizer::BRISK_BFHAMMING:
         case featureStabilizer::ORB_BFHAMMING:
+        case featureStabilizer::AKAZE_BFHAMMING:
             this->matcherType = featureStabilizer::BF_HAMMING;
             this->descriptorMatcher = BFMatcher::create(BFMatcher::BRUTEFORCE_HAMMING);
     }
@@ -173,7 +200,7 @@ void featureStabilizer::activateVerbosity() {
  */
 vector<vector<DMatch>> featureStabilizer::getMatches(Mat* img1, Mat* img2, vector<KeyPoint> * keypoints_1, vector<KeyPoint> * keypoints_2) {
    // vector<KeyPoint> keypoints_1, keypoints_2;
-    bool verbose=true;
+    bool verbose=false;
     Mat descriptors_1, descriptors_2;
     vector<vector<DMatch>> matchesOfAllKeypoints;
 
@@ -196,6 +223,7 @@ vector<vector<DMatch>> featureStabilizer::getMatches(Mat* img1, Mat* img2, vecto
 
     // Match descriptors and retrieve the k=2 best results
     t = clock();
+
     this->descriptorMatcher->knnMatch(descriptors_1,descriptors_2, matchesOfAllKeypoints, 2);
     t = clock() - t;
     if(verbose) cout<<"                           Key-point matching took: "<<((float)t)/CLOCKS_PER_SEC<<" and in clicks "<<t<<endl;

@@ -129,6 +129,10 @@ framewiseSimilarityMetric* metric;
             metric=new opencvITKmetric(2);
             cout<<computeOtherMetrics(argv[1],metric);
             break;
+        case 15: //ITK 3 NCC
+            metric=new featureComparer((featureComparer::type)4);
+            cout<<computeOtherMetrics(argv[1],metric);
+            break;
         default :
             cout << "computeMeasures, wrong measure code" << endl;
             throw("computeMeasures, wrong measure code" );

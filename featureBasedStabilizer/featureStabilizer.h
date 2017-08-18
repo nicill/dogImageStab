@@ -22,8 +22,8 @@ using namespace cv;
 class featureStabilizer {
 
 public:
-    enum type { SIFT_BFL2 = 0, SURF_BFL2 = 1, ORB_BFHAMMING = 2, BRISK_BFHAMMING=3};
-    enum featureDetectorType { SIFT = 0, SURF = 1, ORB = 2, BRISK=3 };
+    enum type { SIFT_BFL2 = 0, SURF_BFL2 = 1, ORB_BFHAMMING = 2, BRISK_BFHAMMING=3,AKAZE_BFHAMMING=4};
+    enum featureDetectorType { SIFT = 0, SURF = 1, ORB = 2, BRISK=3,AKAZE=4 };
     enum descriptorMatcherType { BF_L2 = 0, BF_HAMMING = 1 }; // BF_HAMMING2, FLANN?, Hamming is a brute force matcher
 
     //double computeSimilarity(Mat* im1, Mat* im2);

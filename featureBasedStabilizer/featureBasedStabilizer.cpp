@@ -16,10 +16,47 @@ using std::vector;
 
 void readme();
 
+
+Mat concatenateMatrix(Mat first, Mat second){
+
+    Mat mul1 = Mat::eye(3, 3, CV_64F);
+    Mat mul2 = Mat::eye(3, 3, CV_64F);
+    Mat x_;
+    Mat temp_inv_;
+    Mat mul_r;
+    first.convertTo(temp_inv_, CV_64F);
+    second.convertTo(x_, CV_64F);
+
+    temp_inv_.row(0).copyTo(mul1.row(0));
+    temp_inv_.row(1).copyTo(mul1.row(1));
+
+    x_.row(1).copyTo(mul2.row(1));
+    x_.row(0).copyTo(mul2.row(0));
+
+    try{
+        mul_r = mul1*mul2;
+    }
+    catch (Exception& e){
+        const char* err_msg = e.what();
+        cout << err_msg;
+    }
+
+
+    mul1.release();
+    mul2.release();
+    temp_inv_.release();
+
+    Mat finalResult = Mat::eye(2, 3, CV_64F);
+    mul_r.row(0).copyTo(finalResult.row(0));
+    mul_r.row(1).copyTo(finalResult.row(1));
+
+    return finalResult;
+}
+
 /** @function main */
 int main( int argc, char** argv ) {
 
-    bool verbose=true;
+    bool verbose=false;
     if (argc != 5) {
         std::cerr << "featureBasedStabilizer main::Possible Wrong number of parameters, supplied: " << argc << std::endl;
     }
@@ -43,7 +80,6 @@ int main( int argc, char** argv ) {
         return -1;
     }
 
-
     // Stabilizer type treatment
     featureStabilizer *stabilizer;
     string initString="NOINIT";
@@ -56,6 +92,7 @@ int main( int argc, char** argv ) {
 
     // Matrices to store transformations
     Mat H, previousH ;
+    bool initH=false;
 
 
     // Load first frame
@@ -117,9 +154,21 @@ int main( int argc, char** argv ) {
         t = clock();
         // Step 5, compute deformation from point couples
         try {
-            //H  = findHomography( obj, scene, CV_RANSAC );
+
+            //cout<<"I AM GOING TO ESTIMATE "<<endl;
+           // H  = findHomography( obj, scene, CV_RANSAC );
             H = estimateRigidTransform(obj, scene, false);
-            previousH=H;
+            //cout<<"I AM GOING TO CONCATENATE NOW, size "<<H.rows<<" "<<H.cols<<endl;
+            if(initH) {
+                Mat temp;
+                temp = concatenateMatrix(previousH,H);// Check that this is the correct order!
+               // temp=previousH*H;
+                H = temp;
+            }
+            else{
+                previousH=H;
+                initH=true;
+            }
         }
         catch (Exception e)
         {
@@ -158,6 +207,7 @@ int main( int argc, char** argv ) {
 
         // once everything is finished, just update loop (copy current to previous)
         current.copyTo(previous);
+        //cur2.copyTo(previous);// Check if the thing is more stable if you accumulate deformations.
 
         // Output things if necessary
         //if (verbose) {
