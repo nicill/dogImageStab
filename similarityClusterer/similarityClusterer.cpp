@@ -14,6 +14,7 @@
 #include "defaults.h"
 #include "clusterer.h"
 #include "classifier.h"
+#include <algorithm>
 
 using namespace std;
 using namespace cv;
@@ -33,6 +34,7 @@ int main(int argc, char **argv) {
     bool measureTime = false;
     bool fileIO = false;
     bool useDefaults = false;
+    bool averageSimilarity=false;
 
     bool qualityMeasurement = false;
     bool regionClusterMode = false;
@@ -119,6 +121,10 @@ int main(int argc, char **argv) {
         if (last_arg.find('d') != string::npos) {
             useDefaults = true;
             cout << "Default values will be used." << endl;
+        }
+        if (last_arg.find('a') != string::npos) {
+            averageSimilarity = true;
+            cout << "averaging similarities." << endl;
         }
     }
 
@@ -233,6 +239,7 @@ int main(int argc, char **argv) {
     if (!fileIO || !fileExists) {
         // Framewise metric computation
         Mat current, previous;
+        vector<double> accumulatedSimilarites=vector<double>();
 
         // Load first frame
         capture >> previous;
@@ -250,8 +257,12 @@ int main(int argc, char **argv) {
 
             double currentSimilarity = comparer->computeSimilarity(&previous, &current);
             frames.push_back(FrameInfo(current, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity));
-            if (fileIO) {
+            if (fileIO&&!averageSimilarity) {
                 similarityFileUtils::appendToCsv(ioFilePath, frameCounter, capture.get(CAP_PROP_POS_MSEC), currentSimilarity);
+            }
+            else if (fileIO&&averageSimilarity) {
+                // if we are averaging, simply store last similarity value
+                accumulatedSimilarites.push_back(currentSimilarity);
             }
 
             current.copyTo(previous);
@@ -263,6 +274,21 @@ int main(int argc, char **argv) {
                      << " compared to the last frame" << endl;
             }
         }
+
+        if (fileIO&&averageSimilarity) {// average the five values
+            for (int frameCounter = 2; frameCounter <= totalFrames; frameCounter++) {
+                int minV = (frameCounter-2)<0?0:(frameCounter-2);
+                int maxV = (frameCounter+2)>(accumulatedSimilarites.size()-1)?(accumulatedSimilarites.size()-1):(frameCounter+2);;
+                double averagedValue=0;
+                double averagedFrames=abs(maxV-minV);
+                for (int i=minV;i<=maxV;i++)averagedValue=averagedValue+accumulatedSimilarites[i];
+
+                 similarityFileUtils::appendToCsv(ioFilePath, frameCounter, 0,averagedValue/averagedFrames);
+            }
+        }
+
+
+
     } else {
         // Read in data from file. Failures of method will be output to cerr.
         if (!similarityFileUtils::readFrameInfosFromCsv(ioFilePath, totalFrames, &frames)) {
